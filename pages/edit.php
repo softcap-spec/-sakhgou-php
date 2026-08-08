@@ -68,7 +68,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       'includes' => 'includes', 'what_to_bring' => 'what_to_bring', 'meeting_point' => 'meeting_point',
       'fish_types' => 'fish_species', 'fishing_method' => 'fishing_method', 'boat_type' => 'boat_type',
       'license_required' => 'license_required', 'gear_type' => 'gear_type', 'sizes' => 'sizes',
-      'condition' => 'gear_condition', 'deposit' => 'deposit', 'car_type' => 'car_type',
+      'condition' => 'gear_condition', 'deposit' => 'deposit_amount', 'car_type' => 'car_type',
       'transmission' => 'transmission', 'seats' => 'seats', 'fuel' => 'fuel',
       'mileage' => 'mileage', 'requirements' => 'requirements',
     ];
@@ -236,7 +236,7 @@ require __DIR__ . '/../includes/header.php';
           <div><label class="block text-sm font-medium mb-1">Состояние</label><input type="text" name="condition" value="<?=h($item['gear_condition']??'')?>" class="w-full rounded-lg border border-border py-2 px-3 text-sm focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none"></div>
           <div><label class="block text-sm font-medium mb-1">Размеры</label><input type="text" name="sizes" value="<?=h($item['sizes']??'')?>" class="w-full rounded-lg border border-border py-2 px-3 text-sm focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none"></div>
           <div><label class="block text-sm font-medium mb-1">Доступно (шт.)</label><input type="number" name="max_guests" value="<?=(int)($item['max_guests']??1)?>" min="1" class="w-full rounded-lg border border-border py-2 px-3 text-sm focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none"></div>
-          <div><label class="block text-sm font-medium mb-1">Залог (₽)</label><input type="number" name="deposit" value="<?=(int)($item['deposit']??0)?>" min="0" class="w-full rounded-lg border border-border py-2 px-3 text-sm focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none"></div>
+          <div><label class="block text-sm font-medium mb-1">Залог (₽)</label><input type="number" name="deposit" value="<?=(int)($item['deposit_amount']??0)?>" min="0" class="w-full rounded-lg border border-border py-2 px-3 text-sm focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none"></div>
         </div>
         <div><label class="block text-sm font-medium mb-1">Что включено</label><input type="text" name="includes" value="<?=h($item['includes']??'')?>" class="w-full rounded-lg border border-border py-2 px-3 text-sm focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none"></div>
       </div>
@@ -257,7 +257,7 @@ require __DIR__ . '/../includes/header.php';
           <div><label class="block text-sm font-medium mb-1">Мест</label><input type="number" name="seats" value="<?=(int)($item['seats']??5)?>" min="1" class="w-full rounded-lg border border-border py-2 px-3 text-sm focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none"></div>
           <div><label class="block text-sm font-medium mb-1">Топливо</label><input type="text" name="fuel" value="<?=h($item['fuel']??'')?>" class="w-full rounded-lg border border-border py-2 px-3 text-sm focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none"></div>
           <div><label class="block text-sm font-medium mb-1">Пробег (км/день)</label><input type="number" name="mileage" value="<?=(int)($item['mileage']??0)?>" min="0" class="w-full rounded-lg border border-border py-2 px-3 text-sm focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none"></div>
-          <div><label class="block text-sm font-medium mb-1">Залог (₽)</label><input type="number" name="deposit" value="<?=(int)($item['deposit']??0)?>" min="0" class="w-full rounded-lg border border-border py-2 px-3 text-sm focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none"></div>
+          <div><label class="block text-sm font-medium mb-1">Залог (₽)</label><input type="number" name="deposit" value="<?=(int)($item['deposit_amount']??0)?>" min="0" class="w-full rounded-lg border border-border py-2 px-3 text-sm focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none"></div>
         </div>
         <div><label class="block text-sm font-medium mb-1">Требования</label><input type="text" name="requirements" value="<?=h($item['requirements']??'')?>" class="w-full rounded-lg border border-border py-2 px-3 text-sm focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none"></div>
         <div><label class="block text-sm font-medium mb-1">Что включено</label><input type="text" name="includes" value="<?=h($item['includes']??'')?>" class="w-full rounded-lg border border-border py-2 px-3 text-sm focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none"></div>

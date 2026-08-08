@@ -16,20 +16,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
   
   if ($_POST['action'] === 'approve' && isset($_POST['id'])) {
     $pdo->prepare("UPDATE listings SET status = 'active' WHERE id = ?")->execute([(int)$_POST['id']]);
-    $pdo->prepare("DELETE FROM notifications WHERE user_id = (SELECT user_id FROM listings WHERE id = ?) AND listing_id = ? AND type = 'moderation'")->execute([(int)$_POST['id'], (int)$_POST['id']]);
+    $pdo->prepare("DELETE FROM notifications WHERE user_id = (SELECT user_id FROM listings WHERE id = ?) AND type = 'moderation'")->execute([(int)$_POST['id']]);
     header('Location: /admin?tab=moderation&ok=approved');
     exit;
   }
   
   if ($_POST['action'] === 'reject' && isset($_POST['id'])) {
     $reason = trim($_POST['reason'] ?? '');
-    $pdo->prepare("UPDATE listings SET status = 'rejected', admin_note = ? WHERE id = ?")->execute([$reason, (int)$_POST['id']]);
+    $pdo->prepare("UPDATE listings SET status = 'rejected' WHERE id = ?")->execute([(int)$_POST['id']]);
     $l = $pdo->prepare("SELECT user_id, title FROM listings WHERE id = ?");
     $l->execute([(int)$_POST['id']]);
     $listing = $l->fetch();
     if ($listing) {
-      $pdo->prepare("INSERT INTO notifications (user_id, type, title, message, listing_id, link) VALUES (?, 'moderation', 'Объявление отклонено', ?, ?, ?)")
-        ->execute([$listing['user_id'], 'Объявление «' . $listing['title'] . '» отклонено: ' . $reason, (int)$_POST['id'], '/admin']);
+      $pdo->prepare("INSERT INTO notifications (user_id, type, text, link) VALUES (?, 'moderation', ?, '/admin')")
+        ->execute([$listing['user_id'], 'Объявление «' . $listing['title'] . '» отклонено: ' . $reason]);
     }
     header('Location: /admin?tab=moderation&ok=rejected');
     exit;
@@ -120,7 +120,7 @@ $total_listings = (int)$pdo->query("SELECT COUNT(*) FROM listings")->fetchColumn
 $active_listings = (int)$pdo->query("SELECT COUNT(*) FROM listings WHERE status = 'active'")->fetchColumn();
 $pending_listings = (int)$pdo->query("SELECT COUNT(*) FROM listings WHERE status = 'pending'")->fetchColumn();
 $total_bookings = (int)$pdo->query("SELECT COUNT(*) FROM bookings")->fetchColumn();
-$promo_revenue = (int)$pdo->query("SELECT COALESCE(SUM(amount), 0) FROM promotions WHERE payment_status = 'paid'")->fetchColumn();
+$promo_revenue = (int)$pdo->query("SELECT COALESCE(SUM(payment_amount), 0) FROM promotions WHERE payment_status = 'paid'")->fetchColumn();
 $new_week_users = (int)$pdo->query("SELECT COUNT(*) FROM users WHERE created_at > DATE_SUB(NOW(), INTERVAL 7 DAY)")->fetchColumn();
 $new_week_listings = (int)$pdo->query("SELECT COUNT(*) FROM listings WHERE created_at > DATE_SUB(NOW(), INTERVAL 7 DAY)")->fetchColumn();
 
@@ -252,7 +252,7 @@ elseif ($tab === 'reviews'):
               <tr class="border-b hover:bg-muted/20">
                 <td class="px-4 py-3 text-xs"><?= h($rv['author_name']) ?></td>
                 <td class="px-4 py-3 text-xs hidden sm:table-cell"><a href="/listing/<?= $rv['listing_id'] ?>" class="hover:text-accent"><?= h($rv['listing_title']) ?></a></td>
-                <td class="px-4 py-3 text-xs max-w-xs truncate"><?= h($rv['comment']) ?></td>
+                <td class="px-4 py-3 text-xs max-w-xs truncate"><?= h($rv['text']) ?></td>
                 <td class="px-4 py-3 text-center"><?= str_repeat('⭐', (int)$rv['rating']) ?></td>
                 <td class="px-4 py-3 text-right">
                   <form method="post" class="inline">
@@ -365,7 +365,7 @@ elseif ($tab === 'users'):
 <?php
 // ── PAYMENTS ──
 elseif ($tab === 'payments'):
-  $promos = $pdo->query("SELECT p.*, u.name AS host_name, l.title AS listing_title FROM promotions p JOIN users u ON p.user_id = u.id JOIN listings l ON p.listing_id = l.id ORDER BY p.created_at DESC LIMIT 200");
+  $promos = $pdo->query("SELECT p.*, u.name AS host_name, l.title AS listing_title FROM promotions p JOIN users u ON p.host_id = u.id JOIN listings l ON p.listing_id = l.id ORDER BY p.created_at DESC LIMIT 200");
 ?>
     <h2 class="font-display text-xl mb-4">Платные услуги / Продвижение</h2>
     <div class="bg-white border rounded-xl overflow-hidden">
@@ -380,7 +380,7 @@ elseif ($tab === 'payments'):
               <td class="px-4 py-3 text-center hidden sm:table-cell">
                 <span class="text-xs px-2 py-0.5 rounded-full <?= $pm['promo_type']==='top' ? 'bg-amber-100 text-amber-700' : ($pm['promo_type']==='highlight' ? 'bg-blue-100 text-blue-700' : 'bg-red-100 text-red-700') ?>"><?=h($pm['promo_type'])?></span>
               </td>
-              <td class="px-4 py-3 text-right text-xs hidden sm:table-cell"><?=number_format((int)$pm['amount'],0,',',' ')?> ₽</td>
+              <td class="px-4 py-3 text-right text-xs hidden sm:table-cell"><?=number_format((float)$pm['payment_amount'],0,',',' ')?> ₽</td>
               <td class="px-4 py-3 text-center"><span class="text-xs px-2 py-0.5 rounded-full <?= $pm['payment_status']==='paid' ? 'bg-green-100 text-green-700' : ($pm['payment_status']==='refunded' ? 'bg-gray-100 text-gray-600' : 'bg-yellow-100 text-yellow-700') ?>"><?=h($pm['payment_status'])?></span></td>
               <td class="px-4 py-3 text-xs text-muted-foreground text-right hidden sm:table-cell"><?=date('d.m.Y', strtotime($pm['created_at']))?></td>
             </tr>
