@@ -8,6 +8,7 @@ require_once __DIR__ . '/../includes/auth.php';
 $user = auth_required();
 $listing_id = (int)($id ?? 0);
 $pdo = db();
+define('UPLOAD_URL', '/uploads/');
 
 $stmt = $pdo->prepare('SELECT * FROM listings WHERE id = ? AND user_id = ?');
 $stmt->execute([$listing_id, $user['id']]);
@@ -157,7 +158,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $page_title = 'Редактировать: ' . h($item['title']) . ' — СахГО';
-define('UPLOAD_URL', '/uploads/');
 require __DIR__ . '/../includes/header.php';
 ?>
 
