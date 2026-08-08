@@ -1,146 +1,491 @@
 <?php
-// admin/index.php — панель администратора
-$user = admin_required();
-$pdo = db();
+require_once __DIR__ . '/../../config.php';
+require_once __DIR__ . '/../../includes/functions.php';
+require_once __DIR__ . '/../../includes/auth.php';
 
-$sub = $_GET['sub'] ?? 'stats';
+admin_required();
+$pdo = db();
+$tab = $_GET['tab'] ?? 'dashboard';
+
+// ── POST handlers ──
+
+// Moderation
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
+  csrf_check();
+  
+  if ($_POST['action'] === 'approve' && isset($_POST['id'])) {
+    $pdo->prepare("UPDATE listings SET status = 'active' WHERE id = ?")->execute([(int)$_POST['id']]);
+    $pdo->prepare("DELETE FROM notifications WHERE user_id = (SELECT user_id FROM listings WHERE id = ?) AND listing_id = ? AND type = 'moderation'")->execute([(int)$_POST['id'], (int)$_POST['id']]);
+    header('Location: /admin?tab=moderation&ok=approved');
+    exit;
+  }
+  
+  if ($_POST['action'] === 'reject' && isset($_POST['id'])) {
+    $reason = trim($_POST['reason'] ?? '');
+    $pdo->prepare("UPDATE listings SET status = 'rejected', admin_note = ? WHERE id = ?")->execute([$reason, (int)$_POST['id']]);
+    $l = $pdo->prepare("SELECT user_id, title FROM listings WHERE id = ?");
+    $l->execute([(int)$_POST['id']]);
+    $listing = $l->fetch();
+    if ($listing) {
+      $pdo->prepare("INSERT INTO notifications (user_id, type, title, message, listing_id, link) VALUES (?, 'moderation', 'Объявление отклонено', ?, ?, ?)")
+        ->execute([$listing['user_id'], 'Объявление «' . $listing['title'] . '» отклонено: ' . $reason, (int)$_POST['id'], '/admin']);
+    }
+    header('Location: /admin?tab=moderation&ok=rejected');
+    exit;
+  }
+
+  // Review moderation
+  if ($_POST['action'] === 'moderate_review') {
+    $rid = (int)$_POST['review_id'];
+    $newStatus = (int)$_POST['moderated'];
+    $pdo->prepare("UPDATE reviews SET moderated = ? WHERE id = ?")->execute([$newStatus, $rid]);
+    header('Location: /admin?tab=reviews&ok=1');
+    exit;
+  }
+
+  // User edit
+  if ($_POST['action'] === 'edit_user') {
+    $uid = (int)$_POST['user_id'];
+    $pdo->prepare("UPDATE users SET name = ?, email = ?, phone = ? WHERE id = ?")
+      ->execute([trim($_POST['name']), trim($_POST['email']), trim($_POST['phone'] ?? ''), $uid]);
+    header('Location: /admin?tab=users&ok=1');
+    exit;
+  }
+
+  // User role change
+  if ($_POST['action'] === 'change_role') {
+    $uid = (int)$_POST['user_id'];
+    $pdo->prepare("UPDATE users SET role = ? WHERE id = ?")->execute([$_POST['role'], $uid]);
+    header('Location: /admin?tab=users&ok=1');
+    exit;
+  }
+
+  // User ban/unban
+  if ($_POST['action'] === 'ban_user') {
+    $uid = (int)$_POST['user_id'];
+    $pdo->prepare("UPDATE users SET banned = CASE WHEN banned = 1 THEN 0 ELSE 1 END WHERE id = ?")->execute([$uid]);
+    header('Location: /admin?tab=users&ok=1');
+    exit;
+  }
+
+  // User delete
+  if ($_POST['action'] === 'delete_user') {
+    $uid = (int)$_POST['user_id'];
+    $u = $pdo->prepare("SELECT name FROM users WHERE id = ?");
+    $u->execute([$uid]);
+    $userRow = $u->fetch();
+    if ($userRow && trim($_POST['confirm_name']) === $userRow['name']) {
+      $pdo->prepare("DELETE FROM listings WHERE user_id = ?")->execute([$uid]);
+      $pdo->prepare("DELETE FROM reviews WHERE user_id = ? OR host_id = ?")->execute([$uid, $uid]);
+      $pdo->prepare("DELETE FROM favorites WHERE user_id = ?")->execute([$uid]);
+      $pdo->prepare("DELETE FROM notifications WHERE user_id = ?")->execute([$uid]);
+      $pdo->prepare("DELETE FROM messages WHERE sender_id = ? OR receiver_id = ?")->execute([$uid, $uid]);
+      $pdo->prepare("DELETE FROM bookings WHERE guest_id = ? OR host_id = ?")->execute([$uid, $uid]);
+      $pdo->prepare("DELETE FROM promotions WHERE user_id = ?")->execute([$uid]);
+      $pdo->prepare("DELETE FROM users WHERE id = ?")->execute([$uid]);
+    }
+    header('Location: /admin?tab=users&ok=1');
+    exit;
+  }
+
+  // Category
+  if ($_POST['action'] === 'add_category') {
+    $name = trim($_POST['name']);
+    $slug = transliterate($name);
+    $pdo->prepare("INSERT INTO categories (name, slug) VALUES (?, ?)")->execute([$name, $slug]);
+    header('Location: /admin?tab=categories&ok=1');
+    exit;
+  }
+  if ($_POST['action'] === 'edit_category') {
+    $cid = (int)$_POST['id'];
+    $pdo->prepare("UPDATE categories SET name = ? WHERE id = ?")->execute([trim($_POST['name']), $cid]);
+    header('Location: /admin?tab=categories&ok=1');
+    exit;
+  }
+  if ($_POST['action'] === 'delete_category') {
+    $cid = (int)$_POST['id'];
+    $pdo->prepare("UPDATE listings SET category_id = NULL WHERE category_id = ?")->execute([$cid]);
+    $pdo->prepare("DELETE FROM categories WHERE id = ?")->execute([$cid]);
+    header('Location: /admin?tab=categories&ok=1');
+    exit;
+  }
+}
+
+// ── Data loaders ──
 
 // Stats
-$listings_count = $pdo->query("SELECT COUNT(*) FROM listings")->fetchColumn();
-$users_count = $pdo->query("SELECT COUNT(*) FROM users")->fetchColumn();
-$bookings_count = $pdo->query("SELECT COUNT(*) FROM bookings")->fetchColumn();
-$reviews_count = $pdo->query("SELECT COUNT(*) FROM reviews")->fetchColumn();
-$active_promos = $pdo->query("SELECT COUNT(*) FROM promotions WHERE status = 'active' AND expires_at > NOW()")->fetchColumn();
-$views_total = $pdo->query("SELECT SUM(COALESCE(view_count,0)) FROM listings")->fetchColumn();
+$total_users = (int)$pdo->query("SELECT COUNT(*) FROM users")->fetchColumn();
+$total_listings = (int)$pdo->query("SELECT COUNT(*) FROM listings")->fetchColumn();
+$active_listings = (int)$pdo->query("SELECT COUNT(*) FROM listings WHERE status = 'active'")->fetchColumn();
+$pending_listings = (int)$pdo->query("SELECT COUNT(*) FROM listings WHERE status = 'pending'")->fetchColumn();
+$total_bookings = (int)$pdo->query("SELECT COUNT(*) FROM bookings")->fetchColumn();
+$promo_revenue = (int)$pdo->query("SELECT COALESCE(SUM(amount), 0) FROM promotions WHERE payment_status = 'paid'")->fetchColumn();
+$new_week_users = (int)$pdo->query("SELECT COUNT(*) FROM users WHERE created_at > DATE_SUB(NOW(), INTERVAL 7 DAY)")->fetchColumn();
+$new_week_listings = (int)$pdo->query("SELECT COUNT(*) FROM listings WHERE created_at > DATE_SUB(NOW(), INTERVAL 7 DAY)")->fetchColumn();
 
-// Moderate reviews
-if ($_SERVER['REQUEST_METHOD'] === 'POST') { csrf_check(); }
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['approve_review'])) {
-  $rid = (int)$_POST['approve_review'];
-  $pdo->prepare('UPDATE reviews SET moderated = 1 WHERE id = ?')->execute([$rid]);
-  header('Location: /admin?sub=reviews'); exit;
-}
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_review'])) {
-  $rid = (int)$_POST['delete_review'];
-  $pdo->prepare('DELETE FROM reviews WHERE id = ?')->execute([$rid]);
-  header('Location: /admin?sub=reviews'); exit;
-}
-// Toggle listing status
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['toggle_listing'])) {
-  $lid = (int)$_POST['toggle_listing'];
-  $stmt = $pdo->prepare('SELECT status FROM listings WHERE id = ?');
-  $stmt->execute([$lid]);
-  $cur = $stmt->fetch();
-  if ($cur) {
-    $pdo->prepare('UPDATE listings SET status = ? WHERE id = ?')->execute([$cur['status']==='active'?'inactive':'active', $lid]);
-  }
-  header('Location: /admin?sub=listings'); exit;
-}
+// Search query
+$user_search = $_GET['user_search'] ?? '';
 
-$page_title = 'Админ-панель — СахGO';
-require __DIR__ . '/../../includes/header.php';
+// ── Header ──
+$page_title = 'Админ-панель — СахГО';
+require_once __DIR__ . '/../../includes/header.php';
 ?>
-<section class="py-12">
-<div class="max-w-7xl mx-auto px-4">
-  <span class="text-xs uppercase tracking-[0.12em] text-accent font-medium">Администрирование</span>
-  <h1 class="font-display text-4xl mt-1 mb-2">Админ-панель <span class="text-sm text-muted-foreground font-normal align-top">v<?=defined('APP_VERSION')?APP_VERSION:'1.0'?></span></h1>
-  <p class="text-xs text-muted-foreground mb-6">Пользователь: <?=h($user['name']??'admin')?> · Роль: <?=h($user['role']??'admin')?></p>
 
-  <!-- Tabs -->
-  <div class="flex gap-2 mb-8 border-b">
-    <a href="/admin?sub=stats" class="filter-pill <?=$sub==='stats'?'active':''?>">Статистика</a>
-    <a href="/admin?sub=listings" class="filter-pill <?=$sub==='listings'?'active':''?>">Объявления</a>
-    <a href="/admin?sub=users" class="filter-pill <?=$sub==='users'?'active':''?>">Пользователи</a>
-    <a href="/admin?sub=reviews" class="filter-pill <?=$sub==='reviews'?'active':''?>">Отзывы</a>
-  </div>
-
-  <?php if ($sub === 'stats'): ?>
-    <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
-      <div class="bg-white border rounded-xl p-6 text-center"><div class="font-display text-4xl text-accent mb-1"><?=$listings_count?></div><div class="text-sm text-muted-foreground">объявлений</div></div>
-      <div class="bg-white border rounded-xl p-6 text-center"><div class="font-display text-4xl text-accent mb-1"><?=$users_count?></div><div class="text-sm text-muted-foreground">пользователей</div></div>
-      <div class="bg-white border rounded-xl p-6 text-center"><div class="font-display text-4xl text-accent mb-1"><?=$bookings_count?></div><div class="text-sm text-muted-foreground">бронирований</div></div>
-      <div class="bg-white border rounded-xl p-6 text-center"><div class="font-display text-4xl text-accent mb-1"><?=$reviews_count?></div><div class="text-sm text-muted-foreground">отзывов</div></div>
-      <div class="bg-white border rounded-xl p-6 text-center"><div class="font-display text-4xl text-accent mb-1"><?=$active_promos?></div><div class="text-sm text-muted-foreground">продвижений</div></div>
-      <div class="bg-white border rounded-xl p-6 text-center"><div class="font-display text-4xl text-accent mb-1"><?=number_format($views_total,0,'.',' ')?></div><div class="text-sm text-muted-foreground">просмотров</div></div>
+<section class="py-6">
+  <div class="max-w-7xl mx-auto px-4">
+    <div class="flex items-center gap-3 mb-2">
+      <h1 class="font-display text-2xl">Админ-панель</h1>
+      <span class="text-xs bg-accent/10 text-accent px-2 py-0.5 rounded-full font-medium">v<?= defined('APP_VERSION') ? APP_VERSION : '1.0' ?></span>
     </div>
 
-  <?php elseif ($sub === 'listings'): ?>
-    <div class="bg-white border rounded-xl overflow-hidden">
-      <table class="w-full text-sm">
-        <thead><tr class="bg-secondary text-left"><th class="p-3">ID</th><th class="p-3">Название</th><th class="p-3">Автор</th><th class="p-3">Цена</th><th class="p-3">Просмотры</th><th class="p-3">Статус</th><th class="p-3">Действия</th></tr></thead>
-        <tbody>
+    <?php if (isset($_GET['ok'])): ?>
+      <div class="bg-green-50 border border-green-200 text-green-700 rounded-lg p-3 mb-4 text-sm">Выполнено</div>
+    <?php endif; ?>
+
+    <!-- Tabs -->
+    <div class="border-b mb-6">
+      <nav class="flex gap-1 overflow-x-auto -mb-px">
         <?php
-        $ls = $pdo->query('SELECT l.*, u.name AS author FROM listings l JOIN users u ON l.user_id = u.id ORDER BY l.created_at DESC LIMIT 50')->fetchAll();
-        foreach ($ls as $l): ?>
-          <tr class="border-t">
-            <td class="p-3 text-muted-foreground">#<?=$l['id']?></td>
-            <td class="p-3"><a href="/listing/<?=$l['id']?>" class="font-medium hover:underline"><?=h(mb_substr($l['title'],0,40))?></a></td>
-            <td class="p-3"><?=h($l['author'])?></td>
-            <td class="p-3"><?=format_price((float)$l['price'])?></td>
-            <td class="p-3"><?=$l['view_count']??0?></td>
-            <td class="p-3"><span class="badge <?=$l['status']==='active'?'':'opacity-50'?>"><?=$l['status']?></span></td>
-            <td class="p-3">
-              <form method="post" style="display:inline"><?= csrf_field() ?><button type="submit" name="toggle_listing" value="<?=$l['id']?>" class="auth-btn-ghost text-xs"><?=$l['status']==='active'?'Откл.':'Вкл.'?></button></form>
-            </td>
-          </tr>
+        $tabs = [
+          'dashboard' => '📊 Дашборд',
+          'moderation' => '⚠️ Модерация',
+          'reviews' => '⭐ Отзывы',
+          'users' => '👥 Пользователи',
+          'payments' => '💰 Платежи',
+          'maintenance' => '🔧 Техработы',
+          'categories' => '📂 Категории',
+          'banners' => '🪧 Баннеры',
+          'content' => '📝 Контент',
+        ];
+        foreach ($tabs as $k => $v):
+          $active = $tab === $k;
+        ?>
+          <a href="?tab=<?= $k ?>" class="px-4 py-2.5 text-sm font-medium whitespace-nowrap border-b-2 transition-colors <?= $active ? 'border-accent text-accent' : 'border-transparent text-muted-foreground hover:text-foreground' ?>"><?= $v ?><?= $k === 'moderation' && $pending_listings ? ' <span class="bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full">'.$pending_listings.'</span>' : '' ?></a>
         <?php endforeach; ?>
+      </nav>
+    </div>
+
+<?php
+// ── DASHBOARD ──
+if ($tab === 'dashboard'):
+?>
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-8">
+      <div class="bg-white border rounded-xl p-4"><div class="text-2xl font-display"><?= $total_users ?></div><div class="text-xs text-muted-foreground mt-1">Пользователей</div></div>
+      <div class="bg-white border rounded-xl p-4"><div class="text-2xl font-display"><?= $active_listings ?></div><div class="text-xs text-muted-foreground mt-1">Активных объявлений</div></div>
+      <div class="bg-white border rounded-xl p-4"><div class="text-2xl font-display text-accent"><?= $pending_listings ?></div><div class="text-xs text-muted-foreground mt-1">На модерации</div></div>
+      <div class="bg-white border rounded-xl p-4"><div class="text-2xl font-display"><?= $total_bookings ?></div><div class="text-xs text-muted-foreground mt-1">Бронирований</div></div>
+      <div class="bg-white border rounded-xl p-4"><div class="text-2xl font-display text-green-600"><?= number_format($promo_revenue, 0, ',', ' ') ?> ₽</div><div class="text-xs text-muted-foreground mt-1">Доход от продвижения</div></div>
+      <div class="bg-white border rounded-xl p-4"><div class="text-2xl font-display">+<?= $new_week_listings ?></div><div class="text-xs text-muted-foreground mt-1">Новых за 7 дней</div></div>
+    </div>
+
+    <h3 class="font-display text-lg mb-3">Последние объявления</h3>
+    <div class="bg-white border rounded-xl overflow-hidden mb-8">
+      <table class="w-full text-sm">
+        <thead><tr class="border-b bg-muted/30"><th class="text-left px-4 py-3 font-medium text-muted-foreground">ID</th><th class="text-left px-4 py-3 font-medium text-muted-foreground">Название</th><th class="text-left px-4 py-3 font-medium text-muted-foreground hidden sm:table-cell">Тип</th><th class="text-left px-4 py-3 font-medium text-muted-foreground hidden sm:table-cell">Статус</th><th class="text-right px-4 py-3 font-medium text-muted-foreground hidden sm:table-cell">Дата</th></tr></thead>
+        <tbody>
+          <?php $recent = $pdo->query("SELECT * FROM listings ORDER BY created_at DESC LIMIT 10");
+          while ($r = $recent->fetch()): ?>
+            <tr class="border-b hover:bg-muted/20">
+              <td class="px-4 py-3">#<?= $r['id'] ?></td>
+              <td class="px-4 py-3 font-medium"><a href="/listing/<?= $r['id'] ?>" class="hover:text-accent"><?= h($r['title']) ?></a></td>
+              <td class="px-4 py-3 text-xs text-muted-foreground hidden sm:table-cell"><?= h($r['listing_type']) ?></td>
+              <td class="px-4 py-3 hidden sm:table-cell"><span class="text-xs px-2 py-0.5 rounded-full <?= $r['status']==='active'?'bg-green-100 text-green-700':($r['status']==='pending'?'bg-yellow-100 text-yellow-700':'bg-red-100 text-red-700') ?>"><?= h($r['status']) ?></span></td>
+              <td class="px-4 py-3 text-xs text-muted-foreground text-right hidden sm:table-cell"><?= date('d.m.Y', strtotime($r['created_at'])) ?></td>
+            </tr>
+          <?php endwhile; ?>
         </tbody>
       </table>
     </div>
 
-  <?php elseif ($sub === 'users'): ?>
-    <div class="bg-white border rounded-xl overflow-hidden">
-      <table class="w-full text-sm">
-        <thead><tr class="bg-secondary text-left"><th class="p-3">ID</th><th class="p-3">Имя</th><th class="p-3">Email</th><th class="p-3">Телефон</th><th class="p-3">Роль</th><th class="p-3">Объявлений</th></tr></thead>
-        <tbody>
-        <?php
-        $us = $pdo->query("SELECT u.*, (SELECT COUNT(*) FROM listings WHERE user_id = u.id) AS listing_count FROM users u ORDER BY u.created_at DESC LIMIT 50")->fetchAll();
-        foreach ($us as $u): ?>
-          <tr class="border-t">
-            <td class="p-3 text-muted-foreground">#<?=$u['id']?></td>
-            <td class="p-3 font-medium"><?=h($u['name'])?></td>
-            <td class="p-3"><?=h($u['email'])?></td>
-            <td class="p-3"><?=h($u['phone']?:'—')?></td>
-            <td class="p-3"><span class="badge <?=$u['role']==='admin'?'':'opacity-50'?>"><?=$u['role']?></span></td>
-            <td class="p-3"><?=$u['listing_count']?></td>
-          </tr>
-        <?php endforeach; ?>
-        </tbody>
-      </table>
-    </div>
-
-  <?php elseif ($sub === 'reviews'): ?>
-    <h2 class="font-display text-2xl mb-4">Модерация отзывов</h2>
-    <?php
-    $revs = $pdo->query('SELECT r.*, u.name AS author, l.title AS listing_title FROM reviews r JOIN users u ON r.user_id = u.id JOIN listings l ON r.listing_id = l.id ORDER BY r.moderated ASC, r.created_at DESC LIMIT 30')->fetchAll();
-    if (empty($revs)): ?>
-      <p class="text-muted-foreground">Нет отзывов</p>
+<?php
+// ── MODERATION ──
+elseif ($tab === 'moderation'):
+  $pending = $pdo->query("SELECT l.*, u.name AS host_name, u.email AS host_email FROM listings l JOIN users u ON l.user_id = u.id WHERE l.status = 'pending' ORDER BY l.created_at DESC LIMIT 100");
+?>
+    <h2 class="font-display text-xl mb-4">Объявления на модерации (<?= $pending_listings ?>)</h2>
+    <?php if ($pending->rowCount() === 0): ?>
+      <p class="text-muted-foreground text-sm">Нет объявлений для проверки.</p>
     <?php else: ?>
-      <div class="space-y-3">
-      <?php foreach ($revs as $r): ?>
-        <div class="bg-white border rounded-xl p-4 <?=$r['moderated']?'':'bg-yellow-50'?>">
-          <div class="flex justify-between items-start">
-            <div>
-              <div class="flex items-center gap-2 mb-1">
-                <span class="font-medium"><?=h($r['author'])?></span>
-                <span class="text-sm text-yellow-500"><?=str_repeat('★',(int)$r['rating'])?></span>
-                <span class="text-xs text-muted-foreground">→ <?=h($r['listing_title'])?></span>
+      <div class="space-y-4">
+        <?php while ($p = $pending->fetch()): ?>
+          <div class="bg-white border rounded-xl p-4 md:p-6">
+            <div class="flex flex-col sm:flex-row sm:items-center gap-3 mb-3">
+              <div class="flex-1">
+                <h3 class="font-medium"><a href="/listing/<?= $p['id'] ?>" class="hover:text-accent"><?= h($p['title']) ?></a></h3>
+                <p class="text-xs text-muted-foreground mt-1"><?= h($p['listing_type']) ?> · <?= h($p['host_name']) ?> (<?= h($p['host_email']) ?>) · <?= date('d.m.Y H:i', strtotime($p['created_at'])) ?></p>
               </div>
-              <p class="text-sm text-muted-foreground"><?=h($r['text'])?></p>
-              <div class="text-xs text-muted-foreground mt-1"><?=$r['created_at']?> · <?=$r['moderated']?'✅ Одобрен':'⚠️ На модерации'?></div>
+              <div class="flex gap-2">
+                <form method="post" class="inline"><input type="hidden" name="action" value="approve"><input type="hidden" name="id" value="<?= $p['id'] ?>"><?= csrf_field() ?><button class="px-4 py-1.5 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition-colors">Одобрить</button></form>
+                <button onclick="document.getElementById('reject-<?=$p['id']?>').classList.toggle('hidden')" class="px-4 py-1.5 bg-red-500 text-white rounded-lg text-sm font-medium hover:bg-red-600 transition-colors">Отклонить</button>
+              </div>
             </div>
-            <div class="flex gap-2">
-              <?php if (!$r['moderated']): ?>
-                <form method="post"><?= csrf_field() ?><button name="approve_review" value="<?=$r['id']?>" class="cta-btn" style="font-size:0.75rem;padding:0.25rem 0.75rem">Одобрить</button></form>
-              <?php endif; ?>
-              <form method="post" onsubmit="return confirm('Удалить?')"><?= csrf_field() ?><button name="delete_review" value="<?=$r['id']?>" class="btn-outline" style="font-size:0.75rem;padding:0.25rem 0.75rem;color:#dc2626;border-color:#dc2626">Удалить</button></form>
+            <p class="text-sm text-muted-foreground line-clamp-3"><?= h($p['description'] ?? '') ?></p>
+            <div id="reject-<?=$p['id']?>" class="hidden mt-3 pt-3 border-t">
+              <form method="post" class="flex gap-2">
+                <input type="hidden" name="action" value="reject">
+                <input type="hidden" name="id" value="<?= $p['id'] ?>">
+                <?= csrf_field() ?>
+                <input type="text" name="reason" placeholder="Причина отклонения..." class="flex-1 rounded-lg border border-border py-1.5 px-3 text-sm focus:border-red-400 outline-none">
+                <button class="px-4 py-1.5 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition-colors">Отклонить</button>
+              </form>
             </div>
           </div>
-        </div>
-      <?php endforeach; ?>
+        <?php endwhile; ?>
       </div>
     <?php endif; ?>
-  <?php endif; ?>
-</div>
+
+<?php
+// ── REVIEWS ──
+elseif ($tab === 'reviews'):
+  $reviews = $pdo->query("SELECT r.*, l.title AS listing_title, u.name AS author_name FROM reviews r JOIN listings l ON r.listing_id = l.id JOIN users u ON r.user_id = u.id ORDER BY r.created_at DESC LIMIT 200");
+?>
+    <h2 class="font-display text-xl mb-4">Модерация отзывов</h2>
+    <?php if ($reviews->rowCount() === 0): ?>
+      <p class="text-muted-foreground text-sm">Нет отзывов.</p>
+    <?php else: ?>
+      <div class="bg-white border rounded-xl overflow-hidden">
+        <table class="w-full text-sm">
+          <thead><tr class="border-b bg-muted/30"><th class="px-4 py-3 text-left">Автор</th><th class="px-4 py-3 text-left hidden sm:table-cell">Объявление</th><th class="px-4 py-3 text-left">Отзыв</th><th class="px-4 py-3 text-center">⭐</th><th class="px-4 py-3 text-right">Действия</th></tr></thead>
+          <tbody>
+            <?php while ($rv = $reviews->fetch()): ?>
+              <tr class="border-b hover:bg-muted/20">
+                <td class="px-4 py-3 text-xs"><?= h($rv['author_name']) ?></td>
+                <td class="px-4 py-3 text-xs hidden sm:table-cell"><a href="/listing/<?= $rv['listing_id'] ?>" class="hover:text-accent"><?= h($rv['listing_title']) ?></a></td>
+                <td class="px-4 py-3 text-xs max-w-xs truncate"><?= h($rv['comment']) ?></td>
+                <td class="px-4 py-3 text-center"><?= str_repeat('⭐', (int)$rv['rating']) ?></td>
+                <td class="px-4 py-3 text-right">
+                  <form method="post" class="inline">
+                    <input type="hidden" name="action" value="moderate_review"><input type="hidden" name="review_id" value="<?= $rv['id'] ?>">
+                    <?= csrf_field() ?>
+                    <input type="hidden" name="moderated" value="<?= $rv['moderated'] ? 0 : 1 ?>">
+                    <button class="text-xs px-3 py-1 rounded-lg border transition-colors <?= $rv['moderated'] ? 'bg-green-50 border-green-300 text-green-700 hover:bg-green-100' : 'bg-muted border-border hover:bg-muted/70' ?>">
+                      <?= $rv['moderated'] ? '✅ Одобрен' : '👁️ Одобрить' ?>
+                    </button>
+                  </form>
+                </td>
+              </tr>
+            <?php endwhile; ?>
+          </tbody>
+        </table>
+      </div>
+    <?php endif; ?>
+
+<?php
+// ── USERS ──
+elseif ($tab === 'users'):
+  $where = '';
+  $params = [];
+  if ($user_search) {
+    $where = "WHERE name LIKE ? OR email LIKE ? OR phone LIKE ?";
+    $params = ["%$user_search%", "%$user_search%", "%$user_search%"];
+  }
+  $users = $pdo->prepare("SELECT * FROM users $where ORDER BY created_at DESC LIMIT 200");
+  $users->execute($params);
+?>
+    <h2 class="font-display text-xl mb-4">Пользователи</h2>
+    <form method="get" class="flex gap-2 mb-4">
+      <input type="hidden" name="tab" value="users">
+      <input type="text" name="user_search" value="<?= h($user_search) ?>" placeholder="Поиск по имени, email, телефону..." class="max-w-sm rounded-lg border border-border py-2 px-3 text-sm focus:border-accent outline-none">
+      <button class="px-4 py-2 bg-accent text-white rounded-lg text-sm font-medium hover:opacity-90 transition-all">Найти</button>
+    </form>
+    <div class="bg-white border rounded-xl overflow-hidden">
+      <table class="w-full text-sm">
+        <thead><tr class="border-b bg-muted/30"><th class="px-4 py-3 text-left">Пользователь</th><th class="px-4 py-3 text-left hidden sm:table-cell">Email</th><th class="px-4 py-3 text-center hidden sm:table-cell">Роль</th><th class="px-4 py-3 text-center">Активен</th><th class="px-4 py-3 text-right">Действия</th></tr></thead>
+        <tbody>
+          <?php while ($u = $users->fetch()): ?>
+            <tr class="border-b hover:bg-muted/20">
+              <td class="px-4 py-3 font-medium"><?= h($u['name']) ?></td>
+              <td class="px-4 py-3 text-xs text-muted-foreground hidden sm:table-cell"><?= h($u['email']) ?></td>
+              <td class="px-4 py-3 text-center hidden sm:table-cell">
+                <span class="text-xs px-2 py-0.5 rounded-full <?= $u['role']==='admin'?'bg-purple-100 text-purple-700':($u['role']==='host'?'bg-blue-100 text-blue-700':'bg-muted text-muted-foreground') ?>"><?= h($u['role']) ?></span>
+              </td>
+              <td class="px-4 py-3 text-center"><?= $u['banned'] ? '🚫' : '✅' ?></td>
+              <td class="px-4 py-3 text-right">
+                <div class="flex gap-1 justify-end flex-wrap">
+                  <button onclick="openEditUser(<?=$u['id']?>,'<?= addslashes(h($u['name'])) ?>','<?= addslashes(h($u['email'])) ?>','<?= addslashes(h($u['phone']??'')) ?>')" class="text-xs px-2 py-1 border border-border rounded-lg hover:bg-muted transition-colors">Ред.</button>
+                  <button onclick="openRoleUser(<?=$u['id']?>,'<?= h($u['role']) ?>')" class="text-xs px-2 py-1 border border-border rounded-lg hover:bg-muted transition-colors">Роль</button>
+                  <form method="post" class="inline"><input type="hidden" name="action" value="ban_user"><input type="hidden" name="user_id" value="<?=$u['id']?>"><?= csrf_field() ?><button class="text-xs px-2 py-1 border border-border rounded-lg hover:bg-muted transition-colors"><?=$u['banned']?'Разблок':'Блок'?></button></form>
+                  <button onclick="openDeleteUser(<?=$u['id']?>,'<?= addslashes(h($u['name'])) ?>')" class="text-xs px-2 py-1 border border-red-300 text-red-600 rounded-lg hover:bg-red-50 transition-colors">Удалить</button>
+                </div>
+              </td>
+            </tr>
+          <?php endwhile; ?>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Edit User Modal -->
+    <div id="editUserModal" class="hidden fixed inset-0 z-50 flex items-center justify-center">
+      <div class="fixed inset-0 bg-black/50" onclick="closeModal('editUserModal')"></div>
+      <div class="relative bg-white rounded-2xl shadow-xl max-w-md w-full mx-4 p-6">
+        <h3 class="font-display text-lg mb-4">Редактировать пользователя</h3>
+        <form method="post" class="space-y-3">
+          <input type="hidden" name="action" value="edit_user"><input type="hidden" name="user_id" id="editUserId"><?= csrf_field() ?>
+          <div><label class="block text-xs font-medium mb-1">Имя</label><input type="text" name="name" id="editUserName" required class="w-full rounded-lg border border-border py-2 px-3 text-sm focus:border-accent outline-none"></div>
+          <div><label class="block text-xs font-medium mb-1">Email</label><input type="email" name="email" id="editUserEmail" required class="w-full rounded-lg border border-border py-2 px-3 text-sm focus:border-accent outline-none"></div>
+          <div><label class="block text-xs font-medium mb-1">Телефон</label><input type="text" name="phone" id="editUserPhone" class="w-full rounded-lg border border-border py-2 px-3 text-sm focus:border-accent outline-none"></div>
+          <div class="flex gap-2 pt-2"><button type="button" onclick="closeModal('editUserModal')" class="flex-1 py-2 border border-border rounded-lg text-sm font-medium hover:bg-muted transition-colors">Отмена</button><button class="flex-1 py-2 bg-accent text-white rounded-lg text-sm font-medium hover:opacity-90 transition-all">Сохранить</button></div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Role Modal -->
+    <div id="roleUserModal" class="hidden fixed inset-0 z-50 flex items-center justify-center">
+      <div class="fixed inset-0 bg-black/50" onclick="closeModal('roleUserModal')"></div>
+      <div class="relative bg-white rounded-2xl shadow-xl max-w-xs w-full mx-4 p-6">
+        <h3 class="font-display text-lg mb-4">Сменить роль</h3>
+        <form method="post" class="space-y-3">
+          <input type="hidden" name="action" value="change_role"><input type="hidden" name="user_id" id="roleUserId"><?= csrf_field() ?>
+          <select name="role" id="roleSelect" class="w-full rounded-lg border border-border py-2 px-3 text-sm focus:border-accent outline-none bg-white">
+            <option value="traveler">Путешественник</option><option value="host">Организатор</option><option value="vendor">Продавец</option><option value="admin">Администратор</option>
+          </select>
+          <div class="flex gap-2 pt-2"><button type="button" onclick="closeModal('roleUserModal')" class="flex-1 py-2 border border-border rounded-lg text-sm font-medium hover:bg-muted transition-colors">Отмена</button><button class="flex-1 py-2 bg-accent text-white rounded-lg text-sm font-medium hover:opacity-90 transition-all">Сохранить</button></div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Delete User Modal -->
+    <div id="deleteUserModal" class="hidden fixed inset-0 z-50 flex items-center justify-center">
+      <div class="fixed inset-0 bg-black/50" onclick="closeModal('deleteUserModal')"></div>
+      <div class="relative bg-white rounded-2xl shadow-xl max-w-md w-full mx-4 p-6">
+        <h3 class="font-display text-lg mb-2">Удаление пользователя</h3>
+        <p class="text-sm text-red-600 bg-red-50 rounded-lg p-3 mb-4">Это действие необратимо. Все объявления, бронирования и данные будут удалены.</p>
+        <form method="post" class="space-y-3">
+          <input type="hidden" name="action" value="delete_user"><input type="hidden" name="user_id" id="deleteUserId"><?= csrf_field() ?>
+          <div>
+            <label class="block text-xs font-medium mb-1">Для подтверждения введите имя: <strong id="deleteUserNameLabel"></strong></label>
+            <input type="text" name="confirm_name" id="deleteConfirmInput" required class="w-full rounded-lg border border-border py-2 px-3 text-sm focus:border-red-400 outline-none">
+          </div>
+          <div class="flex gap-2 pt-2"><button type="button" onclick="closeModal('deleteUserModal')" class="flex-1 py-2 border border-border rounded-lg text-sm font-medium hover:bg-muted transition-colors">Отмена</button><button class="flex-1 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition-all">Удалить</button></div>
+        </form>
+      </div>
+    </div>
+
+<?php
+// ── PAYMENTS ──
+elseif ($tab === 'payments'):
+  $promos = $pdo->query("SELECT p.*, u.name AS host_name, l.title AS listing_title FROM promotions p JOIN users u ON p.user_id = u.id JOIN listings l ON p.listing_id = l.id ORDER BY p.created_at DESC LIMIT 200");
+?>
+    <h2 class="font-display text-xl mb-4">Платные услуги / Продвижение</h2>
+    <div class="bg-white border rounded-xl overflow-hidden">
+      <table class="w-full text-sm">
+        <thead><tr class="border-b bg-muted/30"><th class="px-4 py-3 text-left">ID</th><th class="px-4 py-3 text-left">Пользователь</th><th class="px-4 py-3 text-left hidden sm:table-cell">Объявление</th><th class="px-4 py-3 text-center hidden sm:table-cell">Тип</th><th class="px-4 py-3 text-right hidden sm:table-cell">Сумма</th><th class="px-4 py-3 text-center">Статус</th><th class="px-4 py-3 text-right hidden sm:table-cell">Дата</th></tr></thead>
+        <tbody>
+          <?php while ($pm = $promos->fetch()): ?>
+            <tr class="border-b hover:bg-muted/20">
+              <td class="px-4 py-3 text-xs">#<?=$pm['id']?></td>
+              <td class="px-4 py-3 text-xs"><?=h($pm['host_name'])?></td>
+              <td class="px-4 py-3 text-xs hidden sm:table-cell"><a href="/listing/<?=$pm['listing_id']?>" class="hover:text-accent"><?=h($pm['listing_title'])?></a></td>
+              <td class="px-4 py-3 text-center hidden sm:table-cell">
+                <span class="text-xs px-2 py-0.5 rounded-full <?= $pm['promo_type']==='top' ? 'bg-amber-100 text-amber-700' : ($pm['promo_type']==='highlight' ? 'bg-blue-100 text-blue-700' : 'bg-red-100 text-red-700') ?>"><?=h($pm['promo_type'])?></span>
+              </td>
+              <td class="px-4 py-3 text-right text-xs hidden sm:table-cell"><?=number_format((int)$pm['amount'],0,',',' ')?> ₽</td>
+              <td class="px-4 py-3 text-center"><span class="text-xs px-2 py-0.5 rounded-full <?= $pm['payment_status']==='paid' ? 'bg-green-100 text-green-700' : ($pm['payment_status']==='refunded' ? 'bg-gray-100 text-gray-600' : 'bg-yellow-100 text-yellow-700') ?>"><?=h($pm['payment_status'])?></span></td>
+              <td class="px-4 py-3 text-xs text-muted-foreground text-right hidden sm:table-cell"><?=date('d.m.Y', strtotime($pm['created_at']))?></td>
+            </tr>
+          <?php endwhile; ?>
+        </tbody>
+      </table>
+    </div>
+
+<?php
+// ── MAINTENANCE ──
+elseif ($tab === 'maintenance'):
+?>
+    <h2 class="font-display text-xl mb-4">Техническое обслуживание</h2>
+    <div class="bg-white border rounded-xl p-6">
+      <h3 class="font-medium mb-3">Команды для VPS (SSH):</h3>
+      <div class="bg-gray-950 text-green-400 rounded-lg p-4 font-mono text-xs space-y-2 overflow-x-auto">
+        <div>ssh alex@192.168.85.87</div>
+        <div>cd /opt/sakhgo</div>
+        <div>docker compose ps</div>
+        <div>docker compose logs --tail=50 app</div>
+        <div>docker compose restart app</div>
+      </div>
+    </div>
+
+<?php
+// ── CATEGORIES ──
+elseif ($tab === 'categories'):
+  $cats = $pdo->query("SELECT c.*, (SELECT COUNT(*) FROM listings WHERE category_id = c.id) AS cnt FROM categories c ORDER BY c.id")->fetchAll();
+?>
+    <h2 class="font-display text-xl mb-4">Управление категориями</h2>
+
+    <form method="post" class="flex gap-2 mb-4">
+      <input type="hidden" name="action" value="add_category"><?= csrf_field() ?>
+      <input type="text" name="name" placeholder="Название новой категории" required class="max-w-sm rounded-lg border border-border py-2 px-3 text-sm focus:border-accent outline-none">
+      <button class="px-4 py-2 bg-accent text-white rounded-lg text-sm font-medium hover:opacity-90 transition-all">Добавить</button>
+    </form>
+
+    <div class="bg-white border rounded-xl overflow-hidden">
+      <table class="w-full text-sm">
+        <thead><tr class="border-b bg-muted/30"><th class="px-4 py-3 text-left">Название</th><th class="px-4 py-3 text-left hidden sm:table-cell">Slug</th><th class="px-4 py-3 text-center hidden sm:table-cell">Объявлений</th><th class="px-4 py-3 text-right">Действия</th></tr></thead>
+        <tbody>
+          <?php foreach ($cats as $c): ?>
+            <tr class="border-b hover:bg-muted/20">
+              <td class="px-4 py-3">
+                <div class="flex items-center gap-2">
+                  <div class="w-6 h-6 bg-accent/10 rounded flex items-center justify-center text-[10px] text-accent font-semibold"><?= mb_substr($c['name'], 0, 1) ?></div>
+                  <span class="font-medium" id="cat-name-<?=$c['id']?>"><?= h($c['name']) ?></span>
+                </div>
+              </td>
+              <td class="px-4 py-3 text-xs text-muted-foreground font-mono hidden sm:table-cell"><?= h($c['slug']) ?></td>
+              <td class="px-4 py-3 text-center text-muted-foreground hidden sm:table-cell"><?= (int)$c['cnt'] ?></td>
+              <td class="px-4 py-3 text-right">
+                <div class="flex gap-1 justify-end">
+                  <button onclick="editCat(<?=$c['id']?>,'<?= addslashes(h($c['name'])) ?>')" class="text-xs px-2 py-1 border border-border rounded-lg hover:bg-muted transition-colors">Ред.</button>
+                  <form method="post" class="inline"><input type="hidden" name="action" value="delete_category"><input type="hidden" name="id" value="<?=$c['id']?>"><?= csrf_field() ?><button onclick="return confirm('Удалить категорию «<?= addslashes(h($c['name'])) ?>»?')" class="text-xs px-2 py-1 border border-red-300 text-red-600 rounded-lg hover:bg-red-50 transition-colors">Удалить</button></form>
+                </div>
+              </td>
+            </tr>
+          <?php endforeach; ?>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Edit Cat Modal -->
+    <div id="editCatModal" class="hidden fixed inset-0 z-50 flex items-center justify-center">
+      <div class="fixed inset-0 bg-black/50" onclick="closeModal('editCatModal')"></div>
+      <div class="relative bg-white rounded-2xl shadow-xl max-w-sm w-full mx-4 p-6">
+        <h3 class="font-display text-lg mb-4">Редактировать категорию</h3>
+        <form method="post" class="space-y-3">
+          <input type="hidden" name="action" value="edit_category"><input type="hidden" name="id" id="editCatId"><?= csrf_field() ?>
+          <input type="text" name="name" id="editCatName" required class="w-full rounded-lg border border-border py-2 px-3 text-sm focus:border-accent outline-none">
+          <div class="flex gap-2 pt-2"><button type="button" onclick="closeModal('editCatModal')" class="flex-1 py-2 border border-border rounded-lg text-sm font-medium hover:bg-muted transition-colors">Отмена</button><button class="flex-1 py-2 bg-accent text-white rounded-lg text-sm font-medium hover:opacity-90 transition-all">Сохранить</button></div>
+        </form>
+      </div>
+    </div>
+
+<?php
+// ── BANNERS ──
+elseif ($tab === 'banners'):
+?>
+    <h2 class="font-display text-xl mb-4">Управление баннерами</h2>
+    <div class="bg-white border rounded-xl p-8 text-center text-muted-foreground">
+      <p class="text-4xl mb-2">🪧</p>
+      <p>Управление баннерами будет доступно в следующем обновлении</p>
+    </div>
+
+<?php
+// ── CONTENT ──
+elseif ($tab === 'content'):
+?>
+    <h2 class="font-display text-xl mb-4">Редактирование контента</h2>
+    <div class="bg-white border rounded-xl p-8 text-center text-muted-foreground">
+      <p class="text-4xl mb-2">📝</p>
+      <p>Редактор контента будет доступен в следующем обновлении</p>
+    </div>
+<?php endif; ?>
+  </div>
 </section>
-<?php require __DIR__ . '/../../includes/footer.php'; ?>
+
+<script>
+function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+function openEditUser(id, name, email, phone) { document.getElementById('editUserId').value = id; document.getElementById('editUserName').value = name; document.getElementById('editUserEmail').value = email; document.getElementById('editUserPhone').value = phone; document.getElementById('editUserModal').classList.remove('hidden'); }
+function openRoleUser(id, role) { document.getElementById('roleUserId').value = id; document.getElementById('roleSelect').value = role; document.getElementById('roleUserModal').classList.remove('hidden'); }
+function openDeleteUser(id, name) { document.getElementById('deleteUserId').value = id; document.getElementById('deleteUserNameLabel').innerText = name; document.getElementById('deleteUserModal').classList.remove('hidden'); }
+function editCat(id, name) { document.getElementById('editCatId').value = id; document.getElementById('editCatName').value = name; document.getElementById('editCatModal').classList.remove('hidden'); }
+document.querySelectorAll('.fixed.inset-0.z-50').forEach(function(m) { m.addEventListener('click', function(e) { if (e.target === this) this.classList.add('hidden'); }); });
+</script>
+
+<?php require_once __DIR__ . '/../../includes/footer.php'; ?>
