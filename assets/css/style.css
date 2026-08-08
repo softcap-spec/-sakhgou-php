@@ -1,0 +1,91 @@
+/* сахгоу.рф — дополнение к Tailwind CDN */
+/* Не дублирует Tailwind-классы */
+
+/* Listing card transition */
+a[href^="/listing/"] { color:inherit; text-decoration:none; }
+
+/* Only min-h-screen fallback */
+.min-h-screen { min-height: 100vh; }
+
+/* Form elements */
+input, textarea, select {
+  border: 1px solid var(--tw-border-color, #D8E3ED);
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  background: #fff;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.15s;
+}
+input:focus, textarea:focus, select:focus {
+  border-color: #1B6B8A;
+  box-shadow: 0 0 0 3px rgba(27,107,138,0.15);
+}
+input[type="file"] { border:0; padding:0; }
+label { display:block; font-size:0.875rem; font-weight:500; margin-bottom:0.25rem; color:#121E2B; }
+
+/* Auth/Misc old classes kept for backward compat */
+.auth-modal { display:none; position:fixed; inset:0; z-index:100; background:rgba(0,0,0,0.5); align-items:center; justify-content:center; }
+.auth-modal.open { display:flex; }
+.auth-modal-content { background:#fff; border-radius:0.75rem; max-width:28rem; width:90%; padding:2rem; position:relative; }
+.auth-tabs { display:flex; gap:0; margin-bottom:1.5rem; border-bottom:1px solid #D8E3ED; }
+.auth-tab { flex:1; padding:0.75rem; text-align:center; font-size:0.875rem; font-weight:500; cursor:pointer; border-bottom:2px solid transparent; transition:all 0.15s; color:#54677A; }
+.auth-tab.active { border-bottom-color:#121E2B; color:#121E2B; }
+.auth-close { position:absolute; top:0.75rem; right:0.75rem; cursor:pointer; font-size:1.25rem; }
+
+.form-group { margin-bottom:1rem; }
+.flash { padding:0.75rem 1rem; border-radius:0.5rem; margin-bottom:1rem; font-size:0.875rem; }
+.flash.error { background:#fef2f2; color:#991b1b; border:1px solid #fecaca; }
+.flash.success { background:#f0fdf4; color:#166534; border:1px solid #bbf7d0; }
+
+.badge { display:inline-flex; align-items:center; font-size:0.75rem; padding:0.125rem 0.5rem; border-radius:9999px; border:1px solid #D8E3ED; color:#54677A; background:transparent; }
+
+.btn-outline { display:inline-flex; align-items:center; justify-content:center; border-radius:0.5rem; border:1px solid #D8E3ED; padding:0.5rem 1rem; font-size:0.875rem; font-weight:500; background:#fff; color:#121E2B; cursor:pointer; transition:all 0.15s; text-decoration:none; }
+.btn-outline:hover { background:#E8F0F6; }
+
+.cta-btn { display:inline-flex; align-items:center; justify-content:center; border-radius:0.5rem; border:0; padding:0.5rem 1.25rem; font-size:0.875rem; font-weight:600; background:#121E2B; color:#F2F6F9; cursor:pointer; transition:all 0.15s; }
+.cta-btn:hover { opacity:0.9; }
+
+.bg-muted\/30 { background:rgba(232,240,246,0.3); }
+
+/* FAB panels */
+.fab-panel { position:fixed; bottom:6rem; right:1.5rem; z-index:91; width:22rem; max-height:28rem; background:#fff; border-radius:0.75rem; box-shadow:0 20px 60px -15px rgba(0,0,0,0.2); display:none; flex-direction:column; overflow:hidden; }
+.fab-panel.open { display:flex; }
+.fab-container { position:fixed; bottom:1.5rem; right:1.5rem; z-index:90; display:flex; flex-direction:column; gap:0.5rem; }
+.fab-btn { width:3.5rem; height:3.5rem; border-radius:50%; border:0; cursor:pointer; font-size:1.5rem; box-shadow:0 4px 12px rgba(0,0,0,0.15); transition:transform 0.15s; position:relative; display:flex; align-items:center; justify-content:center; background: #fff; color:#121E2B; }
+.fab-btn:hover { transform:scale(1.05); }
+.fab-badge { position:absolute; top:-2px; right:-2px; background:#dc2626; color:#fff; font-size:0.625rem; font-weight:700; min-width:1.25rem; height:1.25rem; border-radius:9999px; display:flex; align-items:center; justify-content:center; }
+
+/* Tables */
+table { width:100%; border-collapse:collapse; }
+th { text-align:left; }
+tr.border-t { border-top:1px solid #D8E3ED; }
+.bg-secondary { background:#E8F0F6; }
+
+/* Component classes retained from old system */
+.listing-card { background:#fff; border:1px solid #D8E3ED; border-radius:0.625rem; overflow:hidden; transition:all 0.15s; display:flex; flex-direction:column; position:relative; }
+.listing-card:hover { transform:translateY(-2px); box-shadow:0 10px 25px -5px rgba(0,0,0,0.08); }
+.listing-img { aspect-ratio:16/10; background:#E8F0F6; overflow:hidden; }
+.listing-img img { width:100%; height:100%; object-fit:cover; }
+.listing-body { padding:1rem; flex:1; display:flex; flex-direction:column; gap:0.25rem; }
+.listing-price { font-family:Manrope,Arial,sans-serif; font-size:1.25rem; letter-spacing:-0.015em; }
+.listing-title { font-weight:500; font-size:0.875rem; line-height:1.375; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+.listing-meta { display:flex; align-items:center; gap:0.5rem; font-size:0.75rem; color:#54677A; margin-top:auto; padding-top:0.5rem; }
+
+.filter-pill { display:inline-flex; align-items:center; justify-content:center; height:1.75rem; gap:0.25rem; padding:0 0.625rem; border-radius:9999px; font-size:0.875rem; font-weight:500; transition:all 0.15s; text-decoration:none; color:#54677A; }
+.filter-pill:hover { color:#121E2B; background:#E8F0F6; }
+.filter-pill.active { background:#121E2B; color:#F2F6F9; }
+
+.qp-card { position:relative; border-radius:0.75rem; overflow:hidden; min-height:200px; display:flex; align-items:flex-end; text-align:left; border:1px solid #D8E3ED; transition:all 0.15s; }
+.qp-card:hover { transform:translateY(-2px); }
+.qp-overlay { position:absolute; inset:0; background:linear-gradient(to top, rgba(0,0,0,0.55), rgba(0,0,0,0.05)); pointer-events:none; }
+.qp-content { position:relative; z-index:10; padding:1.25rem; color:#fff; }
+.qp-count { font-size:0.75rem; text-transform:uppercase; letter-spacing:0.1em; opacity:0.75; }
+.qp-zhilyo .qp-overlay { background:linear-gradient(135deg,#D4DFE7,#8FB8CC,#4A8BA8); } .qp-zhilyo .qp-overlay::after { content:''; position:absolute; inset:0; background:linear-gradient(to top,rgba(0,0,0,0.55),rgba(0,0,0,0.05)); }
+.qp-morskie .qp-overlay { background:linear-gradient(135deg,#C5D5E0,#7BA4BC,#3B7599); } .qp-morskie .qp-overlay::after { content:''; position:absolute; inset:0; background:linear-gradient(to top,rgba(0,0,0,0.55),rgba(0,0,0,0.05)); }
+.qp-dzhip .qp-overlay { background:linear-gradient(135deg,#DDD6C8,#B5A68E,#8C7B62); } .qp-dzhip .qp-overlay::after { content:''; position:absolute; inset:0; background:linear-gradient(to top,rgba(0,0,0,0.55),rgba(0,0,0,0.05)); }
+.qp-rybalka .qp-overlay { background:linear-gradient(135deg,#B8D8D8,#70A8A0,#387870); } .qp-rybalka .qp-overlay::after { content:''; position:absolute; inset:0; background:linear-gradient(to top,rgba(0,0,0,0.55),rgba(0,0,0,0.05)); }
+
+.text-muted-foreground { color:#54677A; }
+.text-accent { color:#1B6B8A; }

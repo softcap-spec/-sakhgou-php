@@ -1,0 +1,21 @@
+# sakhgou-php — PHP-версия сахгоу.рф (SakhGO на Timeweb)
+# Пароли и ключи НЕ хранить в репозитории!
+
+# Файлы конфигурации с паролями
+config.php
+
+# Временные файлы
+uploads/.tmp/
+*.tmp
+*.log
+
+# Сессионные файлы
+sess_*
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db

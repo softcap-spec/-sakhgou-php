@@ -1,0 +1,29 @@
+<?php
+// config.php — скопируйте в config.php и заполните реальными данными
+// НЕ КОММИТИТЬ config.php с паролями!
+session_start();
+
+define('SITE_NAME', 'СахGO');
+define('SITE_URL', 'https://сахгоу.рф');
+define('DB_HOST', 'localhost');
+define('DB_NAME', 'your_db_name');
+define('DB_USER', 'your_db_user');
+define('DB_PASS', 'your_db_password');
+define('DB_CHARSET', 'utf8mb4');
+define('APP_VERSION', '1.1.0');
+define('ITEMS_PER_PAGE', 12);
+define('UPLOAD_DIR', __DIR__ . '/uploads');
+define('CATEGORIES', json_encode([
+  ['slug' => 'property',    'name' => 'Жильё',       'icon' => '🏠'],
+  ['slug' => 'tour',        'name' => 'Туры',        'icon' => '🏔️'],
+  ['slug' => 'fishing',     'name' => 'Рыбалка',     'icon' => '🎣'],
+  ['slug' => 'rental_gear', 'name' => 'Снаряжение',  'icon' => '🎿'],
+  ['slug' => 'car_rental',  'name' => 'Прокат авто', 'icon' => '🚗'],
+], JSON_UNESCAPED_UNICODE));
+
+// Quick-access array
+$categories = [];
+foreach (json_decode(CATEGORIES, true) as $c) {
+  $categories[$c['slug']] = $c;
+}
+$current_category = 'all';
