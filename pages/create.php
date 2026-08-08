@@ -30,7 +30,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $step === 5 && !empty($_FILES['imag
   if (!is_dir($tmpDir)) mkdir($tmpDir, 0755, true);
   foreach ($_FILES['images']['tmp_name'] as $i => $tmp) {
     if ($_FILES['images']['error'][$i] !== UPLOAD_ERR_OK) continue;
-    $ext = pathinfo($_FILES['images']['name'][$i], PATHINFO_EXTENSION) ?: 'jpg';
+    // Verify actual MIME type from file contents (not client-supplied name)
+    $allowed = ['image/jpeg', 'image/png', 'image/webp'];
+    $finfo = new finfo(FILEINFO_MIME_TYPE);
+    $mime = @$finfo->file($tmp);
+    if (!$mime || !in_array($mime, $allowed)) continue;
+    $ext_map = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp'];
+    $ext = $ext_map[$mime];
     $fn = 'tmp_' . $cu['id'] . '_' . time() . '_' . $i . '.' . $ext;
     move_uploaded_file($tmp, $tmpDir . '/' . $fn);
     $_SESSION['tmp_images'][] = ['file' => $fn, 'orig' => $_FILES['images']['name'][$i]];
@@ -38,6 +44,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $step === 5 && !empty($_FILES['imag
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['finish'])) {
+  csrf_check();
   $lt = $_POST['listing_type'] ?? '';
   $cat = $_POST['category'] ?? '';
   $title = trim($_POST['title'] ?? '');
@@ -153,6 +160,7 @@ require __DIR__ . '/../includes/header.php';
   <?php endif; ?>
 
   <form method="post" enctype="multipart/form-data" class="bg-white border rounded-xl p-6 md:p-8 space-y-6">
+    <?= csrf_field() ?>
     <input type="hidden" name="step" value="<?=$step?>">
 
     <?php if ($step === 1): ?>

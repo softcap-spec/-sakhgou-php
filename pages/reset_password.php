@@ -4,6 +4,7 @@ $error = '';
 $success = false;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+  csrf_check();
   $email = trim($_POST['email'] ?? '');
   if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
     $error = 'Введите корректный email';
@@ -41,6 +42,7 @@ require __DIR__ . '/../includes/header.php';
         <p class="text-sm text-muted-foreground mb-6">Введите email — отправим ссылку для сброса пароля.</p>
         <?php if ($error): ?><div class="flash error"><?= h($error) ?></div><?php endif; ?>
         <form method="post">
+          <?= csrf_field() ?>
           <div class="form-group">
             <label>Email</label>
             <input type="email" name="email" value="<?= h($_POST['email'] ?? '') ?>" required autofocus>

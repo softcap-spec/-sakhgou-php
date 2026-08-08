@@ -4,6 +4,7 @@ if (isset($_SESSION['user_id'])) { header('Location: /dashboard'); exit; }
 
 $error = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+  csrf_check();
   $email = trim($_POST['email'] ?? '');
   $password = $_POST['password'] ?? '';
   $result = auth_login($email, $password);
@@ -23,6 +24,7 @@ require __DIR__ . '/../includes/header.php';
       <h1 class="font-display text-3xl text-center mb-8">Войти</h1>
       <?php if ($error): ?><div class="flash error"><?= h($error) ?></div><?php endif; ?>
       <form method="post">
+        <?= csrf_field() ?>
         <div class="form-group">
           <label>Email</label>
           <input type="email" name="email" value="<?= h($_POST['email'] ?? '') ?>" required autofocus>

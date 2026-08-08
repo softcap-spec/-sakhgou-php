@@ -14,6 +14,7 @@ $active_promos = $pdo->query("SELECT COUNT(*) FROM promotions WHERE status = 'ac
 $views_total = $pdo->query("SELECT SUM(COALESCE(view_count,0)) FROM listings")->fetchColumn();
 
 // Moderate reviews
+if ($_SERVER['REQUEST_METHOD'] === 'POST') { csrf_check(); }
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['approve_review'])) {
   $rid = (int)$_POST['approve_review'];
   $pdo->prepare('UPDATE reviews SET moderated = 1 WHERE id = ?')->execute([$rid]);
@@ -79,7 +80,7 @@ require __DIR__ . '/../../includes/header.php';
             <td class="p-3"><?=$l['view_count']??0?></td>
             <td class="p-3"><span class="badge <?=$l['status']==='active'?'':'opacity-50'?>"><?=$l['status']?></span></td>
             <td class="p-3">
-              <form method="post" style="display:inline"><button type="submit" name="toggle_listing" value="<?=$l['id']?>" class="auth-btn-ghost text-xs"><?=$l['status']==='active'?'Откл.':'Вкл.'?></button></form>
+              <form method="post" style="display:inline"><?= csrf_field() ?><button type="submit" name="toggle_listing" value="<?=$l['id']?>" class="auth-btn-ghost text-xs"><?=$l['status']==='active'?'Откл.':'Вкл.'?></button></form>
             </td>
           </tr>
         <?php endforeach; ?>
@@ -130,9 +131,9 @@ require __DIR__ . '/../../includes/header.php';
             </div>
             <div class="flex gap-2">
               <?php if (!$r['moderated']): ?>
-                <form method="post"><button name="approve_review" value="<?=$r['id']?>" class="cta-btn" style="font-size:0.75rem;padding:0.25rem 0.75rem">Одобрить</button></form>
+                <form method="post"><?= csrf_field() ?><button name="approve_review" value="<?=$r['id']?>" class="cta-btn" style="font-size:0.75rem;padding:0.25rem 0.75rem">Одобрить</button></form>
               <?php endif; ?>
-              <form method="post" onsubmit="return confirm('Удалить?')"><button name="delete_review" value="<?=$r['id']?>" class="btn-outline" style="font-size:0.75rem;padding:0.25rem 0.75rem;color:#dc2626;border-color:#dc2626">Удалить</button></form>
+              <form method="post" onsubmit="return confirm('Удалить?')"><?= csrf_field() ?><button name="delete_review" value="<?=$r['id']?>" class="btn-outline" style="font-size:0.75rem;padding:0.25rem 0.75rem;color:#dc2626;border-color:#dc2626">Удалить</button></form>
             </div>
           </div>
         </div>

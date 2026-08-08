@@ -17,6 +17,7 @@ $stmt->execute([$lid]);
 $activePromo = $stmt->fetch();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['promote'])) {
+  csrf_check();
   $promoType = $_POST['promo_type'] ?? 'top';
   $duration = (int)($_POST['duration'] ?? 7);
   $budget = ['top'=>700,'highlight'=>400,'urgent'=>200][$promoType] * $duration;
@@ -24,9 +25,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['promote'])) {
   $expires = date('Y-m-d H:i:s', strtotime("+{$duration} days"));
 
   $stmt = $pdo->prepare('INSERT INTO promotions (listing_id, host_id, promo_type, status, starts_at, expires_at, budget_rub, payment_status, payment_amount) VALUES (?,?,?,?,?,?,?,?,?)');
-  $stmt->execute([$lid, $cu['id'], $promoType, 'active', $starts, $expires, $budget, 'paid', $budget]);
+  $stmt->execute([$lid, $cu['id'], $promoType, 'pending', $starts, $expires, $budget, 'pending', $budget]);
 
-  $pdo->prepare('INSERT INTO notifications (user_id, type, text, link, is_read, created_at) VALUES (?,?,?,?,0,NOW())')->execute([$cu['id'], 'promo', "Объявление «{$listing['title']}» продвигается до {$expires}", '/dashboard']);
+  $pdo->prepare('INSERT INTO notifications (user_id, type, text, link, is_read, created_at) VALUES (?,?,?,?,0,NOW())')->execute([$cu['id'], 'promo', "Заявка на продвижение «{$listing['title']}» принята. Ожидайте подтверждения.", '/dashboard']);
 
   header('Location: /dashboard');
   exit;
@@ -53,6 +54,7 @@ require __DIR__ . '/../includes/header.php';
     </div>
   <?php else: ?>
   <form method="post">
+    <?= csrf_field() ?>
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
       <?php
       $plans = [
@@ -88,7 +90,7 @@ require __DIR__ . '/../includes/header.php';
 
     <div class="flex gap-2">
       <a href="/dashboard" class="btn-outline" style="flex:1;text-align:center">← В кабинет</a>
-      <button type="submit" name="promote" class="cta-btn" style="flex:3">Оплатить и запустить</button>
+      <button type="submit" name="promote" class="cta-btn" style="flex:3">Отправить заявку</button>
     </div>
   </form>
   <?php endif; ?>

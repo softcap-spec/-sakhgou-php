@@ -4,6 +4,7 @@ if (isset($_SESSION['user_id'])) { header('Location: /'); exit; }
 
 $errors = [];
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+  csrf_check();
   $name = trim($_POST['name'] ?? '');
   $email = trim($_POST['email'] ?? '');
   $password = $_POST['password'] ?? '';
@@ -34,6 +35,7 @@ require __DIR__ . '/../includes/header.php';
       <h1 class="font-display text-3xl text-center mb-8">Регистрация</h1>
       <?php foreach ($errors as $e): ?><div class="flash error"><?= h($e) ?></div><?php endforeach; ?>
       <form method="post">
+        <?= csrf_field() ?>
         <div class="form-group">
           <label>Имя</label>
           <input type="text" name="name" value="<?= h($_POST['name'] ?? '') ?>" required autofocus>

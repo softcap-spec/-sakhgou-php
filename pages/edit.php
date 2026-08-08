@@ -20,6 +20,7 @@ if (!$item) {
 
 $errors = [];
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+  csrf_check();
   $title = trim($_POST['title'] ?? '');
   $price = (float)($_POST['price'] ?? 0);
   $description = trim($_POST['description'] ?? '');
@@ -51,6 +52,7 @@ require __DIR__ . '/../includes/header.php';
 
     <div class="bg-white border rounded-xl p-6">
       <form method="post">
+        <?= csrf_field() ?>
         <div class="form-group">
           <label>Название</label>
           <input type="text" name="title" value="<?= h($_POST['title'] ?? $item['title']) ?>" required>

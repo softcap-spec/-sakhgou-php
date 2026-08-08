@@ -1,6 +1,13 @@
 <?php
 // config.php — скопируйте в config.php и заполните реальными данными
 // НЕ КОММИТИТЬ config.php с паролями!
+session_set_cookie_params([
+  'lifetime' => 0,
+  'path'     => '/',
+  'secure'   => true,        // только HTTPS
+  'httponly' => true,        // недоступно для JS
+  'samesite' => 'Lax',      // защита от CSRF
+]);
 session_start();
 
 define('SITE_NAME', 'СахGO');

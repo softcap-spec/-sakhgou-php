@@ -22,14 +22,29 @@ function auth_register(string $email, string $password, string $name, string $ph
 }
 
 function auth_login(string $email, string $password): array {
+  // Rate limiting: max 5 attempts per 15 minutes per IP
+  $ip = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
+  $key = 'login_attempts_' . md5($ip);
+  $now = time();
+  $attempts = $_SESSION[$key] ?? ['count' => 0, 'first' => $now];
+  if ($now - $attempts['first'] > 900) { $attempts = ['count' => 0, 'first' => $now]; }
+  if ($attempts['count'] >= 5) {
+    return ['ok' => false, 'error' => 'Слишком много попыток. Попробуйте через 15 минут.'];
+  }
+
   $pdo = db();
   $stmt = $pdo->prepare('SELECT id, password_hash, role, name FROM users WHERE email = ?');
   $stmt->execute([$email]);
   $user = $stmt->fetch();
   
   if (!$user || !password_verify($password, $user['password_hash'])) {
+    $attempts['count']++;
+    $_SESSION[$key] = $attempts;
     return ['ok' => false, 'error' => 'Неверный email или пароль'];
   }
+
+  // Clear attempts on success
+  unset($_SESSION[$key]);
   
   $_SESSION['user_id'] = (int) $user['id'];
   $_SESSION['user_role'] = $user['role'];

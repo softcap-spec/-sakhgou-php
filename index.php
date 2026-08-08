@@ -6,6 +6,12 @@ require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/includes/functions.php';
 require_once __DIR__ . '/includes/auth.php';
 
+header('X-Frame-Options: SAMEORIGIN');
+header('X-Content-Type-Options: nosniff');
+header('Referrer-Policy: strict-origin-when-cross-origin');
+header('Permissions-Policy: camera=(), microphone=(), geolocation=(self)');
+header('Strict-Transport-Security: max-age=63072000; includeSubDomains; preload');
+
 $url = $_GET['url'] ?? '';
 $url = rtrim($url, '/');
 $parts = $url ? explode('/', $url) : [];

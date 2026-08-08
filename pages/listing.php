@@ -58,6 +58,7 @@ $isOwner = $cu && ($cu['id'] == $item['user_id'] || $cu['role'] === 'admin');
 
 // POST: favorite toggle
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['fav'])) {
+  csrf_check();
   if ($cu) { $isFavorite = toggle_favorite($cu['id'], $lid); header('Location: /listing/'.$lid); exit; }
 }
 
@@ -118,6 +119,7 @@ require __DIR__ . '/../includes/header.php';
           <?php if ($cu): ?>
           <div class="flex gap-2 pt-2">
             <form method="post" class="flex-1">
+              <?= csrf_field() ?>
               <button name="fav" value="1" class="w-full inline-flex items-center justify-center rounded-lg border <?=$isFavorite?'bg-red-50 border-red-200 text-red-600':'border-border hover:bg-muted'?> h-10 px-4 text-sm font-medium transition-all"><?=$isFavorite?'♥ В избранном':'♡ В избранное'?></button>
             </form>
             <?php if (!$isOwner): ?>

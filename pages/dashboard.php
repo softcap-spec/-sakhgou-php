@@ -26,6 +26,7 @@ $tabs = [
 
 // POST: обновление профиля
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
+  csrf_check();
   $name = trim($_POST['name'] ?? '');
   $phone = trim($_POST['phone'] ?? '');
   $email = trim($_POST['email'] ?? '');
@@ -40,6 +41,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
 
 // POST: delete listing
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete'])) {
+  csrf_check();
   $pdo->prepare('DELETE FROM listings WHERE id=? AND user_id=?')->execute([(int)$_POST['delete'], $user['id']]);
   header('Location: /dashboard'); exit;
 }
@@ -93,7 +95,7 @@ require __DIR__ . '/../includes/header.php';
               <a href="/listing/<?=$item['id']?>" class="flex-1 inline-flex items-center justify-center rounded-lg border border-border hover:bg-muted h-8 text-xs font-medium transition-all">Смотреть</a>
               <a href="/edit/<?=$item['id']?>" class="flex-1 inline-flex items-center justify-center rounded-lg border border-border hover:bg-muted h-8 text-xs font-medium transition-all">Ред.</a>
               <a href="/promote?id=<?=$item['id']?>" class="flex-1 inline-flex items-center justify-center rounded-lg border border-amber-200 text-amber-700 hover:bg-amber-50 h-8 text-xs font-medium transition-all">🚀</a>
-              <form method="post" onsubmit="return confirm('Удалить?')"><button name="delete" value="<?=$item['id']?>" class="inline-flex items-center justify-center rounded-lg border border-red-200 text-red-600 hover:bg-red-50 h-8 px-2 text-xs font-medium transition-all">🗑</button></form>
+              <form method="post" onsubmit="return confirm('Удалить?')"><?= csrf_field() ?><button name="delete" value="<?=$item['id']?>" class="inline-flex items-center justify-center rounded-lg border border-red-200 text-red-600 hover:bg-red-50 h-8 px-2 text-xs font-medium transition-all">🗑</button></form>
             </div>
           </div>
         </div>
@@ -142,6 +144,7 @@ require __DIR__ . '/../includes/header.php';
     <?php if (isset($_GET['ok'])): ?><div class="bg-green-50 border border-green-200 text-green-700 rounded-lg p-3 mb-6 text-sm">Профиль обновлён</div><?php endif; ?>
     <div class="max-w-lg">
       <form method="post" class="bg-white border rounded-xl p-6 space-y-4">
+        <?= csrf_field() ?>
         <div class="form-group"><label>Имя</label><input type="text" name="name" value="<?=h($user['name'])?>" class="w-full rounded-lg border border-border py-2 px-3 text-sm focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none"></div>
         <div class="form-group"><label>Email</label><input type="email" name="email" value="<?=h($user['email'])?>" class="w-full rounded-lg border border-border py-2 px-3 text-sm focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none"></div>
         <div class="form-group"><label>Телефон</label><input type="text" name="phone" value="<?=h($user['phone']??'')?>" class="w-full rounded-lg border border-border py-2 px-3 text-sm focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none"></div>
