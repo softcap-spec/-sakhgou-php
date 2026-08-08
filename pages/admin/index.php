@@ -110,6 +110,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     header('Location: /admin?tab=categories&ok=1');
     exit;
   }
+
+  // Maintenance toggle
+  if ($_POST['action'] === 'toggle_maintenance') {
+    $current = $pdo->query("SELECT setting_value FROM settings WHERE setting_key = 'maintenance'")->fetchColumn();
+    $newVal = $current === '1' ? '0' : '1';
+    $pdo->prepare("UPDATE settings SET setting_value = ? WHERE setting_key = 'maintenance'")->execute([$newVal]);
+    header('Location: /admin?tab=maintenance&ok=' . ($newVal === '1' ? 'on' : 'off'));
+    exit;
+  }
 }
 
 // ── Data loaders ──
@@ -126,6 +135,10 @@ $new_week_listings = (int)$pdo->query("SELECT COUNT(*) FROM listings WHERE creat
 
 // Search query
 $user_search = $_GET['user_search'] ?? '';
+
+// Maintenance status
+$maint_status = $pdo->query("SELECT setting_value FROM settings WHERE setting_key = 'maintenance'")->fetchColumn();
+$maint_on = $maint_status === '1';
 
 // ── Header ──
 $page_title = 'Админ-панель — СахГО';
@@ -393,15 +406,37 @@ elseif ($tab === 'payments'):
 // ── MAINTENANCE ──
 elseif ($tab === 'maintenance'):
 ?>
-    <h2 class="font-display text-xl mb-4">Техническое обслуживание</h2>
-    <div class="bg-white border rounded-xl p-6">
-      <h3 class="font-medium mb-3">Команды для VPS (SSH):</h3>
-      <div class="bg-gray-950 text-green-400 rounded-lg p-4 font-mono text-xs space-y-2 overflow-x-auto">
-        <div>ssh alex@192.168.85.87</div>
-        <div>cd /opt/sakhgo</div>
-        <div>docker compose ps</div>
-        <div>docker compose logs --tail=50 app</div>
-        <div>docker compose restart app</div>
+    <div class="bg-white border rounded-xl p-8 max-w-lg mx-auto text-center space-y-6">
+      <div class="mx-auto w-16 h-16 rounded-2xl <?= $maint_on ? 'bg-red-100' : 'bg-amber-100' ?> flex items-center justify-center">
+        <span class="text-3xl"><?= $maint_on ? '🚫' : '🔧' ?></span>
+      </div>
+      <div>
+        <h2 class="font-display text-xl mb-2">Режим техработ</h2>
+        <p class="text-sm text-muted-foreground">
+          Включает заглушку для всех посетителей.<br>Админка и API продолжают работать.
+        </p>
+      </div>
+
+      <?php if (isset($_GET['ok'])): ?>
+        <div class="text-sm text-green-600 font-medium animate-pulse">Режим техработ <?= $_GET['ok']==='on' ? 'ВКЛЮЧЕН' : 'ВЫКЛЮЧЕН' ?></div>
+      <?php endif; ?>
+
+      <div class="flex flex-col items-center gap-3">
+        <div class="flex items-center gap-3">
+          <span class="text-sm <?= $maint_on ? 'text-red-600 font-medium' : 'text-muted-foreground' ?>"><?= $maint_on ? '🔴 ВКЛЮЧЕНЫ' : '⚪ ВЫКЛЮЧЕНЫ' ?></span>
+        </div>
+        <form method="post">
+          <?= csrf_field() ?>
+          <input type="hidden" name="action" value="toggle_maintenance">
+          <button class="px-8 py-3 rounded-xl text-sm font-medium transition-all <?= $maint_on ? 'bg-green-600 text-white hover:bg-green-700' : 'bg-red-500 text-white hover:bg-red-600' ?>">
+            <?= $maint_on ? 'Выключить техработы' : 'Включить техработы' ?>
+          </button>
+        </form>
+      </div>
+
+      <div class="bg-muted/50 rounded-lg p-3 font-mono text-xs text-muted-foreground">
+        SSH: ssh alex@192.168.85.87<br>
+        <code class="text-accent">docker compose ps</code> · <code class="text-accent">docker compose logs app</code>
       </div>
     </div>
 

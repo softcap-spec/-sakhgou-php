@@ -22,6 +22,17 @@ $id = $parts[2] ?? null;
 // Fix: listing/edit/promote use /listing/N format (id in parts[1])
 if (in_array($page, ['listing', 'edit', 'promote']) && empty($id)) { $id = $sub; $sub = null; }
 
+// Maintenance mode check
+if ($page !== 'admin' && $page !== 'login' && $page !== 'register' && $page !== 'api') {
+  $mcheck = db()->query("SELECT setting_value FROM settings WHERE setting_key = 'maintenance'")->fetchColumn();
+  $user = auth_user();
+  if ($mcheck === '1' && (!$user || $user['role'] !== 'admin')) {
+    http_response_code(503);
+    ?><!DOCTYPE html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Техработы — СахГО</title><script src="https://cdn.tailwindcss.com"></script><script>tailwind.config={theme:{extend:{fontFamily:{sans:['Manrope','Arial','sans-serif'],display:['Manrope','Arial','sans-serif']},colors:{background:'#F2F6F9',foreground:'#121E2B',accent:'#1B6B8A',muted:'#8BA0B5','muted-foreground':'#54677A'}}}}</script><link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet"></head><body class="bg-background min-h-screen flex items-center justify-center"><div class="text-center px-4"><div class="text-6xl mb-6">🔧</div><h1 class="font-display text-3xl mb-2">На сайте ведутся<br>технические работы</h1><p class="text-muted-foreground text-lg">Мы скоро вернёмся</p><p class="text-muted-foreground text-sm mt-8">© СахГО · Сахалинская область</p></div></body></html><?php
+    exit;
+  }
+}
+
 switch ($page) {
   case '':
   case 'home':
