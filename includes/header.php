@@ -41,7 +41,7 @@ $my_count = $cu ? ($cu['unread_notifications'] ?? '') : '';
 <header class="sticky top-0 z-50">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16 gap-4">
     <a href="/" class="flex items-center gap-2 shrink-0">
-      <img src="/logo.png" alt="СахGO" class="h-9 sm:h-11 w-auto">
+      <img src="/logo.png" alt="СахGO" class="h-12 sm:h-14 w-auto">
     </a>
     <div class="hidden md:flex items-center gap-0.5 bg-white border border-[#DFE4EA] rounded-lg p-0.5">
       <?php foreach (['all'=>'Все','property'=>'Жильё','tour'=>'Туры','fishing'=>'Рыбалка','rental_gear'=>'Снаряжение','car_rental'=>'Прокат авто'] as $k=>$v):

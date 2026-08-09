@@ -6,7 +6,7 @@
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
     <div class="grid grid-cols-2 md:grid-cols-4 gap-8 mb-8">
       <div class="col-span-2 md:col-span-1">
-        <img src="/logo.png" alt="СахGO" class="h-11 w-auto mb-3">
+        <img src="/logo.png" alt="СахGO" class="h-14 mb-3">
         <p class="text-xs text-[#7A8A9A] leading-relaxed max-w-xs">Маркетплейс туруслуг, рыбалки и жилья для Сахалинской области и Курильских островов.</p>
       </div>
       <div>
