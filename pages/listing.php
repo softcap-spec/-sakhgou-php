@@ -208,7 +208,16 @@ require __DIR__ . '/../includes/header.php';
             <?= avatar_html(['name' => $item['host_name'], 'avatar_url' => $item['host_avatar']], 'w-12 h-12', 'text-xl') ?>
             <div><div class="font-medium"><?=h($item['host_name'])?></div><div class="text-xs text-muted-foreground">Присоединился <?=date('m.Y',strtotime($item['created_at']))?></div></div>
           </div>
-          <?php if(!empty($item['host_phone'])): ?><div class="text-sm text-muted-foreground mb-2">📞 <?=h($item['host_phone'])?></div><?php endif; ?>
+          <?php if(!empty($item['host_phone'])): ?>
+            <div class="text-sm mb-2" id="phoneBlock">
+              <button type="button" onclick="revealPhone()" id="revealPhoneBtn" class="w-full inline-flex items-center justify-center gap-1.5 rounded-lg border border-border hover:bg-muted h-10 px-4 text-sm font-medium transition-all">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
+                Показать номер
+              </button>
+              <div id="revealedPhone" class="hidden text-center font-display text-lg mt-2">📞 <a href="tel:<?=h($item['host_phone'])?>" class="text-accent hover:underline"><?=h($item['host_phone'])?></a></div>
+            </div>
+            <script>function revealPhone(){document.getElementById('revealPhoneBtn').classList.add('hidden');document.getElementById('revealedPhone').classList.remove('hidden');}</script>
+          <?php endif; ?>
           <?php if($cu && !$isOwner): ?>
           <a href="/inbox?listing=<?=$lid?>" class="w-full inline-flex items-center justify-center rounded-lg bg-accent text-white hover:bg-accent/80 h-10 px-4 text-sm font-medium transition-all mt-2">✉️ Написать</a>
           <?php endif; ?>

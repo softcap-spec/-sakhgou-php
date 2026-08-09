@@ -167,6 +167,7 @@ require __DIR__ . '/../includes/header.php';
     <div class="max-w-lg">
       <form method="post" enctype="multipart/form-data" class="bg-white border rounded-xl p-6 space-y-4">
         <?= csrf_field() ?>
+        <input type="hidden" name="update_profile" value="1">
         <!-- Avatar -->
         <div class="flex items-center gap-4">
           <?= avatar_html($user, 'w-16 h-16', 'text-xl') ?>
