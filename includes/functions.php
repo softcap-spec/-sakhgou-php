@@ -302,7 +302,7 @@ function get_promo_prices(): array {
  * Get price suffix for listing type
  */
 function price_label(?string $type): string {
-  if ($type === 'property') return '₽ / ночь';
   if ($type === 'rental_gear' || $type === 'car_rental') return '₽ / сутки';
+  if ($type === 'property') return '₽ / сутки';
   return '₽ / чел.';
 }
