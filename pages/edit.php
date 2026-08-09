@@ -186,7 +186,7 @@ require __DIR__ . '/../includes/header.php';
             <input type="text" name="title" value="<?= h($item['title']) ?>" required class="w-full rounded-lg border border-border py-2 px-3 text-sm focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none">
           </div>
           <div>
-            <label class="block text-sm font-medium mb-1">Цена (₽)</label>
+            <label class="block text-sm font-medium mb-1">Цена (<?=price_label($item['listing_type'])?>)</label>
             <input type="number" name="price" value="<?= (int)$item['price'] ?>" min="0" step="1" required class="w-full rounded-lg border border-border py-2 px-3 text-sm focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none">
           </div>
           <div>

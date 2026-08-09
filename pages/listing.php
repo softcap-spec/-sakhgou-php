@@ -99,7 +99,7 @@ require __DIR__ . '/../includes/header.php';
       <div class="lg:sticky lg:top-20 self-start">
         <div class="bg-white border rounded-xl p-6 space-y-5">
           <div>
-            <div class="font-display text-3xl"><?=number_format((float)$item['price'],0,'.',' ')?> ₽</div>
+            <div class="font-display text-3xl"><?=number_format((float)$item['price'],0,'.',' ')?> <?=price_label($item['listing_type'])?></div>
             <div class="text-sm text-muted-foreground"><?=$PRICE_UNIT[$lt]??''?></div>
           </div>
           <div class="space-y-1 text-sm"><span class="text-muted-foreground">Тип:</span> <?=$TYPE_EMOJI[$lt]??''?> <?=$TYPE_LABEL[$lt]??''?></div>
@@ -231,7 +231,7 @@ require __DIR__ . '/../includes/header.php';
           <?php if($simg): ?><img src="/uploads/<?=h($simg)?>" alt="" loading="lazy"><?php endif; ?>
         </div>
         <div class="listing-body">
-          <div class="listing-price"><?=number_format((float)$s['price'],0,'.',' ')?> ₽</div>
+          <div class="listing-price"><?=number_format((float)$s['price'],0,'.',' ')?> <?=price_label($s['listing_type'])?></div>
           <div class="listing-title"><?=h($s['title'])?></div>
           <div class="listing-meta"><span><?=h($s['location'])?></span></div>
         </div>

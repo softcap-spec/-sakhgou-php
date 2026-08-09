@@ -50,7 +50,7 @@ require __DIR__ . '/../includes/header.php';
           <span class="absolute top-2 left-2 text-xs font-bold px-2 py-0.5 rounded-full text-white <?=$item['promo_type']==='top'?'bg-red-600':($item['promo_type']==='highlight'?'bg-amber-500':'bg-red-500')?>"><?=$item['promo_type']==='top'?'🔝 TOP':($item['promo_type']==='highlight'?'💡 PROMO':'⚡ Срочно')?></span>
           <?php endif; ?>
           <div class="listing-body">
-            <div class="listing-price"><?=number_format((float)$item['price'],0,'.',' ')?> ₽</div>
+            <div class="listing-price"><?=number_format((float)$item['price'],0,'.',' ')?> <?=price_label($item['listing_type'])?></div>
             <div class="listing-title"><?=h($item['title'])?></div>
             <div class="listing-meta">
               <span><?=h($item['category_name'])?></span><span>·</span><span><?=time_ago($item['created_at'])?></span>

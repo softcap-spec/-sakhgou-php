@@ -127,7 +127,7 @@ require __DIR__ . '/../includes/header.php';
           <span class="absolute top-2 left-2 text-xs font-bold px-2 py-0.5 rounded-full text-white <?=$item['promo_type']==='top'?'bg-red-600':($item['promo_type']==='highlight'?'bg-amber-500':'bg-red-500')?>"><?=$item['promo_type']==='top'?'🔝 TOP':($item['promo_type']==='highlight'?'💡 PROMO':'⚡ Срочно')?></span>
           <?php endif; ?>
           <div class="p-4 flex-1 flex flex-col gap-1">
-            <div class="font-display text-xl"><?=number_format((float)$item['price'],0,'.',' ')?> ₽</div>
+            <div class="font-display text-xl"><?=number_format((float)$item['price'],0,'.',' ')?> <?=price_label($item['listing_type'])?></div>
             <div class="font-medium text-sm leading-snug line-clamp-2"><?=h($item['title'])?></div>
             <div class="flex items-center gap-2 text-xs text-muted-foreground mt-auto pt-2">
               <span><?=h($item['category_name'])?></span>

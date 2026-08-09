@@ -297,3 +297,11 @@ function get_promo_prices(): array {
   }
   return $defaults;
 }
+
+/**
+ * Get price suffix for listing type
+ */
+function price_label(?string $type): string {
+  $per_day = ['property', 'car_rental', 'rental_gear', 'fishing'];
+  return in_array($type, $per_day) ? '₽ / сутки' : '₽';
+}

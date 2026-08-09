@@ -110,7 +110,7 @@ require __DIR__ . '/../includes/header.php';
           <?php endif; ?>
           <div class="p-4 flex-1 flex flex-col gap-1">
             <div class="flex items-center gap-2 text-xs"><span class="badge <?=$item['status']==='active'?'text-green-700 border-green-200 bg-green-50':'text-muted-foreground'?>"><?=$item['status']==='active'?'Активно':$item['status']?></span><span class="text-muted-foreground"><?=h($item['category_name'])?></span></div>
-            <div class="font-display text-xl mt-1"><?=number_format((float)$item['price'],0,'.',' ')?> ₽</div>
+            <div class="font-display text-xl mt-1"><?=number_format((float)$item['price'],0,'.',' ')?> <?=price_label($item['listing_type'])?></div>
             <div class="font-medium text-sm leading-snug"><?=h($item['title'])?></div>
             <div class="flex items-center gap-2 text-xs text-muted-foreground mt-auto pt-2"><span>👁 <?=$item['view_count']??0?></span><span>·</span><span><?=time_ago($item['created_at'])?></span></div>
             <div class="flex gap-2 mt-3">
@@ -134,7 +134,7 @@ require __DIR__ . '/../includes/header.php';
         <?php foreach ($favs as $item): ?>
         <a href="/listing/<?=$item['id']?>" class="bg-white border rounded-xl overflow-hidden transition-all hover:-translate-y-0.5 hover:shadow-lg flex flex-col relative">
           <div class="aspect-[16/10] bg-secondary overflow-hidden"><?php if(!empty($item['image'])):?><img src="/uploads/<?=h($item['image'])?>" class="w-full h-full object-cover" loading="lazy"><?php else:?><div class="w-full h-full flex items-center justify-center text-4xl">📷</div><?php endif;?></div>
-          <div class="p-4 flex-1 flex flex-col gap-1"><div class="font-display text-xl"><?=number_format((float)$item['price'],0,'.',' ')?> ₽</div><div class="font-medium text-sm leading-snug"><?=h($item['title'])?></div><div class="flex items-center gap-2 text-xs text-muted-foreground mt-auto pt-2"><span><?=h($item['category_name'])?></span></div></div>
+          <div class="p-4 flex-1 flex flex-col gap-1"><div class="font-display text-xl"><?=number_format((float)$item['price'],0,'.',' ')?> <?=price_label($item['listing_type'])?></div><div class="font-medium text-sm leading-snug"><?=h($item['title'])?></div><div class="flex items-center gap-2 text-xs text-muted-foreground mt-auto pt-2"><span><?=h($item['category_name'])?></span></div></div>
         </a>
         <?php endforeach; ?>
       </div>

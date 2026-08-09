@@ -198,7 +198,7 @@ require __DIR__ . '/../includes/header.php';
       <div class="form-group"><label>Название объявления</label><input type="text" name="title" value="<?=h($_POST['title']??'')?>" class="w-full" placeholder="Напр. «Уютная квартира с видом на море»" required></div>
       <div class="form-group"><label>Описание</label><textarea name="description" rows="5" class="w-full" placeholder="Опишите ваше предложение подробно..."><?=h($_POST['description']??'')?></textarea></div>
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div class="form-group"><label>Цена (₽)</label><input type="number" name="price" value="<?=h($_POST['price']??'')?>" class="w-full" min="0" step="1" required></div>
+        <div class="form-group"><label>Цена (<?=price_label($_POST['listing_type']??'')?>)</label><input type="number" name="price" value="<?=h($_POST['price']??'')?>" class="w-full" min="0" step="1" required></div>
         <div class="form-group"><label>Локация</label>
           <select name="location" class="w-full"><option value="">Выберите...</option>
             <?php foreach($LOCATIONS as $l): ?><option value="<?=$l?>" <?=($_POST['location']??'')===$l?'selected':''?>><?=$l?></option><?php endforeach; ?>
@@ -334,7 +334,7 @@ function removeImage(idx) {
       <div class="bg-secondary/50 rounded-xl p-6 space-y-3 text-sm">
         <div class="flex justify-between"><span class="text-muted-foreground">Тип:</span><span class="font-medium"><?=$LISTING_EMOJI[$_POST['listing_type']??'']??''?> <?=$LISTING_LABELS[$_POST['listing_type']??'']??''?></span></div>
         <div class="flex justify-between"><span class="text-muted-foreground">Название:</span><span class="font-medium"><?=h($_POST['title']??'')?></span></div>
-        <div class="flex justify-between"><span class="text-muted-foreground">Цена:</span><span class="font-display text-lg"><?=number_format((float)($_POST['price']??0),0,'.',' ')?> ₽</span></div>
+        <div class="flex justify-between"><span class="text-muted-foreground">Цена:</span><span class="font-display text-lg"><?=number_format((float)($_POST['price']??0),0,'.',' ')?> <?=price_label($_POST['listing_type']??'')?></span></div>
         <div class="flex justify-between"><span class="text-muted-foreground">Локация:</span><span class="font-medium"><?=h($_POST['location']??'')?></span></div>
         <div class="flex justify-between"><span class="text-muted-foreground">Фото:</span><span class="font-medium"><?=empty($_SESSION['tmp_images'])?'Нет':count($_SESSION['tmp_images']).' фото'?></span></div>
       </div>
