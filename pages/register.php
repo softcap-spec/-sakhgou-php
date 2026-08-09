@@ -1,5 +1,5 @@
 <?php
-// register.php — v4
+// register.php — v5 split layout
 if (isset($_SESSION['user_id'])) { header('Location: /'); exit; }
 
 $errors = [];
@@ -27,21 +27,70 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $page_title = 'Регистрация — СахGO';
-require __DIR__ . '/../includes/header.php';
 ?>
-<section class="min-h-[calc(100vh-4rem)] flex items-center justify-center py-12 px-4">
-  <div class="w-full max-w-sm">
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title><?= h($page_title) ?></title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>tailwind.config={theme:{extend:{fontFamily:{sans:['Manrope','Arial','sans-serif'],display:['Manrope','Arial','sans-serif']},colors:{background:'#F7F9FB',foreground:'#121E2B',accent:'#1B6B8A',border:'#DFE4EA','muted-foreground':'#7A8A9A'}}}}</script>
+<link rel="stylesheet" href="/includes/style.css?v=10">
+</head>
+<body class="min-h-screen">
 
-    <!-- Logo -->
-    <div class="text-center mb-8">
-      <a href="/"><img src="/logo.png" alt="СахGO" class="h-14 w-auto mx-auto"></a>
+<div class="min-h-[calc(100vh-4rem)] grid lg:grid-cols-2">
+
+  <!-- Brand panel -->
+  <div class="hidden lg:flex flex-col justify-between relative overflow-hidden" style="background: linear-gradient(155deg, #1a3a4a 0%, #1B6B8A 45%, #2a5a6a 100%)">
+    <div class="absolute inset-0 opacity-20" style="background-image:url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 80 80%22><circle cx=%2240%22 cy=%2240%22 r=%221%22 fill=%22white%22/></svg>');background-size:80px 80px"></div>
+    <div class="absolute inset-0" style="background:radial-gradient(ellipse 70% 50% at 30% 80%, rgba(0,0,0,0.3), transparent)"></div>
+
+    <div class="relative p-12">
+      <a href="/"><img src="/logo.png" alt="СахGO" class="h-12 w-auto brightness-0 invert"></a>
     </div>
 
-    <!-- Card -->
-    <div class="bg-white border border-[#EBEEF2] rounded-2xl p-8 shadow-[0_4px_24px_-8px_rgba(15,23,32,0.08)]">
+    <div class="relative p-12 text-white">
+      <h2 class="font-display text-4xl leading-tight mb-4">Размещайте<br>свои объявления</h2>
+      <p class="text-white/70 text-base leading-relaxed max-w-md">Сдавайте жильё, предлагайте туры и рыбалку или сдавайте снаряжение. Найдите гостей со всей России.</p>
 
-      <h1 class="font-display text-xl text-center mb-1">Создать аккаунт</h1>
-      <p class="text-xs text-[#9AAAB8] text-center mb-6">Регистрация займёт меньше минуты</p>
+      <div class="space-y-3 mt-8 max-w-sm">
+        <div class="flex items-center gap-3">
+          <div class="w-7 h-7 rounded-full bg-white/15 flex items-center justify-center shrink-0">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          <span class="text-sm text-white/80">Бесплатное размещение</span>
+        </div>
+        <div class="flex items-center gap-3">
+          <div class="w-7 h-7 rounded-full bg-white/15 flex items-center justify-center shrink-0">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          <span class="text-sm text-white/80">Прямой контакт с клиентами</span>
+        </div>
+        <div class="flex items-center gap-3">
+          <div class="w-7 h-7 rounded-full bg-white/15 flex items-center justify-center shrink-0">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          <span class="text-sm text-white/80">Продвижение объявлений</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Form panel -->
+  <div class="flex items-center justify-center py-12 px-4">
+    <div class="w-full max-w-sm">
+
+      <div class="text-center mb-8 lg:hidden">
+        <a href="/"><img src="/logo.png" alt="СахGO" class="h-12 w-auto mx-auto"></a>
+      </div>
+
+      <h1 class="font-display text-2xl mb-1">Создать аккаунт</h1>
+      <p class="text-sm text-[#9AAAB8] mb-7">Регистрация займёт меньше минуты</p>
 
       <?php if (!empty($errors)): ?>
       <div class="bg-red-50 border border-red-200 rounded-lg px-3 py-2.5 mb-4 space-y-1">
@@ -81,25 +130,20 @@ require __DIR__ . '/../includes/header.php';
           </div>
         </div>
 
-        <div>
-          <label>Пароль</label>
-          <div class="relative">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="absolute left-3 top-1/2 -translate-y-1/2 text-[#9AAAB8]"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-            <input type="password" name="password" id="pwField" required class="w-full" style="padding-left:2.25rem;padding-right:2.5rem">
-            <button type="button" onclick="togglePw()" class="absolute right-3 top-1/2 -translate-y-1/2 text-[#9AAAB8] hover:text-[#54677A] transition-colors">
-              <svg id="pwEye" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
-            </button>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label>Пароль</label>
+            <div class="relative">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="absolute left-3 top-1/2 -translate-y-1/2 text-[#9AAAB8]"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              <input type="password" name="password" id="pwField" required class="w-full" style="padding-left:2.25rem;padding-right:2rem">
+            </div>
           </div>
-        </div>
-
-        <div>
-          <label>Повторите пароль</label>
-          <div class="relative">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="absolute left-3 top-1/2 -translate-y-1/2 text-[#9AAAB8]"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-            <input type="password" name="password2" id="pwField2" required class="w-full" style="padding-left:2.25rem;padding-right:2.5rem">
-            <button type="button" onclick="togglePw2()" class="absolute right-3 top-1/2 -translate-y-1/2 text-[#9AAAB8] hover:text-[#54677A] transition-colors">
-              <svg id="pwEye2" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
-            </button>
+          <div>
+            <label>Повтор</label>
+            <div class="relative">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="absolute left-3 top-1/2 -translate-y-1/2 text-[#9AAAB8]"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              <input type="password" name="password2" required class="w-full" style="padding-left:2.25rem;padding-right:2rem">
+            </div>
           </div>
         </div>
 
@@ -108,28 +152,24 @@ require __DIR__ . '/../includes/header.php';
         </button>
       </form>
 
+      <div class="flex items-center gap-3 my-6">
+        <div class="flex-1 h-px bg-[#EBEEF2]"></div>
+        <span class="text-xs text-[#9AAAB8]">или</span>
+        <div class="flex-1 h-px bg-[#EBEEF2]"></div>
+      </div>
+
+      <p class="text-center text-sm text-[#7A8A9A]">
+        Уже есть аккаунт? <a href="/login" class="text-accent font-semibold hover:underline">Войти</a>
+      </p>
+
     </div>
-
-    <!-- Switch -->
-    <p class="text-center text-sm text-[#7A8A9A] mt-5">
-      Уже есть аккаунт? <a href="/login" class="text-accent font-semibold hover:underline">Войти</a>
-    </p>
-
   </div>
-</section>
+</div>
 
 <script>
 function togglePw(){
   var f=document.getElementById('pwField');
-  var e=document.getElementById('pwEye');
-  if(f.type==='password'){f.type='text';e.innerHTML='<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-10-8-10-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 10 8 10 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>';}
-  else{f.type='password';e.innerHTML='<path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/>';}
-}
-function togglePw2(){
-  var f=document.getElementById('pwField2');
-  var e=document.getElementById('pwEye2');
-  if(f.type==='password'){f.type='text';e.innerHTML='<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-10-8-10-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 10 8 10 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>';}
-  else{f.type='password';e.innerHTML='<path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/>';}
+  if(f.type==='password')f.type='text';else f.type='password';
 }
 </script>
-<?php require __DIR__ . '/../includes/footer.php'; ?>
+</body></html>

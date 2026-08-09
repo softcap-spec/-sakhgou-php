@@ -1,5 +1,5 @@
 <?php
-// login.php — v4
+// login.php — v5 split layout
 if (isset($_SESSION['user_id'])) { header('Location: /dashboard'); exit; }
 
 $error = '';
@@ -16,21 +16,68 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $page_title = 'Вход — СахGO';
-require __DIR__ . '/../includes/header.php';
 ?>
-<section class="min-h-[calc(100vh-4rem)] flex items-center justify-center py-12 px-4">
-  <div class="w-full max-w-sm">
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title><?= h($page_title) ?></title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>tailwind.config={theme:{extend:{fontFamily:{sans:['Manrope','Arial','sans-serif'],display:['Manrope','Arial','sans-serif']},colors:{background:'#F7F9FB',foreground:'#121E2B',accent:'#1B6B8A',border:'#DFE4EA','muted-foreground':'#7A8A9A'}}}}</script>
+<link rel="stylesheet" href="/includes/style.css?v=10">
+</head>
+<body class="min-h-screen">
 
-    <!-- Logo -->
-    <div class="text-center mb-8">
-      <a href="/"><img src="/logo.png" alt="СахGO" class="h-14 w-auto mx-auto"></a>
+<div class="min-h-[calc(100vh-4rem)] grid lg:grid-cols-2">
+
+  <!-- Brand panel (desktop only) -->
+  <div class="hidden lg:flex flex-col justify-between relative overflow-hidden" style="background: linear-gradient(155deg, #1a3a4a 0%, #1B6B8A 45%, #2a5a6a 100%)">
+    <!-- Texture -->
+    <div class="absolute inset-0 opacity-20" style="background-image:url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 80 80%22><circle cx=%2240%22 cy=%2240%22 r=%221%22 fill=%22white%22/></svg>');background-size:80px 80px"></div>
+    <div class="absolute inset-0" style="background:radial-gradient(ellipse 70% 50% at 30% 80%, rgba(0,0,0,0.3), transparent)"></div>
+
+    <div class="relative p-12">
+      <a href="/"><img src="/logo.png" alt="СахGO" class="h-12 w-auto brightness-0 invert"></a>
     </div>
 
-    <!-- Card -->
-    <div class="bg-white border border-[#EBEEF2] rounded-2xl p-8 shadow-[0_4px_24px_-8px_rgba(15,23,32,0.08)]">
+    <div class="relative p-12 text-white">
+      <h2 class="font-display text-4xl leading-tight mb-4">Сахалин и Курилы —<br>ближе, чем кажется</h2>
+      <p class="text-white/70 text-base leading-relaxed max-w-md">Жильё, джип-туры, морские выходы, рыбалка и снаряжение — напрямую от местных организаторов.</p>
 
-      <h1 class="font-display text-xl text-center mb-1">Вход в аккаунт</h1>
-      <p class="text-xs text-[#9AAAB8] text-center mb-6">Войдите, чтобы управлять объявлениями</p>
+      <div class="flex items-center gap-6 mt-8">
+        <div>
+          <div class="font-display text-2xl"><?=$cat_counts['property'] ?? 0?></div>
+          <div class="text-xs text-white/50 uppercase tracking-wide">Жильё</div>
+        </div>
+        <div class="w-px h-8 bg-white/20"></div>
+        <div>
+          <div class="font-display text-2xl"><?=($cat_counts['tour'] ?? 0) + ($cat_counts['fishing'] ?? 0)?></div>
+          <div class="text-xs text-white/50 uppercase tracking-wide">Туры и рыбалка</div>
+        </div>
+        <div class="w-px h-8 bg-white/20"></div>
+        <div>
+          <div class="font-display text-2xl">100%</div>
+          <div class="text-xs text-white/50 uppercase tracking-wide">От местных</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Form panel -->
+  <div class="flex items-center justify-center py-12 px-4">
+    <div class="w-full max-w-sm">
+
+      <!-- Mobile logo -->
+      <div class="text-center mb-8 lg:hidden">
+        <a href="/"><img src="/logo.png" alt="СахGO" class="h-12 w-auto mx-auto"></a>
+      </div>
+
+      <h1 class="font-display text-2xl mb-1">Вход в аккаунт</h1>
+      <p class="text-sm text-[#9AAAB8] mb-7">Войдите, чтобы управлять объявлениями</p>
 
       <?php if ($error): ?>
       <div class="flex items-start gap-2 bg-red-50 border border-red-200 rounded-lg px-3 py-2.5 mb-4 text-xs text-red-700">
@@ -46,7 +93,7 @@ require __DIR__ . '/../includes/header.php';
           <label>Email</label>
           <div class="relative">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="absolute left-3 top-1/2 -translate-y-1/2 text-[#9AAAB8]"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-            <input type="email" name="email" value="<?= h($_POST['email'] ?? '') ?>" required autofocus class="w-full pl-9" style="padding-left:2.25rem">
+            <input type="email" name="email" value="<?= h($_POST['email'] ?? '') ?>" required autofocus class="w-full" style="padding-left:2.25rem">
           </div>
         </div>
 
@@ -74,15 +121,19 @@ require __DIR__ . '/../includes/header.php';
         </button>
       </form>
 
+      <div class="flex items-center gap-3 my-6">
+        <div class="flex-1 h-px bg-[#EBEEF2]"></div>
+        <span class="text-xs text-[#9AAAB8]">или</span>
+        <div class="flex-1 h-px bg-[#EBEEF2]"></div>
+      </div>
+
+      <p class="text-center text-sm text-[#7A8A9A]">
+        Нет аккаунта? <a href="/register" class="text-accent font-semibold hover:underline">Зарегистрироваться</a>
+      </p>
+
     </div>
-
-    <!-- Switch -->
-    <p class="text-center text-sm text-[#7A8A9A] mt-5">
-      Нет аккаунта? <a href="/register" class="text-accent font-semibold hover:underline">Зарегистрироваться</a>
-    </p>
-
   </div>
-</section>
+</div>
 
 <script>
 function togglePw(){
@@ -92,4 +143,4 @@ function togglePw(){
   else{f.type='password';e.innerHTML='<path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/>';}
 }
 </script>
-<?php require __DIR__ . '/../includes/footer.php'; ?>
+</body></html>
