@@ -3,6 +3,11 @@
 if (isset($_SESSION['user_id'])) { header('Location: /'); exit; }
 
 $errors = [];
+$_pdo = db();
+$_recent = $_pdo->query('SELECT l.id, l.title, l.price, l.listing_type, l.location,
+  (SELECT filename FROM listing_images WHERE listing_id = l.id ORDER BY sort_order LIMIT 1) AS image
+  FROM listings l WHERE l.status = "active" ORDER BY l.created_at DESC LIMIT 5')->fetchAll();
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   csrf_check();
   $name = trim($_POST['name'] ?? '');
@@ -46,36 +51,55 @@ $page_title = 'Регистрация — СахGO';
 <div class="min-h-[calc(100vh-4rem)] grid lg:grid-cols-2">
 
   <!-- Brand panel -->
-  <div class="hidden lg:flex flex-col justify-between relative overflow-hidden" style="background: linear-gradient(155deg, #1a3a4a 0%, #1B6B8A 45%, #2a5a6a 100%)">
+  <div class="hidden lg:flex flex-col relative overflow-hidden" style="background: linear-gradient(155deg, #1a3a4a 0%, #1B6B8A 45%, #2a5a6a 100%)">
     <div class="absolute inset-0 opacity-20" style="background-image:url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 80 80%22><circle cx=%2240%22 cy=%2240%22 r=%221%22 fill=%22white%22/></svg>');background-size:80px 80px"></div>
     <div class="absolute inset-0" style="background:radial-gradient(ellipse 70% 50% at 30% 80%, rgba(0,0,0,0.3), transparent)"></div>
 
-    <div class="relative p-12">
+    <div class="relative p-12 pb-0">
       <a href="/"><img src="/logo.png" alt="СахGO" class="h-12 w-auto brightness-0 invert"></a>
     </div>
 
-    <div class="relative p-12 text-white">
-      <h2 class="font-display text-4xl leading-tight mb-4">Размещайте<br>свои объявления</h2>
-      <p class="text-white/70 text-base leading-relaxed max-w-md">Сдавайте жильё, предлагайте туры и рыбалку или сдавайте снаряжение. Найдите гостей со всей России.</p>
+    <!-- Carousel -->
+    <?php if (!empty($_recent)): ?>
+    <div class="relative flex-1 flex items-center px-12 py-6">
+      <div class="relative w-full overflow-hidden rounded-2xl">
+        <div id="regCarousel" class="flex transition-transform duration-500 ease-out" style="transform:translateX(0)">
+          <?php foreach ($_recent as $ri => $r): ?>
+          <div class="shrink-0 w-full">
+            <a href="/listing/<?=$r['id']?>" class="block bg-white rounded-2xl overflow-hidden shadow-2xl">
+              <?php if (!empty($r['image'])): ?>
+              <img src="/uploads/<?=h($r['image'])?>" alt="" class="w-full aspect-[4/3] object-cover">
+              <?php else: ?>
+              <div class="w-full aspect-[4/3] bg-[#EEF2F6]"></div>
+              <?php endif; ?>
+              <div class="p-4">
+                <div class="font-display text-lg text-foreground"><?=number_format((float)$r['price'],0,'.',' ')?> <span class="text-xs font-normal text-[#9AAAB8]"><?=price_label($r['listing_type'])?></span></div>
+                <div class="text-sm text-[#3A4A5C] mt-1 truncate"><?=h($r['title'])?></div>
+                <div class="text-xs text-[#9AAAB8] mt-1"><?=h($r['location'])?></div>
+              </div>
+            </a>
+          </div>
+          <?php endforeach; ?>
+        </div>
+        <div class="flex justify-center gap-1.5 mt-3">
+          <?php foreach ($_recent as $ri => $_): ?>
+          <button onclick="slideTo(<?=$ri?>)" class="w-1.5 h-1.5 rounded-full transition-colors <?=$ri===0?'bg-white':'bg-white/40'?>" id="dot_<?=$ri?>"></button>
+          <?php endforeach; ?>
+        </div>
+      </div>
+    </div>
+    <?php endif; ?>
 
-      <div class="space-y-3 mt-8 max-w-sm">
-        <div class="flex items-center gap-3">
-          <div class="w-7 h-7 rounded-full bg-white/15 flex items-center justify-center shrink-0">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-          </div>
-          <span class="text-sm text-white/80">Бесплатное размещение</span>
+    <div class="relative p-12 pt-0 text-white">
+      <h2 class="font-display text-3xl leading-tight mb-2">Размещайте<br>свои объявления</h2>
+      <div class="space-y-2 mt-4 max-w-sm">
+        <div class="flex items-center gap-2.5">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          <span class="text-sm text-white/70">Бесплатно и без комиссии</span>
         </div>
-        <div class="flex items-center gap-3">
-          <div class="w-7 h-7 rounded-full bg-white/15 flex items-center justify-center shrink-0">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-          </div>
-          <span class="text-sm text-white/80">Прямой контакт с клиентами</span>
-        </div>
-        <div class="flex items-center gap-3">
-          <div class="w-7 h-7 rounded-full bg-white/15 flex items-center justify-center shrink-0">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-          </div>
-          <span class="text-sm text-white/80">Продвижение объявлений</span>
+        <div class="flex items-center gap-2.5">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          <span class="text-sm text-white/70">Прямой контакт с клиентами</span>
         </div>
       </div>
     </div>
@@ -171,5 +195,15 @@ function togglePw(){
   var f=document.getElementById('pwField');
   if(f.type==='password')f.type='text';else f.type='password';
 }
+</script>
+<script>
+var cIdx = 0;
+var cMax = <?=count($_recent)?>;
+function slideTo(i){
+  cIdx = i;
+  document.getElementById('regCarousel').style.transform = 'translateX(-'+(i*100)+'%)';
+  for(var j=0;j<cMax;j++){var d=document.getElementById('dot_'+j);if(d){d.className='w-1.5 h-1.5 rounded-full transition-colors '+(j===i?'bg-white':'bg-white/40');}}
+}
+setInterval(function(){ cIdx=(cIdx+1)%cMax; slideTo(cIdx); }, 4000);
 </script>
 </body></html>

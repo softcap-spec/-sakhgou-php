@@ -3,6 +3,11 @@
 if (isset($_SESSION['user_id'])) { header('Location: /dashboard'); exit; }
 
 $error = '';
+$_pdo = db();
+$_recent = $_pdo->query('SELECT l.id, l.title, l.price, l.listing_type, l.location,
+  (SELECT filename FROM listing_images WHERE listing_id = l.id ORDER BY sort_order LIMIT 1) AS image
+  FROM listings l WHERE l.status = "active" ORDER BY l.created_at DESC LIMIT 5')->fetchAll();
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   csrf_check();
   $email = trim($_POST['email'] ?? '');
@@ -35,35 +40,51 @@ $page_title = 'Вход — СахGO';
 <div class="min-h-[calc(100vh-4rem)] grid lg:grid-cols-2">
 
   <!-- Brand panel (desktop only) -->
-  <div class="hidden lg:flex flex-col justify-between relative overflow-hidden" style="background: linear-gradient(155deg, #1a3a4a 0%, #1B6B8A 45%, #2a5a6a 100%)">
-    <!-- Texture -->
+  <div class="hidden lg:flex flex-col relative overflow-hidden" style="background: linear-gradient(155deg, #1a3a4a 0%, #1B6B8A 45%, #2a5a6a 100%)">
     <div class="absolute inset-0 opacity-20" style="background-image:url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 80 80%22><circle cx=%2240%22 cy=%2240%22 r=%221%22 fill=%22white%22/></svg>');background-size:80px 80px"></div>
     <div class="absolute inset-0" style="background:radial-gradient(ellipse 70% 50% at 30% 80%, rgba(0,0,0,0.3), transparent)"></div>
 
-    <div class="relative p-12">
+    <!-- Logo -->
+    <div class="relative p-12 pb-0">
       <a href="/"><img src="/logo.png" alt="СахGO" class="h-12 w-auto brightness-0 invert"></a>
     </div>
 
-    <div class="relative p-12 text-white">
-      <h2 class="font-display text-4xl leading-tight mb-4">Сахалин и Курилы —<br>ближе, чем кажется</h2>
-      <p class="text-white/70 text-base leading-relaxed max-w-md">Жильё, джип-туры, морские выходы, рыбалка и снаряжение — напрямую от местных организаторов.</p>
-
-      <div class="flex items-center gap-6 mt-8">
-        <div>
-          <div class="font-display text-2xl"><?=$cat_counts['property'] ?? 0?></div>
-          <div class="text-xs text-white/50 uppercase tracking-wide">Жильё</div>
+    <!-- Carousel -->
+    <?php if (!empty($_recent)): ?>
+    <div class="relative flex-1 flex items-center px-12 py-6">
+      <div class="relative w-full overflow-hidden rounded-2xl">
+        <div id="loginCarousel" class="flex transition-transform duration-500 ease-out" style="transform:translateX(0)">
+          <?php foreach ($_recent as $ri => $r): ?>
+          <div class="shrink-0 w-full pr-0">
+            <a href="/listing/<?=$r['id']?>" class="block bg-white rounded-2xl overflow-hidden shadow-2xl">
+              <?php if (!empty($r['image'])): ?>
+              <img src="/uploads/<?=h($r['image'])?>" alt="" class="w-full aspect-[4/3] object-cover">
+              <?php else: ?>
+              <div class="w-full aspect-[4/3] bg-[#EEF2F6]"></div>
+              <?php endif; ?>
+              <div class="p-4">
+                <div class="font-display text-lg text-foreground"><?=number_format((float)$r['price'],0,'.',' ')?> <span class="text-xs font-normal text-[#9AAAB8]"><?=price_label($r['listing_type'])?></span></div>
+                <div class="text-sm text-[#3A4A5C] mt-1 truncate"><?=h($r['title'])?></div>
+                <div class="text-xs text-[#9AAAB8] mt-1"><?=h($r['location'])?></div>
+              </div>
+            </a>
+          </div>
+          <?php endforeach; ?>
         </div>
-        <div class="w-px h-8 bg-white/20"></div>
-        <div>
-          <div class="font-display text-2xl"><?=($cat_counts['tour'] ?? 0) + ($cat_counts['fishing'] ?? 0)?></div>
-          <div class="text-xs text-white/50 uppercase tracking-wide">Туры и рыбалка</div>
-        </div>
-        <div class="w-px h-8 bg-white/20"></div>
-        <div>
-          <div class="font-display text-2xl">100%</div>
-          <div class="text-xs text-white/50 uppercase tracking-wide">От местных</div>
+        <!-- Dots -->
+        <div class="flex justify-center gap-1.5 mt-3">
+          <?php foreach ($_recent as $ri => $_): ?>
+          <button onclick="slideTo(<?=$ri?>)" class="w-1.5 h-1.5 rounded-full transition-colors <?=$ri===0?'bg-white':'bg-white/40'?>" id="dot_<?=$ri?>"></button>
+          <?php endforeach; ?>
         </div>
       </div>
+    </div>
+    <?php endif; ?>
+
+    <!-- Slogan -->
+    <div class="relative p-12 pt-0 text-white">
+      <h2 class="font-display text-3xl leading-tight mb-2">Сахалин и Курилы —<br>ближе, чем кажется</h2>
+      <p class="text-white/60 text-sm">Жильё, туры, рыбалка и снаряжение — от местных</p>
     </div>
   </div>
 
@@ -142,5 +163,15 @@ function togglePw(){
   if(f.type==='password'){f.type='text';e.innerHTML='<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-10-8-10-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 10 8 10 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>';}
   else{f.type='password';e.innerHTML='<path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/>';}
 }
+</script>
+<script>
+var cIdx = 0;
+var cMax = <?=count($_recent)?>;
+function slideTo(i){
+  cIdx = i;
+  document.getElementById('loginCarousel').style.transform = 'translateX(-'+(i*100)+'%)';
+  for(var j=0;j<cMax;j++){var d=document.getElementById('dot_'+j);if(d){d.className='w-1.5 h-1.5 rounded-full transition-colors '+(j===i?'bg-white':'bg-white/40');}}
+}
+setInterval(function(){ cIdx=(cIdx+1)%cMax; slideTo(cIdx); }, 4000);
 </script>
 </body></html>
