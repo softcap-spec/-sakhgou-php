@@ -37,7 +37,7 @@
       </div>
     </div>
     <div class="border-t border-[#EBEEF2] pt-5 flex flex-wrap justify-between gap-3 text-xs text-[#9AAAB8]">
-      <span>© 2026 SakhGo · Сахалинская область</span>
+      <span>© <?=date('Y')?> SakhGo · Сделано на Сахалине</span>
       <span class="flex gap-3">
         <a href="/privacy" class="hover:text-foreground transition-colors">Конфиденциальность</a>
         <a href="/terms" class="hover:text-foreground transition-colors">Условия</a>
