@@ -52,6 +52,7 @@ $my_count = $cu ? ($cu['unread_notifications'] ?? '') : '';
     </div>
     <div class="hidden sm:flex items-center gap-2 shrink-0">
       <?php if ($cu): ?>
+        <?= avatar_html($cu, 'w-8 h-8', 'text-[0.65rem]') ?>
         <a href="/dashboard" class="inline-flex items-center justify-center h-7 gap-1 rounded-md px-2.5 text-[0.8rem] font-medium bg-accent text-white hover:bg-accent/80 transition-all">Кабинет</a>
         <?php if ($cu['role']==='admin'): ?>
         <a href="/admin" class="inline-flex items-center justify-center h-7 gap-1 rounded-md px-2.5 text-[0.8rem] font-medium hover:bg-muted hover:text-foreground transition-all">Админ</a>
@@ -63,7 +64,9 @@ $my_count = $cu ? ($cu['unread_notifications'] ?? '') : '';
       <?php endif; ?>
     </div>
     <div class="flex items-center gap-2 sm:hidden">
-      <a href="<?=$cu?'/dashboard':'/login'?>" class="inline-flex items-center justify-center h-7 gap-1 rounded-md px-2.5 text-[0.8rem] font-medium bg-accent text-white hover:bg-accent/80 transition-all"><?=$cu?'Кабинет':'Войти'?></a>
+      <?php if ($cu): ?>
+        <?= avatar_html($cu, 'w-7 h-7', 'text-[0.6rem]') ?>
+        <a href="/dashboard" class="inline-flex items-center justify-center h-7 gap-1 rounded-md px-2.5 text-[0.8rem] font-medium bg-accent text-white hover:bg-accent/80 transition-all">Кабинет</a>
     </div>
   </div>
 </header>

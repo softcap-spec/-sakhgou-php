@@ -36,6 +36,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
     $user['phone'] = $phone;
     $user['email'] = $email;
   }
+
+  // Avatar upload
+  if (!empty($_FILES['avatar']['name']) && $_FILES['avatar']['error'] === UPLOAD_ERR_OK) {
+    $finfo = finfo_open(FILEINFO_MIME_TYPE);
+    $mime = finfo_file($finfo, $_FILES['avatar']['tmp_name']);
+    finfo_close($finfo);
+    $allowed = ['image/jpeg', 'image/png', 'image/webp'];
+    if (in_array($mime, $allowed)) {
+      $ext = ['image/jpeg'=>'jpg','image/png'=>'png','image/webp'=>'webp'][$mime];
+      $fn = 'avatar_' . $user['id'] . '_' . time() . '.' . $ext;
+      if (move_uploaded_file($_FILES['avatar']['tmp_name'], UPLOAD_DIR . '/' . $fn)) {
+        // Remove old avatar if exists
+        if ($user['avatar_url'] && !str_starts_with($user['avatar_url'], 'http')) {
+          @unlink(UPLOAD_DIR . '/' . basename($user['avatar_url']));
+        }
+        $avatar_url = '/uploads/' . $fn;
+        $pdo->prepare('UPDATE users SET avatar_url=? WHERE id=?')->execute([$avatar_url, $user['id']]);
+        $user['avatar_url'] = $avatar_url;
+      }
+    }
+  }
+
   header('Location: /dashboard?sub=profile&ok=1'); exit;
 }
 
@@ -55,7 +77,7 @@ require __DIR__ . '/../includes/header.php';
   <div class="flex flex-wrap items-end justify-between gap-4 mb-8">
     <div>
       <span class="text-xs uppercase tracking-[0.12em] text-accent font-medium">Личный кабинет</span>
-      <h1 class="font-display text-4xl mt-1"><?=h($user['name'])?></h1>
+      <h1 class="font-display text-4xl mt-1 flex items-center gap-3"><?= avatar_html($user, 'w-10 h-10', 'text-base') ?> <?=h($user['name'])?></h1>
     </div>
     <a href="/create" class="inline-flex items-center justify-center rounded-lg bg-accent text-white hover:bg-accent/80 h-9 px-4 text-sm font-medium transition-all">+ Новое объявление</a>
   </div>
@@ -143,8 +165,19 @@ require __DIR__ . '/../includes/header.php';
   <?php elseif ($sub === 'profile'): ?>
     <?php if (isset($_GET['ok'])): ?><div class="bg-green-50 border border-green-200 text-green-700 rounded-lg p-3 mb-6 text-sm">Профиль обновлён</div><?php endif; ?>
     <div class="max-w-lg">
-      <form method="post" class="bg-white border rounded-xl p-6 space-y-4">
+      <form method="post" enctype="multipart/form-data" class="bg-white border rounded-xl p-6 space-y-4">
         <?= csrf_field() ?>
+        <!-- Avatar -->
+        <div class="flex items-center gap-4">
+          <?= avatar_html($user, 'w-16 h-16', 'text-xl') ?>
+          <div>
+            <label class="inline-flex items-center justify-center rounded-lg border border-border hover:bg-muted h-8 px-3 text-xs font-medium cursor-pointer transition-all">
+              Сменить аватар
+              <input type="file" name="avatar" accept="image/*" class="hidden" onchange="this.form.submit()">
+            </label>
+            <p class="text-[0.7rem] text-muted-foreground mt-1">JPG, PNG, WebP</p>
+          </div>
+        </div>
         <div class="form-group"><label>Имя</label><input type="text" name="name" value="<?=h($user['name'])?>" class="w-full rounded-lg border border-border py-2 px-3 text-sm focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none"></div>
         <div class="form-group"><label>Email</label><input type="email" name="email" value="<?=h($user['email'])?>" class="w-full rounded-lg border border-border py-2 px-3 text-sm focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none"></div>
         <div class="form-group"><label>Телефон</label><input type="text" name="phone" value="<?=h($user['phone']??'')?>" class="w-full rounded-lg border border-border py-2 px-3 text-sm focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none"></div>

@@ -35,7 +35,7 @@ $stmt->execute([$item['listing_type'] ?? 'tour', $lid, 'active']);
 $similar = $stmt->fetchAll();
 
 // Отзывы
-$stmt = $pdo->prepare('SELECT r.*, u.name AS author_name FROM reviews r JOIN users u ON r.user_id = u.id WHERE r.listing_id = ? AND r.moderated = 1 ORDER BY r.created_at DESC LIMIT 10');
+$stmt = $pdo->prepare('SELECT r.*, u.name AS author_name, u.avatar_url AS author_avatar FROM reviews r JOIN users u ON r.user_id = u.id WHERE r.listing_id = ? AND r.moderated = 1 ORDER BY r.created_at DESC LIMIT 10');
 $stmt->execute([$lid]);
 $reviews = $stmt->fetchAll();
 
@@ -195,7 +195,7 @@ require __DIR__ . '/../includes/header.php';
           <?php if(empty($reviews)): ?>
           <p class="text-muted-foreground text-sm">Пока нет отзывов</p>
           <?php else: foreach($reviews as $r): ?>
-          <div class="border-t py-4"><div class="flex items-center gap-2 mb-2"><span class="font-medium"><?=h($r['author_name'])?></span><span class="text-amber-500 text-sm"><?=str_repeat('★',(int)$r['rating'])?></span><span class="text-xs text-muted-foreground ml-auto"><?=time_ago($r['created_at'])?></span></div><p class="text-sm text-muted-foreground"><?=h($r['text'])?></p></div>
+          <div class="border-t py-4"><div class="flex items-center gap-2 mb-2"><?= avatar_html(['name'=>$r['author_name'],'avatar_url'=>$r['author_avatar']??null], 'w-6 h-6', 'text-[0.55rem]') ?><span class="font-medium"><?=h($r['author_name'])?></span><span class="text-amber-500 text-sm"><?=str_repeat('★',(int)$r['rating'])?></span><span class="text-xs text-muted-foreground ml-auto"><?=time_ago($r['created_at'])?></span></div><p class="text-sm text-muted-foreground"><?=h($r['text'])?></p></div>
           <?php endforeach; endif; ?>
         </div>
       </div>
@@ -205,7 +205,7 @@ require __DIR__ . '/../includes/header.php';
         <div class="bg-white border rounded-xl p-6">
           <h3 class="font-display text-lg mb-4">Организатор</h3>
           <div class="flex items-center gap-3 mb-3">
-            <div class="w-12 h-12 rounded-full bg-secondary flex items-center justify-center text-xl font-bold"><?=mb_substr(h($item['host_name']),0,1)?></div>
+            <?= avatar_html(['name' => $item['host_name'], 'avatar_url' => $item['host_avatar']], 'w-12 h-12', 'text-xl') ?>
             <div><div class="font-medium"><?=h($item['host_name'])?></div><div class="text-xs text-muted-foreground">Присоединился <?=date('m.Y',strtotime($item['created_at']))?></div></div>
           </div>
           <?php if(!empty($item['host_phone'])): ?><div class="text-sm text-muted-foreground mb-2">📞 <?=h($item['host_phone'])?></div><?php endif; ?>

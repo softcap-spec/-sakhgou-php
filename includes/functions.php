@@ -258,3 +258,21 @@ function get_recent_listings(int $limit = 6): array {
   $stmt->execute();
   return $stmt->fetchAll();
 }
+
+/**
+ * Return avatar HTML: img if avatar_url exists, or colored circle with first letter
+ */
+function avatar_html(?array $user, string $size_class = 'w-8 h-8', string $text_class = 'text-xs'): string {
+  $name = $user['name'] ?? '?';
+  $initial = mb_strtoupper(mb_substr($name, 0, 1));
+  $url = $user['avatar_url'] ?? null;
+  if ($url) {
+    $img_url = (str_starts_with($url, 'http')) ? $url : $url;
+    return '<img src="' . h($img_url) . '" alt="' . h($name) . '" class="' . $size_class . ' rounded-full object-cover" />';
+  }
+  $colors = ['bg-accent text-white', 'bg-emerald-600 text-white', 'bg-violet-600 text-white',
+             'bg-amber-600 text-white', 'bg-rose-600 text-white', 'bg-cyan-600 text-white',
+             'bg-indigo-600 text-white', 'bg-teal-600 text-white'];
+  $color = $colors[abs(crc32($name)) % count($colors)];
+  return '<span class="' . $size_class . ' rounded-full ' . $color . ' inline-flex items-center justify-center font-semibold ' . $text_class . ' shrink-0">' . $initial . '</span>';
+}
