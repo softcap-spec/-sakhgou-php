@@ -38,37 +38,37 @@ $my_count = $cu ? ($cu['unread_notifications'] ?? '') : '';
 <body class="min-h-screen flex flex-col">
 <div class="flex-1 flex flex-col">
 
-<header class="sticky top-0 z-50 bg-background/95 backdrop-blur-md border-b">
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16 gap-4">
-    <a href="/" class="flex items-center gap-2 shrink-0">
-      <img src="/logo.png" alt="СахGO" class="h-10 sm:h-12 w-auto">
+<header class="sticky top-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border/40 shadow-[0_1px_3px_rgba(18,30,43,0.03)]">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-[4.25rem] gap-4">
+    <a href="/" class="flex items-center gap-2 shrink-0 group">
+      <img src="/logo.png" alt="СахGO" class="h-10 sm:h-12 w-auto transition-transform group-hover:scale-105">
     </a>
-    <div class="hidden md:flex items-center gap-0.5 bg-white border rounded-lg p-0.5">
-      <?php foreach (['all'=>'Всё','property'=>'Жильё','tour'=>'Туры','fishing'=>'Рыбалка','rental_gear'=>'Снаряжение','car_rental'=>'Прокат авто'] as $k=>$v): 
+    <div class="hidden md:flex items-center gap-0.5 bg-white/90 border border-border/60 rounded-xl p-1 shadow-[0_2px_8px_rgba(18,30,43,0.04)]">
+      <?php foreach (['all'=>'Все','property'=>'Жильё','tour'=>'Туры','fishing'=>'Рыбалка','rental_gear'=>'Снаряжение','car_rental'=>'Прокат авто'] as $k=>$v): 
         $active = ($k==='all' && empty($_GET['cat'])) || (isset($_GET['cat']) && $_GET['cat']===$k);
       ?>
-      <a href="/catalog/<?=$k==='all'?'':$k?>" class="px-3.5 py-1.5 text-sm font-medium rounded-md transition-colors whitespace-nowrap <?=$active?'bg-accent text-white':'text-muted-foreground hover:text-foreground hover:bg-secondary'?>"><?=$v?></a>
+      <a href="/catalog/<?=$k==='all'?'':$k?>" class="px-3.5 py-2 text-sm font-medium rounded-lg transition-all whitespace-nowrap <?=$active?'bg-accent text-white shadow-[0_2px_6px_rgba(27,107,138,0.25)]':'text-muted-foreground hover:text-foreground hover:bg-secondary/70'?>"><?=$v?></a>
       <?php endforeach; ?>
     </div>
     <div class="hidden sm:flex items-center gap-2 shrink-0">
       <?php if ($cu): ?>
         <?= avatar_html($cu, 'w-8 h-8', 'text-[0.65rem]') ?>
-        <a href="/dashboard" class="inline-flex items-center justify-center h-7 gap-1 rounded-md px-2.5 text-[0.8rem] font-medium bg-accent text-white hover:bg-accent/80 transition-all">Кабинет</a>
+        <a href="/dashboard" class="inline-flex items-center justify-center h-8 gap-1 rounded-lg px-3 text-[0.8rem] font-semibold bg-accent text-white hover:bg-accent/85 transition-all shadow-[0_2px_6px_rgba(27,107,138,0.2)]">Кабинет</a>
         <?php if ($cu['role']==='admin'): ?>
-        <a href="/admin" class="inline-flex items-center justify-center h-7 gap-1 rounded-md px-2.5 text-[0.8rem] font-medium hover:bg-muted hover:text-foreground transition-all">Админ</a>
+        <a href="/admin" class="inline-flex items-center justify-center h-8 gap-1 rounded-lg px-3 text-[0.8rem] font-medium hover:bg-muted/70 hover:text-foreground transition-all">Админ</a>
         <?php endif; ?>
-        <a href="/logout" class="inline-flex items-center justify-center h-7 gap-1 rounded-md px-2.5 text-[0.8rem] font-medium hover:bg-muted hover:text-foreground transition-all">Выйти</a>
+        <a href="/logout" class="inline-flex items-center justify-center h-8 gap-1 rounded-lg px-3 text-[0.8rem] font-medium text-muted-foreground hover:text-destructive hover:bg-destructive/5 transition-all">Выйти</a>
       <?php else: ?>
-        <a href="/login" class="inline-flex items-center justify-center h-7 gap-1 rounded-md px-2.5 text-[0.8rem] font-medium hover:bg-muted hover:text-foreground transition-all">Войти</a>
-        <a href="/register" class="inline-flex items-center justify-center h-7 gap-1 rounded-md px-2.5 text-[0.8rem] font-medium bg-accent text-white hover:bg-accent/80 transition-all">Регистрация</a>
+        <a href="/login" class="inline-flex items-center justify-center h-8 gap-1 rounded-lg px-3 text-[0.8rem] font-medium hover:bg-muted/70 hover:text-foreground transition-all">Войти</a>
+        <a href="/register" class="inline-flex items-center justify-center h-8 gap-1 rounded-lg px-3 text-[0.8rem] font-semibold bg-accent text-white hover:bg-accent/85 transition-all shadow-[0_2px_6px_rgba(27,107,138,0.2)]">Регистрация</a>
       <?php endif; ?>
     </div>
     <div class="flex items-center gap-2 sm:hidden">
       <?php if ($cu): ?>
         <?= avatar_html($cu, 'w-7 h-7', 'text-[0.6rem]') ?>
-        <a href="/dashboard" class="inline-flex items-center justify-center h-7 gap-1 rounded-md px-2.5 text-[0.8rem] font-medium bg-accent text-white hover:bg-accent/80 transition-all">Кабинет</a>
+        <a href="/dashboard" class="inline-flex items-center justify-center h-8 gap-1 rounded-lg px-3 text-[0.8rem] font-semibold bg-accent text-white hover:bg-accent/85 transition-all">Кабинет</a>
       <?php else: ?>
-        <a href="/login" class="inline-flex items-center justify-center h-7 gap-1 rounded-md px-2.5 text-[0.8rem] font-medium bg-accent text-white hover:bg-accent/80 transition-all">Войти</a>
+        <a href="/login" class="inline-flex items-center justify-center h-8 gap-1 rounded-lg px-3 text-[0.8rem] font-semibold bg-accent text-white hover:bg-accent/85 transition-all">Войти</a>
       <?php endif; ?>
     </div>
   </div>
