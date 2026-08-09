@@ -1,5 +1,5 @@
 <?php
-// register.php — v2
+// register.php — v3
 if (isset($_SESSION['user_id'])) { header('Location: /'); exit; }
 
 $errors = [];
@@ -29,14 +29,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $page_title = 'Регистрация — СахGO';
 require __DIR__ . '/../includes/header.php';
 ?>
-<section class="min-h-[80vh] flex items-center justify-center py-16">
-  <div class="w-full max-w-md mx-auto px-4">
+<section class="min-h-[75vh] flex items-center justify-center py-16">
+  <div class="w-full max-w-sm mx-auto px-4">
     <div class="text-center mb-8">
-      <a href="/"><img src="/logo.png" alt="СахGO" class="h-14 w-auto mx-auto mb-4"></a>
-      <h1 class="font-display text-3xl">Присоединяйтесь</h1>
-      <p class="text-sm text-muted-foreground mt-2">Создайте аккаунт за минуту</p>
+      <a href="/"><img src="/logo.png" alt="СахGO" class="h-12 w-auto mx-auto mb-6"></a>
+      <h1 class="font-display text-2xl">Регистрация</h1>
     </div>
-    <div class="bg-white border border-border/60 rounded-2xl p-8 shadow-[0_12px_40px_-10px_rgba(18,30,43,0.1)]">
+    <div class="bg-white border border-[#EBEEF2] rounded-xl p-7">
       <?php foreach ($errors as $e): ?><div class="flash error"><?= h($e) ?></div><?php endforeach; ?>
       <form method="post">
         <?= csrf_field() ?>
@@ -60,9 +59,9 @@ require __DIR__ . '/../includes/header.php';
           <label>Повторите пароль</label>
           <input type="password" name="password2" required>
         </div>
-        <button type="submit" class="cta-btn" style="width:100%;height:3rem;font-size:1rem">Зарегистрироваться</button>
+        <button type="submit" class="cta-btn w-full" style="height:2.75rem">Зарегистрироваться</button>
       </form>
-      <p class="text-sm text-center mt-5 text-muted-foreground">Уже есть аккаунт? <a href="/login" class="text-accent font-semibold hover:underline">Войти</a></p>
+      <p class="auth-footer">Уже есть аккаунт? <a href="/login">Войти</a></p>
     </div>
   </div>
 </section>

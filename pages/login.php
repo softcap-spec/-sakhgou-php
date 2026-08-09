@@ -1,5 +1,5 @@
 <?php
-// login.php — v2
+// login.php — v3
 if (isset($_SESSION['user_id'])) { header('Location: /dashboard'); exit; }
 
 $error = '';
@@ -18,14 +18,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $page_title = 'Войти — СахGO';
 require __DIR__ . '/../includes/header.php';
 ?>
-<section class="min-h-[80vh] flex items-center justify-center py-16">
-  <div class="w-full max-w-md mx-auto px-4">
+<section class="min-h-[75vh] flex items-center justify-center py-16">
+  <div class="w-full max-w-sm mx-auto px-4">
     <div class="text-center mb-8">
-      <a href="/"><img src="/logo.png" alt="СахGO" class="h-14 w-auto mx-auto mb-4"></a>
-      <h1 class="font-display text-3xl">С возвращением</h1>
-      <p class="text-sm text-muted-foreground mt-2">Войдите чтобы управлять объявлениями</p>
+      <a href="/"><img src="/logo.png" alt="СахGO" class="h-12 w-auto mx-auto mb-6"></a>
+      <h1 class="font-display text-2xl">Вход</h1>
     </div>
-    <div class="bg-white border border-border/60 rounded-2xl p-8 shadow-[0_12px_40px_-10px_rgba(18,30,43,0.1)]">
+    <div class="bg-white border border-[#EBEEF2] rounded-xl p-7">
       <?php if ($error): ?><div class="flash error"><?= h($error) ?></div><?php endif; ?>
       <form method="post">
         <?= csrf_field() ?>
@@ -37,11 +36,11 @@ require __DIR__ . '/../includes/header.php';
           <label>Пароль</label>
           <input type="password" name="password" required>
         </div>
-        <button type="submit" class="cta-btn" style="width:100%;height:3rem;font-size:1rem">Войти</button>
+        <button type="submit" class="cta-btn w-full" style="height:2.75rem">Войти</button>
       </form>
-      <div class="flex justify-between mt-5 text-sm">
-        <a href="/reset-password" class="text-muted-foreground hover:text-accent transition-colors">Забыли пароль?</a>
-        <a href="/register" class="text-accent font-semibold hover:underline">Регистрация →</a>
+      <div class="flex justify-between mt-4 text-xs">
+        <a href="/reset-password" class="text-[#7A8A9A] hover:text-accent transition-colors">Забыли пароль?</a>
+        <a href="/register" class="text-accent font-medium hover:underline">Регистрация</a>
       </div>
     </div>
   </div>

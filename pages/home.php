@@ -1,5 +1,5 @@
 <?php
-// home.php — главная сахгоу.рф v2
+// home.php — сахгоу.рф v3
 $cu = auth_user();
 $recent = get_recent_listings(8);
 $cat_counts = [];
@@ -7,57 +7,47 @@ foreach (['property','tour','fishing','rental_gear','car_rental'] as $slug) {
   $r = get_listings($slug, '', 1);
   $cat_counts[$slug] = $r['total'];
 }
-$page_title = 'СахGO — жильё, туры, рыбалка и снаряжение. Сахалин и Курилы — ближе, чем кажется';
+$page_title = 'СахGO — жильё, туры, рыбалка и снаряжение. Сахалин и Курилы';
 require __DIR__ . '/../includes/header.php';
 ?>
 
 <main>
-<!-- ═══ Hero ═══ -->
-<section class="relative py-28 sm:py-36 overflow-hidden">
-  <!-- Background layers -->
-  <div class="absolute inset-0 bg-gradient-to-b from-[#E5EEF5] via-[#EDF2F7] to-background"></div>
-  <div class="absolute inset-0" style="background:radial-gradient(ellipse 90% 70% at 50% 5%, rgba(59,130,200,0.09), transparent 65%), radial-gradient(ellipse 40% 30% at 85% 90%, rgba(27,107,138,0.04), transparent)"></div>
-  <!-- Subtle pattern -->
-  <div class="absolute inset-0 opacity-[0.03]" style="background-image:url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 60 60%22><circle cx=%2230%22 cy=%2230%22 r=%221.5%22 fill=%22%231B6B8A%22/></svg>');background-size:60px 60px"></div>
 
-  <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-10 mb-14">
-      <div class="max-w-2xl">
-        <span class="inline-flex items-center gap-2.5 text-xs uppercase tracking-[0.18em] text-accent font-semibold mb-5">
-          <span class="w-8 h-px bg-accent/40"></span>Маркетплейс приключений
-        </span>
-        <h1 class="font-display text-5xl sm:text-6xl lg:text-[4.25rem] leading-[1.02] tracking-tight text-foreground mb-6">
-          Сахалин и Курилы — <em class="text-accent not-italic relative">ближе<svg class="absolute -bottom-1.5 left-0 w-full" viewBox="0 0 100 8" preserveAspectRatio="none"><path d="M0,4 Q25,1 50,4 Q75,7 100,4" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" class="text-accent/40"></path></svg></em>,<br>чем кажется
-        </h1>
-        <p class="text-lg text-muted-foreground max-w-lg leading-relaxed">Жильё, джип-туры, морские выходы, рыбалка и снаряжение — напрямую от местных, без посредников.</p>
-      </div>
-      <div class="hidden lg:block shrink-0 relative">
-        <div class="absolute inset-0 bg-gradient-to-t from-accent/10 to-transparent rounded-full blur-3xl"></div>
-        <img src="/hero-bear.png" alt="" class="relative h-56 w-auto opacity-90 drop-shadow-xl">
-      </div>
+<!-- ═══ Hero ═══ -->
+<section class="py-24 sm:py-32">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="max-w-2xl">
+      <span class="inline-flex items-center gap-2 text-xs uppercase tracking-[0.16em] text-accent font-semibold mb-5">
+        <span class="w-8 h-px bg-accent/30"></span>Маркетплейс Сахалина
+      </span>
+      <h1 class="font-display text-[2.75rem] sm:text-5xl lg:text-[3.5rem] leading-[1.05] tracking-tight text-foreground mb-5">
+        Сахалин и Курилы —<br>
+        <span class="text-accent">ближе, чем кажется</span>
+      </h1>
+      <p class="text-base sm:text-lg text-[#7A8A9A] max-w-lg leading-relaxed">
+        Жильё, джип-туры, морские выходы, рыбалка и снаряжение — напрямую от местных организаторов.
+      </p>
     </div>
 
     <!-- Search -->
-    <div class="max-w-3xl">
-      <form action="/search" method="get" class="relative group">
-        <div class="absolute -inset-1.5 bg-gradient-to-r from-accent/25 via-accent/10 to-accent/25 rounded-[1.25rem] blur-md opacity-0 group-focus-within:opacity-100 transition duration-700"></div>
-        <div class="relative flex items-center bg-white rounded-[1.25rem] shadow-[0_8px_40px_-12px_rgba(0,0,0,0.1)] hover:shadow-[0_16px_48px_-12px_rgba(0,0,0,0.15)] transition-shadow duration-300">
-          <div class="flex-1 flex items-center gap-3.5 px-6">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-muted-foreground/35 shrink-0"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
-            <input type="text" name="q" placeholder="Квартира у моря, джип-тур, сноуборд, рыбалка..." class="w-full h-[3.75rem] bg-transparent border-0 text-lg placeholder:text-muted-foreground/35 focus:outline-none font-medium" value="<?=h($_GET['q']??'')?>">
+    <div class="max-w-2xl mt-10">
+      <form action="/search" method="get" class="relative">
+        <div class="flex items-center bg-white border border-[#DFE4EA] rounded-xl shadow-sm focus-within:border-accent focus-within:ring-1 focus-within:ring-accent transition-colors">
+          <div class="flex-1 flex items-center gap-2.5 px-4">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-[#9AAAB8] shrink-0"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
+            <input type="text" name="q" placeholder="Квартира, джип-тур, сноуборд, рыбалка..." class="w-full h-14 bg-transparent border-0 text-base placeholder:text-[#9AAAB8] focus:outline-none">
           </div>
-          <div class="p-2 pr-2.5">
-            <button type="submit" class="inline-flex shrink-0 items-center justify-center border border-transparent bg-accent text-white hover:bg-accent/85 h-[3rem] px-8 rounded-xl gap-2 text-base font-semibold shadow-[0_4px_14px_-4px_rgba(27,107,138,0.4)] hover:shadow-[0_6px_20px_-4px_rgba(27,107,138,0.5)] transition-all active:scale-[0.98]">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z"/><path d="M20 2v4M22 4h-4"/><circle cx="4" cy="20" r="2"/></svg>
+          <div class="p-1.5">
+            <button type="submit" class="inline-flex items-center justify-center bg-accent text-white hover:bg-accent/90 h-11 px-6 rounded-lg text-sm font-semibold transition-colors">
               Найти
             </button>
           </div>
         </div>
       </form>
-      <div class="flex flex-wrap items-center gap-2 mt-5">
-        <span class="text-xs text-muted-foreground mr-1">Часто ищут:</span>
+      <div class="flex flex-wrap items-center gap-2 mt-3">
+        <span class="text-xs text-[#9AAAB8] mr-1">Часто ищут:</span>
         <?php foreach (['Маяк Анива','Джип-тур','Сноуборд','Квартира посуточно','Рыбалка'] as $tag): ?>
-        <a href="/search?q=<?=urlencode($tag)?>" class="px-3 py-1.5 text-xs rounded-full border border-border/60 hover:border-accent/30 hover:text-accent hover:bg-accent/[0.04] transition-all"><?=$tag?></a>
+        <a href="/search?q=<?=urlencode($tag)?>" class="px-2.5 py-1 text-xs rounded-md text-[#54677A] hover:text-foreground hover:bg-[#EEF2F6] transition-colors"><?=$tag?></a>
         <?php endforeach; ?>
       </div>
     </div>
@@ -65,26 +55,24 @@ require __DIR__ . '/../includes/header.php';
 </section>
 
 <!-- ═══ Quick Picks ═══ -->
-<section class="py-14 section-wave">
+<section class="pb-16">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <span class="text-xs uppercase tracking-[0.14em] text-accent font-semibold">Быстрые подборки</span>
-    <h2 class="font-display text-4xl sm:text-5xl mt-1.5 mb-10">Куда поедем?</h2>
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
       <?php
       $picks = [
-        ['Жильё','property','qp-zhilyo','🏠'],
-        ['Морские выходы','tour','qp-morskie','⛵'],
-        ['Джип-туры','tour','qp-dzhip','🚙'],
-        ['Рыбалка','fishing','qp-rybalka','🎣'],
+        ['Жильё','property','qp-zhilyo','M3 12l9-9 9 9M5 10v10h14V10'],
+        ['Морские выходы','tour','qp-morskie','M3 18l1.5-2.5h15L21 18M5 18v2M19 18v2M7 15.5l5-7 5 7'],
+        ['Джип-туры','tour','qp-dzhip','M5 11l1.5-4.5h11L19 11M3 11h18v6H3zM6.5 17v2M17.5 17v2'],
+        ['Рыбалка','fishing','qp-rybalka','M16 3l-4 4M12 7c-3 0-6 2-6 5s3 5 6 5M18 12c0-1.5-1-3-2.5-4M12 17v4'],
       ];
       foreach ($picks as $p):
       ?>
-      <a href="/catalog/<?=$p[1]?>" class="qp-card <?=$p[3]?>">
+      <a href="/catalog/<?=$p[1]?>" class="qp-card <?=$p[2]?>">
         <div class="qp-overlay"></div>
         <div class="qp-content">
-          <div class="text-3xl mb-2"><?=$p[3]?></div>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="mb-2 opacity-90"><path d="<?=$p[3]?>"/></svg>
           <span class="qp-count"><?=$cat_counts[$p[1]]?> вариантов</span>
-          <h3 class="font-display text-xl mt-1 leading-tight"><?=$p[0]?></h3>
+          <h3 class="font-display text-lg mt-0.5 leading-tight"><?=$p[0]?></h3>
         </div>
       </a>
       <?php endforeach; ?>
@@ -93,16 +81,16 @@ require __DIR__ . '/../includes/header.php';
 </section>
 
 <!-- ═══ Popular Listings ═══ -->
-<section class="py-14 md:py-18 bg-white border-t border-border/40">
+<section class="py-16 bg-white border-t border-[#EBEEF2]">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="flex flex-wrap items-end justify-between gap-4 mb-12">
+    <div class="flex flex-wrap items-end justify-between gap-4 mb-10">
       <div>
-        <span class="text-xs uppercase tracking-[0.14em] text-accent font-semibold">Популярное сейчас</span>
-        <h2 class="font-display text-4xl sm:text-5xl mt-1.5">Выбор путешественников</h2>
+        <h2 class="font-display text-3xl sm:text-4xl tracking-tight">Выбор путешественников</h2>
+        <p class="text-sm text-[#7A8A9A] mt-1.5">Популярные объявления на этой неделе</p>
       </div>
-      <div class="flex gap-1.5 flex-wrap">
+      <div class="flex gap-1 flex-wrap">
         <?php
-        $cats_filter = ['all'=>'Всё','property'=>'Жильё','tour'=>'Туры','fishing'=>'Рыбалка','rental_gear'=>'Снаряжение','car_rental'=>'Прокат авто'];
+        $cats_filter = ['all'=>'Все','property'=>'Жильё','tour'=>'Туры','fishing'=>'Рыбалка','rental_gear'=>'Снаряжение','car_rental'=>'Прокат авто'];
         $active_cat = $_GET['cat'] ?? 'all';
         foreach ($cats_filter as $k=>$v):
         ?>
@@ -112,35 +100,27 @@ require __DIR__ . '/../includes/header.php';
     </div>
 
     <?php if (empty($recent)): ?>
-      <div class="text-center py-24 text-muted-foreground">
-        <div class="text-6xl mb-4">🏕️</div>
-        <p class="text-xl font-medium mb-1">Ничего не найдено</p>
-        <p class="text-sm mb-6">Станьте первым организатором на Сахалине</p>
-        <a href="/create" class="inline-flex items-center justify-center rounded-lg border border-border bg-background hover:bg-muted hover:text-foreground h-9 gap-1.5 px-3 text-sm font-medium transition-all">Подать объявление</a>
+      <div class="text-center py-20">
+        <p class="text-lg font-medium text-[#3A4A5C]">Объявлений пока нет</p>
+        <p class="text-sm text-[#7A8A9A] mt-1 mb-5">Станьте первым организатором на Сахалине</p>
+        <a href="/create" class="cta-btn">Подать объявление</a>
       </div>
     <?php else: ?>
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <?php foreach ($recent as $item): ?>
-        <a href="/listing/<?=$item['id']?>" class="listing-card group">
+        <a href="/listing/<?=$item['id']?>" class="listing-card">
           <?php if (!empty($item['image'])): ?>
           <div class="listing-img">
             <img src="/uploads/<?=h($item['image'])?>" alt="<?=h($item['title'])?>" loading="lazy">
           </div>
           <?php else: ?>
-          <div class="listing-img">
-            <div class="w-full h-full bg-gradient-to-br from-secondary to-secondary/50 flex items-center justify-center text-5xl">
-              <?php
-              $defaultIcons = ['property'=>'🏠','tour'=>'🏔️','fishing'=>'🎣','rental_gear'=>'🔧','car_rental'=>'🚗'];
-              echo $defaultIcons[$item['listing_type']] ?? '📷';
-              ?>
-            </div>
-          </div>
+          <div class="listing-img bg-[#EEF2F6]"></div>
           <?php endif; ?>
           <?php if (!empty($item['promo_type'])): ?>
-          <span class="promo-badge absolute top-3 left-3 <?=$item['promo_type']==='top'?'bg-red-600':($item['promo_type']==='highlight'?'bg-amber-500':'bg-red-500')?>"><?=$item['promo_type']==='top'?'🔝 TOP':($item['promo_type']==='highlight'?'💡 PROMO':'⚡ Срочно')?></span>
+          <span class="promo-badge absolute top-2.5 left-2.5 <?=$item['promo_type']==='top'?'bg-red-600':($item['promo_type']==='highlight'?'bg-amber-500':'bg-red-500')?>"><?=$item['promo_type']==='top'?'TOP':($item['promo_type']==='highlight'?'PROMO':'Срочно')?></span>
           <?php endif; ?>
           <div class="listing-body">
-            <div class="listing-price"><?=number_format((float)$item['price'],0,'.',' ')?> <span class="text-sm font-medium text-muted-foreground"><?=price_label($item['listing_type'])?></span></div>
+            <div class="listing-price"><?=number_format((float)$item['price'],0,'.',' ')?> <span class="text-xs font-normal text-[#9AAAB8]"><?=price_label($item['listing_type'])?></span></div>
             <div class="listing-title"><?=h($item['title'])?></div>
             <div class="listing-meta">
               <span><?=h($item['category_name'])?></span>
@@ -156,17 +136,18 @@ require __DIR__ . '/../includes/header.php';
 </section>
 
 <!-- ═══ CTA ═══ -->
-<section class="py-28 bg-accent text-white text-center cta-section">
-  <div class="relative max-w-2xl mx-auto px-4">
-    <div class="text-5xl mb-6">🏔️</div>
-    <h2 class="font-display text-4xl sm:text-5xl leading-[1.08] mb-6">Разместите своё объявление на SakhGo</h2>
-    <p class="text-white/80 text-lg max-w-xl mx-auto mb-12 leading-relaxed">Сдавайте жильё, предлагайте туры и рыбалку или сдавайте снаряжение — наша площадка помогает найти гостей со всей России.</p>
-    <a href="/create" class="inline-flex items-center justify-center rounded-xl bg-white text-accent hover:bg-white/90 h-9 gap-2 text-base px-10 py-7 font-semibold transition-all shadow-[0_8px_30px_-8px_rgba(0,0,0,0.3)] hover:shadow-[0_12px_36px_-8px_rgba(0,0,0,0.35)] hover:-translate-y-0.5 active:translate-y-0">
-      Разместить объявление
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+<section class="py-20 bg-foreground text-white">
+  <div class="max-w-3xl mx-auto px-4 text-center">
+    <h2 class="font-display text-3xl sm:text-4xl leading-[1.1] mb-4">Разместите своё объявление</h2>
+    <p class="text-white/60 text-base max-w-xl mx-auto mb-8 leading-relaxed">
+      Сдавайте жильё, предлагайте туры и рыбалку или сдавайте снаряжение. Найдите гостей со всей России.
+    </p>
+    <a href="/create" class="inline-flex items-center justify-center bg-white text-foreground hover:bg-white/90 h-11 px-8 rounded-lg text-sm font-semibold transition-colors">
+      Подать объявление
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="ml-1.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
     </a>
   </div>
 </section>
-</main>
 
+</main>
 <?php require __DIR__ . '/../includes/footer.php'; ?>
