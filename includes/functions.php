@@ -276,3 +276,17 @@ function avatar_html(?array $user, string $size_class = 'w-8 h-8', string $text_
   $color = $colors[abs(crc32($name)) % count($colors)];
   return '<span class="' . $size_class . ' rounded-full ' . $color . ' inline-flex items-center justify-center font-semibold ' . $text_class . ' shrink-0">' . $initial . '</span>';
 }
+
+/**
+ * Get promo prices from settings (with defaults)
+ */
+function get_promo_prices(): array {
+  $pdo = db();
+  $stmt = $pdo->query("SELECT setting_key, setting_value FROM settings WHERE setting_key LIKE 'promo_%'");
+  $prices = ['top' => 700, 'highlight' => 400, 'urgent' => 200];
+  while ($row = $stmt->fetch()) {
+    $key = str_replace('promo_', '', $row['setting_key']);
+    $prices[$key] = (int)$row['setting_value'];
+  }
+  return $prices;
+}

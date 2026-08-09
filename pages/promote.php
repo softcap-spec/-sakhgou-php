@@ -3,6 +3,7 @@
 $cu = auth_required();
 
 $pdo = db();
+$prices = get_promo_prices();
 $lid = (int)($_GET['id'] ?? 0);
 $stmt = $pdo->prepare('SELECT id, title FROM listings WHERE id = ? AND user_id = ?');
 $stmt->execute([$lid, $cu['id']]);
@@ -20,7 +21,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['promote'])) {
   csrf_check();
   $promoType = $_POST['promo_type'] ?? 'top';
   $duration = (int)($_POST['duration'] ?? 7);
-  $budget = ['top'=>700,'highlight'=>400,'urgent'=>200][$promoType] * $duration;
+  $budget = $prices[$promoType] * $duration;
   $starts = date('Y-m-d H:i:s');
   $expires = date('Y-m-d H:i:s', strtotime("+{$duration} days"));
 
@@ -64,9 +65,9 @@ require __DIR__ . '/../includes/header.php';
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
       <?php
       $plans = [
-        ['top','🔝 Top','Наверху списка','700 ₽/день',['Максимальная видимость','Первое место в выдаче','Статистика показов']],
-        ['highlight','💡 Highlight','Выделено цветом','400 ₽/день',['Жёлтый фон в выдаче','Выше обычных','Статистика кликов']],
-        ['urgent','⚡ Срочно','Метка срочности','200 ₽/день',['Красная метка','Привлекает внимание','Повышает конверсию']],
+        ['top','🔝 Top','Наверху списка',$prices['top'].' ₽/день',['Максимальная видимость','Первое место в выдаче','Статистика показов']],
+        ['highlight','💡 Highlight','Выделено цветом',$prices['highlight'].' ₽/день',['Жёлтый фон в выдаче','Выше обычных','Статистика кликов']],
+        ['urgent','⚡ Срочно','Метка срочности',$prices['urgent'].' ₽/день',['Красная метка','Привлекает внимание','Повышает конверсию']],
       ];
       foreach ($plans as $p):
       ?>
@@ -89,9 +90,9 @@ require __DIR__ . '/../includes/header.php';
     </div>
 
     <div class="bg-muted/30 rounded-xl p-4 mb-6" id="priceEstimate">
-      <div class="flex justify-between text-sm"><span>Тариф Top</span><span>7 × 700 ₽</span></div>
+      <div class="flex justify-between text-sm"><span>Тариф Top</span><span id="calcLabel">7 × <?=$prices['top']?> ₽</span></div>
       <hr class="my-2">
-      <div class="flex justify-between font-medium"><span>Итого</span><span class="font-display text-lg" id="totalPrice">4 900 ₽</span></div>
+      <div class="flex justify-between font-medium"><span>Итого</span><span class="font-display text-lg" id="totalPrice"><?=number_format($prices['top']*7,0,',',' ')?> ₽</span></div>
     </div>
 
     <div class="flex gap-2">
@@ -104,7 +105,8 @@ require __DIR__ . '/../includes/header.php';
 </section>
 
 <script>
-var prices = {top:700, highlight:400, urgent:200};
+var prices = <?=json_encode($prices)?>;
+var typeNames = {top:'Top', highlight:'Highlight', urgent:'Срочно'};
 function selectPlan(input) {
   document.querySelectorAll('.promo-card').forEach(function(c){c.style.borderColor='var(--border)';c.style.background=''});
   var card = input.closest('label').querySelector('.promo-card');
@@ -116,6 +118,7 @@ function updatePrice() {
   var type = document.querySelector('input[name="promo_type"]:checked').value;
   var days = parseInt(document.querySelector('select[name="duration"]').value);
   var total = prices[type] * days;
+  document.getElementById('calcLabel').textContent = days + ' × ' + prices[type].toLocaleString('ru-RU') + ' ₽';
   document.getElementById('totalPrice').textContent = total.toLocaleString('ru-RU') + ' ₽';
 }
 </script>

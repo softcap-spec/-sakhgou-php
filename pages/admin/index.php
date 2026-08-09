@@ -404,9 +404,47 @@ elseif ($tab === 'users'):
 <?php
 // ── PAYMENTS ──
 elseif ($tab === 'payments'):
+  // Handle price save
+  if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'save_prices') {
+    foreach (['top','highlight','urgent'] as $t) {
+      $val = max(1, (int)($_POST['price_' . $t] ?? 100));
+      $pdo->prepare("UPDATE settings SET setting_value = ? WHERE setting_key = ?")->execute([$val, 'promo_' . $t]);
+    }
+    header('Location: /admin?tab=payments&ok=prices'); exit;
+  }
+  $promoPrices = get_promo_prices();
   $promos = $pdo->query("SELECT p.*, u.name AS host_name, l.title AS listing_title FROM promotions p JOIN users u ON p.host_id = u.id JOIN listings l ON p.listing_id = l.id ORDER BY p.created_at DESC LIMIT 200");
 ?>
     <h2 class="font-display text-xl mb-4">Платные услуги / Продвижение</h2>
+
+    <!-- Price Editor -->
+    <div class="bg-white border rounded-xl p-6 mb-6">
+      <div class="flex items-center justify-between mb-3">
+        <h3 class="font-display text-lg">Настройка цен (₽/день)</h3>
+        <?php if (isset($_GET['ok']) && $_GET['ok']==='prices'): ?>
+          <span class="text-xs text-green-600">✓ Сохранено</span>
+        <?php endif; ?>
+      </div>
+      <form method="post" class="flex flex-wrap gap-4 items-end">
+        <?= csrf_field() ?>
+        <input type="hidden" name="action" value="save_prices">
+        <?php
+        $priceDefs = [
+          ['top', '🔝 Top', $promoPrices['top']],
+          ['highlight', '💡 Highlight', $promoPrices['highlight']],
+          ['urgent', '⚡ Срочно', $promoPrices['urgent']],
+        ];
+        foreach ($priceDefs as $pd): ?>
+          <label class="flex flex-col gap-1">
+            <span class="text-xs text-muted-foreground"><?=$pd[1]?></span>
+            <input type="number" name="price_<?=$pd[0]?>" value="<?=$pd[2]?>" min="1" class="w-24 border rounded-lg px-3 py-2 text-sm">
+          </label>
+        <?php endforeach; ?>
+        <button type="submit" class="btn-accent text-sm py-2 px-4">Сохранить</button>
+      </form>
+    </div>
+
+    <!-- Promo Requests -->
     <div class="bg-white border rounded-xl overflow-hidden">
       <table class="w-full text-sm">
         <thead><tr class="border-b bg-muted/30"><th class="px-4 py-3 text-left">ID</th><th class="px-4 py-3 text-left">Пользователь</th><th class="px-4 py-3 text-left hidden sm:table-cell">Объявление</th><th class="px-4 py-3 text-center hidden sm:table-cell">Тип</th><th class="px-4 py-3 text-right hidden sm:table-cell">Сумма</th><th class="px-4 py-3 text-center">Статус</th><th class="px-4 py-3 text-right hidden sm:table-cell">Дата</th><th class="px-4 py-3 text-center">Действия</th></tr></thead>
