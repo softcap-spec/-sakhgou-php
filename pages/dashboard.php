@@ -1,11 +1,11 @@
 <?php
-// dashboard.php — Tailwind, копия dashboard_main.tsx
+// dashboard.php — v3 clean design
 $user = auth_required();
 $pdo = db();
 
 $sub = $_GET['sub'] ?? 'listings';
 
-// Мой профиль: мои объявления
+// My listings
 $st = $pdo->prepare("SELECT l.*, c.name AS category_name,
   (SELECT filename FROM listing_images WHERE listing_id = l.id ORDER BY sort_order LIMIT 1) AS image,
   promo.promo_type AS promo_type
@@ -15,16 +15,16 @@ $st = $pdo->prepare("SELECT l.*, c.name AS category_name,
 $st->execute([$user['id']]);
 $myListings = $st->fetchAll();
 
-// Вкладки
+// Tabs
 $tabs = [
-  'listings' => 'Мои объявления',
-  'favorites' => 'Избранное',
-  'bookings' => 'Бронирования',
+  'listings'   => 'Мои объявления',
+  'favorites'  => 'Избранное',
+  'bookings'   => 'Бронирования',
   'host_bookings' => 'Ко мне',
-  'profile' => 'Профиль',
+  'profile'    => 'Профиль',
 ];
 
-// POST: обновление профиля
+// POST: update profile
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
   csrf_check();
   $name = trim($_POST['name'] ?? '');
@@ -47,7 +47,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
       $ext = ['image/jpeg'=>'jpg','image/png'=>'png','image/webp'=>'webp'][$mime];
       $fn = 'avatar_' . $user['id'] . '_' . time() . '.' . $ext;
       if (move_uploaded_file($_FILES['avatar']['tmp_name'], UPLOAD_DIR . '/' . $fn)) {
-        // Remove old avatar if exists
         if ($user['avatar_url'] && !str_starts_with($user['avatar_url'], 'http')) {
           @unlink(UPLOAD_DIR . '/' . basename($user['avatar_url']));
         }
@@ -72,52 +71,90 @@ $page_title = 'Личный кабинет — СахGO';
 require __DIR__ . '/../includes/header.php';
 ?>
 
-<main class="py-12">
-<div class="max-w-7xl mx-auto px-4">
-  <div class="flex flex-wrap items-end justify-between gap-4 mb-8">
-    <div>
-      <span class="text-xs uppercase tracking-[0.12em] text-accent font-medium">Личный кабинет</span>
-      <h1 class="font-display text-4xl mt-1 flex items-center gap-3"><?= avatar_html($user, 'w-10 h-10', 'text-base') ?> <?=h($user['name'])?></h1>
+<main style="padding:3rem 0 4rem">
+<div style="max-width:1200px;margin:0 auto;padding:0 1rem">
+
+  <!-- Header -->
+  <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin-bottom:2rem">
+    <div style="display:flex;align-items:center;gap:0.875rem">
+      <?= avatar_html($user, 'w-10 h-10', 'text-base') ?>
+      <div>
+        <span style="font-size:0.6875rem;text-transform:uppercase;letter-spacing:0.1em;color:#7A8A9A;font-weight:500">Личный кабинет</span>
+        <h1 style="font-family:Manrope,sans-serif;font-weight:700;font-size:2rem;letter-spacing:-0.02em;margin:0;line-height:1.2"><?=h($user['name'])?></h1>
+      </div>
     </div>
-    <a href="/create" class="inline-flex items-center justify-center rounded-lg bg-accent text-white hover:bg-accent/80 h-9 px-4 text-sm font-medium transition-all">+ Новое объявление</a>
+    <a href="/create" class="cta-btn" style="padding:0.625rem 1.25rem;gap:0.375rem">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+      Новое объявление
+    </a>
   </div>
 
   <!-- Tabs -->
-  <div class="flex gap-2 mb-8 border-b pb-0 flex-wrap">
-    <?php foreach ($tabs as $k => $v): ?>
-    <a href="/dashboard<?=$k==='listings'?'':'?sub='.$k?>" class="inline-flex items-center h-7 px-2.5 rounded-full text-sm font-medium transition-all <?=$sub===$k?'bg-accent text-white':'text-muted-foreground hover:text-foreground hover:bg-muted'?>"><?=$v?></a>
+  <div style="display:flex;gap:0.25rem;margin-bottom:2rem;flex-wrap:wrap;border-bottom:1px solid #EEF2F6;padding-bottom:0.875rem">
+    <?php foreach ($tabs as $k => $v): $active = ($sub === $k); ?>
+    <a href="/dashboard<?=$k==='listings'?'':'?sub='.$k?>"
+       style="display:inline-flex;align-items:center;padding:0.5rem 1rem;font-size:0.8125rem;font-weight:500;border-radius:8px;text-decoration:none;transition:all 0.15s ease;<?=$active?'background:#121E2B;color:#F7F9FB':'color:#7A8A9A;background:transparent'?>"
+       onmouseover="if(!this.classList.contains('active')){this.style.background='#EEF2F6';this.style.color='#121E2B'}"
+       onmouseout="if(!this.classList.contains('active')){this.style.background='transparent';this.style.color='#7A8A9A'}"
+       class="<?=$active?'active':''?>"><?=$v?></a>
     <?php endforeach; ?>
   </div>
 
   <?php if ($sub === 'listings'): ?>
     <?php if (empty($myListings)): ?>
-      <div class="text-center py-20 text-muted-foreground">
-        <p class="text-lg">У вас пока нет объявлений</p>
-        <p class="text-sm mt-1 mb-4">Создайте первое объявление и начните зарабатывать</p>
-        <a href="/create" class="inline-flex items-center justify-center rounded-lg bg-accent text-white hover:bg-accent/80 h-9 px-6 text-sm font-medium transition-all">Создать объявление</a>
+      <div style="text-align:center;padding:5rem 1rem">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#C8D0DA" stroke-width="1.5" style="margin-bottom:1.25rem">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/>
+        </svg>
+        <p style="font-size:1rem;font-weight:600;color:#121E2B;margin:0 0 0.25rem">У вас пока нет объявлений</p>
+        <p style="font-size:0.8125rem;color:#7A8A9A;margin:0 0 1.5rem">Создайте первое объявление и начните зарабатывать</p>
+        <a href="/create" class="cta-btn" style="gap:0.375rem">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+          Создать объявление
+        </a>
       </div>
     <?php else: ?>
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1.25rem">
         <?php foreach ($myListings as $item): ?>
-        <div class="bg-white border rounded-xl overflow-hidden flex flex-col relative">
-          <div class="aspect-[16/10] bg-secondary overflow-hidden">
+        <div class="listing-card">
+          <div class="listing-img">
             <?php if (!empty($item['image'])): ?>
-            <img src="/uploads/<?=h($item['image'])?>" alt="" class="w-full h-full object-cover" loading="lazy">
-            <?php else: ?><div class="w-full h-full flex items-center justify-center text-4xl">📷</div><?php endif; ?>
+            <img src="/uploads/<?=h($item['image'])?>" alt="" loading="lazy">
+            <?php else: ?>
+            <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#C8D0DA">
+              <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            </div>
+            <?php endif; ?>
           </div>
           <?php if (!empty($item['promo_type'])): ?>
-          <span class="absolute top-2 left-2 text-xs font-bold px-2 py-0.5 rounded-full text-white <?=$item['promo_type']==='top'?'bg-red-600':($item['promo_type']==='highlight'?'bg-amber-500':'bg-red-500')?>"><?=$item['promo_type']==='top'?'🔝 TOP':($item['promo_type']==='highlight'?'💡 PROMO':'⚡ Срочно')?></span>
+          <span class="promo-badge" style="position:absolute;top:0.625rem;left:0.625rem;<?=$item['promo_type']==='top'?'background:#1B6B8A':($item['promo_type']==='highlight'?'background:#D97706':'background:#DC2626')?>">
+            <?=$item['promo_type']==='top'?'TOP':($item['promo_type']==='highlight'?'PROMO':'Срочно')?>
+          </span>
           <?php endif; ?>
-          <div class="p-4 flex-1 flex flex-col gap-1">
-            <div class="flex items-center gap-2 text-xs"><span class="badge <?=$item['status']==='active'?'text-green-700 border-green-200 bg-green-50':'text-muted-foreground'?>"><?=$item['status']==='active'?'Активно':$item['status']?></span><span class="text-muted-foreground"><?=h($item['category_name'])?></span></div>
-            <div class="font-display text-xl mt-1"><?=number_format((float)$item['price'],0,'.',' ')?> <?=price_label($item['listing_type'])?></div>
-            <div class="font-medium text-sm leading-snug"><?=h($item['title'])?></div>
-            <div class="flex items-center gap-2 text-xs text-muted-foreground mt-auto pt-2"><span>👁 <?=$item['view_count']??0?></span><span>·</span><span><?=time_ago($item['created_at'])?></span></div>
-            <div class="flex gap-2 mt-3">
-              <a href="/listing/<?=$item['id']?>" class="flex-1 inline-flex items-center justify-center rounded-lg border border-border hover:bg-muted h-8 text-xs font-medium transition-all">Смотреть</a>
-              <a href="/edit/<?=$item['id']?>" class="flex-1 inline-flex items-center justify-center rounded-lg border border-border hover:bg-muted h-8 text-xs font-medium transition-all">Ред.</a>
-              <a href="/promote?id=<?=$item['id']?>" class="flex-1 inline-flex items-center justify-center rounded-lg border border-amber-200 text-amber-700 hover:bg-amber-50 h-8 text-xs font-medium transition-all">🚀</a>
-              <form method="post" onsubmit="return confirm('Удалить?')"><?= csrf_field() ?><button name="delete" value="<?=$item['id']?>" class="inline-flex items-center justify-center rounded-lg border border-red-200 text-red-600 hover:bg-red-50 h-8 px-2 text-xs font-medium transition-all">🗑</button></form>
+          <div class="listing-body" style="gap:0.5rem">
+            <div style="display:flex;align-items:center;gap:0.5rem;font-size:0.6875rem">
+              <span class="badge" style="<?=$item['status']==='active'?'color:#166534;border-color:#BBF7D0;background:#F0FDF4':''?>"><?=$item['status']==='active'?'Активно':$item['status']?></span>
+              <span style="color:#7A8A9A"><?=h($item['category_name'])?></span>
+            </div>
+            <div class="listing-price"><?=number_format((float)$item['price'],0,'.',' ')?> <?=price_label($item['listing_type'])?></div>
+            <div class="listing-title"><?=h($item['title'])?></div>
+            <div class="listing-meta">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              <span><?=$item['view_count']??0?></span>
+              <span style="margin-left:0.25rem"><?=time_ago($item['created_at'])?></span>
+            </div>
+            <div style="display:flex;gap:0.375rem">
+              <a href="/listing/<?=$item['id']?>" style="flex:1;text-align:center;display:inline-flex;align-items:center;justify-content:center;gap:0.25rem;border-radius:8px;border:1px solid #DFE4EA;padding:0.375rem 0.5rem;font-size:0.75rem;font-weight:500;color:#3A4A5C;text-decoration:none;transition:all 0.15s ease" onmouseover="this.style.background='#F7F9FB';this.style.borderColor='#C8D0DA'" onmouseout="this.style.background='';this.style.borderColor='#DFE4EA'">Смотреть</a>
+              <a href="/edit/<?=$item['id']?>" style="flex:1;text-align:center;display:inline-flex;align-items:center;justify-content:center;gap:0.25rem;border-radius:8px;border:1px solid #DFE4EA;padding:0.375rem 0.5rem;font-size:0.75rem;font-weight:500;color:#3A4A5C;text-decoration:none;transition:all 0.15s ease" onmouseover="this.style.background='#F7F9FB';this.style.borderColor='#C8D0DA'" onmouseout="this.style.background='';this.style.borderColor='#DFE4EA'">Ред.</a>
+              <a href="/promote?id=<?=$item['id']?>" style="flex:1;text-align:center;display:inline-flex;align-items:center;justify-content:center;gap:0.25rem;border-radius:8px;border:1px solid #FDE68A;padding:0.375rem 0.5rem;font-size:0.75rem;font-weight:500;color:#92400E;text-decoration:none;transition:all 0.15s ease" onmouseover="this.style.background='#FFFBEB';this.style.borderColor='#FCD34D'" onmouseout="this.style.background='';this.style.borderColor='#FDE68A'">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+              </a>
+              <form method="post" onsubmit="return confirm('Удалить объявление?')" style="margin:0">
+                <?= csrf_field() ?>
+                <button name="delete" value="<?=$item['id']?>" style="display:inline-flex;align-items:center;justify-content:center;width:2rem;border-radius:8px;border:1px solid #FECACA;background:transparent;color:#DC2626;cursor:pointer;padding:0;height:100%;transition:all 0.15s ease" onmouseover="this.style.background='#FEF2F2'" onmouseout="this.style.background='transparent'">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                </button>
+              </form>
             </div>
           </div>
         </div>
@@ -128,13 +165,32 @@ require __DIR__ . '/../includes/header.php';
   <?php elseif ($sub === 'favorites'): ?>
     <?php $favs = get_user_favorites($user['id']); ?>
     <?php if (empty($favs)): ?>
-      <div class="text-center py-20 text-muted-foreground"><p class="text-lg">Нет избранных объявлений</p><p class="text-sm mt-1">Добавляйте объявления в избранное кнопкой ♡</p></div>
+      <div style="text-align:center;padding:5rem 1rem">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#C8D0DA" stroke-width="1.5" style="margin-bottom:1.25rem">
+          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+        </svg>
+        <p style="font-size:1rem;font-weight:600;color:#121E2B;margin:0 0 0.25rem">Нет избранных объявлений</p>
+        <p style="font-size:0.8125rem;color:#7A8A9A;margin:0 0 1.5rem">Добавляйте объявления в избранное кликом по сердечку</p>
+        <a href="/catalog" class="btn-outline">Перейти в каталог</a>
+      </div>
     <?php else: ?>
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1.25rem">
         <?php foreach ($favs as $item): ?>
-        <a href="/listing/<?=$item['id']?>" class="bg-white border rounded-xl overflow-hidden transition-all hover:-translate-y-0.5 hover:shadow-lg flex flex-col relative">
-          <div class="aspect-[16/10] bg-secondary overflow-hidden"><?php if(!empty($item['image'])):?><img src="/uploads/<?=h($item['image'])?>" class="w-full h-full object-cover" loading="lazy"><?php else:?><div class="w-full h-full flex items-center justify-center text-4xl">📷</div><?php endif;?></div>
-          <div class="p-4 flex-1 flex flex-col gap-1"><div class="font-display text-xl"><?=number_format((float)$item['price'],0,'.',' ')?> <?=price_label($item['listing_type'])?></div><div class="font-medium text-sm leading-snug"><?=h($item['title'])?></div><div class="flex items-center gap-2 text-xs text-muted-foreground mt-auto pt-2"><span><?=h($item['category_name'])?></span></div></div>
+        <a href="/listing/<?=$item['id']?>" class="listing-card">
+          <div class="listing-img">
+            <?php if(!empty($item['image'])):?>
+            <img src="/uploads/<?=h($item['image'])?>" loading="lazy">
+            <?php else:?>
+            <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#C8D0DA">
+              <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            </div>
+            <?php endif;?>
+          </div>
+          <div class="listing-body">
+            <div class="listing-price"><?=number_format((float)$item['price'],0,'.',' ')?> <?=price_label($item['listing_type'])?></div>
+            <div class="listing-title"><?=h($item['title'])?></div>
+            <div class="listing-meta"><span><?=h($item['category_name']??'')?></span></div>
+          </div>
         </a>
         <?php endforeach; ?>
       </div>
@@ -142,47 +198,96 @@ require __DIR__ . '/../includes/header.php';
 
   <?php elseif ($sub === 'bookings'): ?>
     <?php $bookings = get_user_bookings($user['id']); ?>
-    <?php if (empty($bookings)): ?><div class="text-center py-20 text-muted-foreground"><p class="text-lg">Нет бронирований</p></div>
+    <?php if (empty($bookings)): ?>
+      <div style="text-align:center;padding:5rem 1rem">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#C8D0DA" stroke-width="1.5" style="margin-bottom:1.25rem">
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+        </svg>
+        <p style="font-size:1rem;font-weight:600;color:#121E2B;margin:0 0 0.25rem">Нет бронирований</p>
+      </div>
     <?php else: ?>
-      <div class="space-y-3">
+      <div style="display:flex;flex-direction:column;gap:0.75rem">
       <?php foreach ($bookings as $b): ?>
-        <div class="bg-white border rounded-xl p-5"><div class="flex justify-between items-start"><div><a href="/listing/<?=$b['listing_id']?>" class="font-display text-lg hover:underline"><?=h($b['listing_title'])?></a><div class="text-sm text-muted-foreground mt-1"><?=h($b['location']??'')?> · хозяин: <?=h($b['host_name'])?></div></div><div class="text-right"><div class="font-display text-xl"><?=number_format((float)$b['total_price'],0,'.',' ')?> ₽</div><div class="text-xs text-muted-foreground mt-1"><?=$b['created_at']?></div></div></div></div>
+        <div style="background:#fff;border:1px solid #EEF2F6;border-radius:12px;padding:1.25rem;box-shadow:0 4px 12px rgba(15,23,32,0.06)">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start">
+            <div>
+              <a href="/listing/<?=$b['listing_id']?>" style="font-family:Manrope,sans-serif;font-weight:700;font-size:1.0625rem;color:#121E2B;text-decoration:none"><?=h($b['listing_title'])?></a>
+              <div style="font-size:0.8125rem;color:#7A8A9A;margin-top:0.25rem"><?=h($b['location']??'')?> &middot; хозяин: <?=h($b['host_name'])?></div>
+            </div>
+            <div style="text-align:right">
+              <div style="font-family:Manrope,sans-serif;font-weight:700;font-size:1.0625rem"><?=number_format((float)$b['total_price'],0,'.',' ')?> ₽</div>
+              <div style="font-size:0.6875rem;color:#7A8A9A;margin-top:0.25rem"><?=$b['created_at']?></div>
+            </div>
+          </div>
+        </div>
       <?php endforeach; ?>
       </div>
     <?php endif; ?>
 
   <?php elseif ($sub === 'host_bookings'): ?>
     <?php $hb = get_host_bookings($user['id']); ?>
-    <?php if (empty($hb)): ?><div class="text-center py-20 text-muted-foreground"><p class="text-lg">Нет бронирований у вас</p></div>
+    <?php if (empty($hb)): ?>
+      <div style="text-align:center;padding:5rem 1rem">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#C8D0DA" stroke-width="1.5" style="margin-bottom:1.25rem">
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+        </svg>
+        <p style="font-size:1rem;font-weight:600;color:#121E2B;margin:0 0 0.25rem">Нет бронирований у вас</p>
+      </div>
     <?php else: ?>
-      <div class="space-y-3">
+      <div style="display:flex;flex-direction:column;gap:0.75rem">
       <?php foreach ($hb as $b): ?>
-        <div class="bg-white border rounded-xl p-5"><div class="flex justify-between items-start"><div><span class="text-sm text-muted-foreground">Гость: <?=h($b['guest_name'])?></span><br><a href="/listing/<?=$b['listing_id']?>" class="font-display text-lg hover:underline"><?=h($b['listing_title'])?></a></div><div class="text-right"><div class="font-display text-xl"><?=number_format((float)$b['total_price'],0,'.',' ')?> ₽</div><div class="text-xs text-muted-foreground mt-1"><?=$b['created_at']?></div></div></div></div>
+        <div style="background:#fff;border:1px solid #EEF2F6;border-radius:12px;padding:1.25rem;box-shadow:0 4px 12px rgba(15,23,32,0.06)">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start">
+            <div>
+              <span style="font-size:0.8125rem;color:#7A8A9A">Гость: <?=h($b['guest_name'])?></span><br>
+              <a href="/listing/<?=$b['listing_id']?>" style="font-family:Manrope,sans-serif;font-weight:700;font-size:1.0625rem;color:#121E2B;text-decoration:none"><?=h($b['listing_title'])?></a>
+            </div>
+            <div style="text-align:right">
+              <div style="font-family:Manrope,sans-serif;font-weight:700;font-size:1.0625rem"><?=number_format((float)$b['total_price'],0,'.',' ')?> ₽</div>
+              <div style="font-size:0.6875rem;color:#7A8A9A;margin-top:0.25rem"><?=$b['created_at']?></div>
+            </div>
+          </div>
+        </div>
       <?php endforeach; ?>
       </div>
     <?php endif; ?>
 
   <?php elseif ($sub === 'profile'): ?>
-    <?php if (isset($_GET['ok'])): ?><div class="bg-green-50 border border-green-200 text-green-700 rounded-lg p-3 mb-6 text-sm">Профиль обновлён</div><?php endif; ?>
-    <div class="max-w-lg">
-      <form method="post" enctype="multipart/form-data" class="bg-white border rounded-xl p-6 space-y-4">
+    <?php if (isset($_GET['ok'])): ?>
+    <div class="flash success">Профиль обновлён</div>
+    <?php endif; ?>
+    <div style="max-width:30rem">
+      <form method="post" enctype="multipart/form-data" style="background:#fff;border:1px solid #EEF2F6;border-radius:12px;padding:2rem;box-shadow:0 4px 12px rgba(15,23,32,0.06)">
         <?= csrf_field() ?>
         <input type="hidden" name="update_profile" value="1">
         <!-- Avatar -->
-        <div class="flex items-center gap-4">
+        <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1.5rem">
           <?= avatar_html($user, 'w-16 h-16', 'text-xl') ?>
           <div>
-            <label class="inline-flex items-center justify-center rounded-lg border border-border hover:bg-muted h-8 px-3 text-xs font-medium cursor-pointer transition-all">
+            <label style="display:inline-flex;align-items:center;gap:0.375rem;border-radius:8px;border:1px solid #DFE4EA;padding:0.5rem 0.875rem;font-size:0.75rem;font-weight:500;cursor:pointer;transition:all 0.15s ease;background:#fff;color:#3A4A5C" onmouseover="this.style.background='#F7F9FB';this.style.borderColor='#C8D0DA'" onmouseout="this.style.background='#fff';this.style.borderColor='#DFE4EA'">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
               Сменить аватар
-              <input type="file" name="avatar" accept="image/*" class="hidden" onchange="this.form.submit()">
+              <input type="file" name="avatar" accept="image/*" hidden onchange="this.form.submit()">
             </label>
-            <p class="text-[0.7rem] text-muted-foreground mt-1">JPG, PNG, WebP</p>
+            <p style="font-size:0.6875rem;color:#7A8A9A;margin:0.375rem 0 0">JPG, PNG, WebP</p>
           </div>
         </div>
-        <div class="form-group"><label>Имя</label><input type="text" name="name" value="<?=h($user['name'])?>" class="w-full rounded-lg border border-border py-2 px-3 text-sm focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none"></div>
-        <div class="form-group"><label>Email</label><input type="email" name="email" value="<?=h($user['email'])?>" class="w-full rounded-lg border border-border py-2 px-3 text-sm focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none"></div>
-        <div class="form-group"><label>Телефон</label><input type="text" name="phone" value="<?=h($user['phone']??'')?>" class="w-full rounded-lg border border-border py-2 px-3 text-sm focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none"></div>
-        <button type="submit" name="update_profile" value="1" class="inline-flex items-center justify-center rounded-lg bg-accent text-white hover:bg-accent/80 h-9 px-6 text-sm font-medium transition-all">Сохранить</button>
+        <div class="form-group">
+          <label>Имя</label>
+          <input type="text" name="name" value="<?=h($user['name'])?>" style="width:100%;box-sizing:border-box">
+        </div>
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" name="email" value="<?=h($user['email'])?>" style="width:100%;box-sizing:border-box">
+        </div>
+        <div class="form-group">
+          <label>Телефон</label>
+          <input type="text" name="phone" value="<?=h($user['phone']??'')?>" style="width:100%;box-sizing:border-box">
+        </div>
+        <button type="submit" name="update_profile" value="1" class="cta-btn" style="width:100%;gap:0.375rem;padding:0.625rem 1.25rem">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+          Сохранить
+        </button>
       </form>
     </div>
   <?php endif; ?>

@@ -1,5 +1,5 @@
 <?php
-// search.php
+// search.php — v3 clean design
 $q = trim($_GET['q'] ?? '');
 $page_num = max(1, (int)($_GET['page'] ?? 1));
 
@@ -16,42 +16,49 @@ unset($item);
 $page_title = (!empty($q) ? 'Поиск: ' . $q : 'Поиск') . ' — СахGO';
 require __DIR__ . '/../includes/header.php';
 ?>
-<section class="py-12">
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="max-w-3xl mb-10">
-      <form action="/search" method="get" class="relative group search-group">
-        <div class="search-bar-glow"></div>
-        <div class="search-bar-wrap">
-          <div class="flex-1 flex items-center gap-3 px-5">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="search-icon"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
-            <input type="text" name="q" value="<?= h($q) ?>" placeholder="Что ищете?" class="search-input-hero flex-1" autofocus>
+
+<section style="padding:3rem 0 4rem">
+  <div style="max-width:1200px;margin:0 auto;padding:0 1rem">
+
+    <!-- Search bar -->
+    <div style="max-width:40rem;margin-bottom:2rem">
+      <form action="/search" method="get">
+        <div style="display:flex;align-items:center;background:#fff;border:1px solid #DFE4EA;border-radius:10px;overflow:hidden;box-shadow:0 4px 12px rgba(15,23,32,0.06);transition:border-color 0.15s ease,box-shadow 0.15s ease" onmouseover="this.style.borderColor='#C8D0DA'" onmouseout="this.style.borderColor='#DFE4EA'">
+          <div style="flex:1;display:flex;align-items:center;gap:0.625rem;padding:0 1rem">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7A8A9A" stroke-width="2"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
+            <input type="text" name="q" value="<?= h($q) ?>" placeholder="Что ищете?" autofocus style="flex:1;border:0;padding:0.75rem 0;font-size:0.9375rem;outline:none;background:transparent;box-shadow:none">
           </div>
-          <div class="p-2 pr-2"><button type="submit" class="search-submit">Найти</button></div>
+          <button type="submit" style="background:#121E2B;color:#F7F9FB;border:0;padding:0.75rem 1.5rem;font-size:0.8125rem;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;transition:background 0.15s ease" onmouseover="this.style.background='#1A2937'" onmouseout="this.style.background='#121E2B'">Найти</button>
         </div>
       </form>
     </div>
 
     <?php if (!empty($q)): ?>
-      <span class="text-xs uppercase tracking-[0.12em] text-accent font-medium">Результаты поиска</span>
-      <h2 class="font-display text-4xl mt-1 mb-8">«<?= h($q) ?>» — <?= $total ?> результатов</h2>
+      <span style="font-size:0.6875rem;text-transform:uppercase;letter-spacing:0.1em;color:#7A8A9A;font-weight:500">Результаты поиска</span>
+      <h2 style="font-family:Manrope,sans-serif;font-weight:700;font-size:1.75rem;letter-spacing:-0.02em;margin:0.25rem 0 2rem">&laquo;<?= h($q) ?>&raquo; &mdash; <?= $total ?> результатов</h2>
     <?php else: ?>
-      <h2 class="font-display text-4xl mb-8">Поиск</h2>
+      <h2 style="font-family:Manrope,sans-serif;font-weight:700;font-size:1.75rem;letter-spacing:-0.02em;margin:0 0 2rem">Поиск</h2>
     <?php endif; ?>
 
     <?php if (empty($listings)): ?>
-      <div class="text-center py-20 text-muted-foreground">
-        <p class="text-lg">Ничего не найдено</p>
-        <p class="text-sm mt-1 mb-4">Попробуйте изменить запрос</p>
+      <div style="text-align:center;padding:5rem 1rem">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#C8D0DA" stroke-width="1.5" style="margin-bottom:1.25rem">
+          <circle cx="11" cy="11" r="8"/><path d="m21 21-4.34-4.34"/>
+        </svg>
+        <p style="font-size:1rem;font-weight:600;color:#121E2B;margin:0 0 0.25rem">Ничего не найдено</p>
+        <p style="font-size:0.8125rem;color:#7A8A9A;margin:0 0 1.5rem">Попробуйте изменить запрос</p>
         <a href="/" class="btn-outline">На главную</a>
       </div>
     <?php else: ?>
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1.25rem">
         <?php foreach ($listings as $item): ?>
         <a href="/listing/<?= $item['id'] ?>" class="listing-card">
           <?php if (!empty($item['image'])): ?>
-          <img src="/uploads/<?= h($item['image']) ?>" alt="<?= h($item['title']) ?>" class="listing-img" loading="lazy">
+          <div class="listing-img"><img src="/uploads/<?= h($item['image']) ?>" alt="<?= h($item['title']) ?>" loading="lazy"></div>
           <?php else: ?>
-          <div class="listing-img" style="display:flex;align-items:center;justify-content:center;font-size:2.5rem;color:var(--muted)">📷</div>
+          <div class="listing-img" style="display:flex;align-items:center;justify-content:center;color:#C8D0DA">
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          </div>
           <?php endif; ?>
           <div class="listing-body">
             <div class="listing-price"><?= format_price((float)$item['price']) ?></div>
@@ -64,10 +71,14 @@ require __DIR__ . '/../includes/header.php';
         </a>
         <?php endforeach; ?>
       </div>
+
       <?php if ($total_pages > 1): ?>
-      <div class="pagination">
+      <div style="display:flex;justify-content:center;gap:0.375rem;margin-top:2.5rem">
         <?php for ($i = 1; $i <= $total_pages; $i++): ?>
-        <a href="?q=<?= urlencode($q) ?>&page=<?= $i ?>" class="<?= $i === $page_num ? 'active' : '' ?>"><?= $i ?></a>
+        <a href="?q=<?= urlencode($q) ?>&page=<?= $i ?>"
+           style="display:inline-flex;align-items:center;justify-content:center;min-width:2.25rem;height:2.25rem;border-radius:8px;font-size:0.8125rem;font-weight:500;text-decoration:none;transition:all 0.15s ease;<?=$i===$page_num?'background:#121E2B;color:#F7F9FB':'color:#7A8A9A;border:1px solid #DFE4EA'?>"
+           onmouseover="if(<?=$i!==$page_num?'true':'false'?>){this.style.background='#EEF2F6';this.style.color='#121E2B'}"
+           onmouseout="if(<?=$i!==$page_num?'true':'false'?>){this.style.background='transparent';this.style.color='#7A8A9A'}"><?= $i ?></a>
         <?php endfor; ?>
       </div>
       <?php endif; ?>

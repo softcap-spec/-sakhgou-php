@@ -1,10 +1,17 @@
 <?php
-// create.php v2 — Tailwind wizard
+// create.php v3 — clean design wizard
 $cu = auth_required();
 $pdo = db();
 
 $LISTING_LABELS = ['property'=>'Жильё','tour'=>'Тур','fishing'=>'Рыбалка','rental_gear'=>'Снаряжение','car_rental'=>'Прокат авто'];
-$LISTING_EMOJI = ['property'=>'🏠','tour'=>'🏔️','fishing'=>'🎣','rental_gear'=>'🔧','car_rental'=>'🚗'];
+
+$LISTING_ICONS = [
+  'property'    => '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>',
+  'tour'        => '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>',
+  'fishing'     => '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M18 4L3 17l4 4L22 6l-4-4z"/><line x1="4" y1="20" x2="6" y2="22"/></svg>',
+  'rental_gear' => '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>',
+  'car_rental'  => '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 17h14M5 17l-.6-1.5A2 2 0 0 1 4 13V9a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3v4a2 2 0 0 1-.4 2.5L19 17"/><circle cx="7.5" cy="17.5" r="2.5"/><circle cx="16.5" cy="17.5" r="2.5"/></svg>',
+];
 
 $CATEGORY_OPTIONS = [
   'property'=>[['kvartiry','Квартира'],['doma-u-morya','Дом у моря'],['bazy-otdyha','База отдыха'],['gostevye-doma','Гостевой дом']],
@@ -30,7 +37,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $step === 5 && !empty($_FILES['imag
   if (!is_dir($tmpDir)) mkdir($tmpDir, 0755, true);
   foreach ($_FILES['images']['tmp_name'] as $i => $tmp) {
     if ($_FILES['images']['error'][$i] !== UPLOAD_ERR_OK) continue;
-    // Verify actual MIME type from file contents (not client-supplied name)
     $allowed = ['image/jpeg', 'image/png', 'image/webp'];
     $finfo = new finfo(FILEINFO_MIME_TYPE);
     $mime = @$finfo->file($tmp);
@@ -66,7 +72,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['finish'])) {
     $catRow = $catStmt->fetch();
     $real_cid = $catRow ? $catRow['id'] : 1;
 
-    // Unique slug
     $baseSlug = transliterate($title);
     $slug = $baseSlug;
     $n = 1;
@@ -100,7 +105,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['finish'])) {
       $errors[] = 'Ошибка БД: ' . $e->getMessage();
     }
 
-    // Move images from temp to permanent
     $tmpDir = UPLOAD_DIR . '/.tmp';
     if (!empty($_SESSION['tmp_images'])) {
       $pdo->beginTransaction();
@@ -124,66 +128,98 @@ $page_title = 'Подать объявление — СахGO';
 require __DIR__ . '/../includes/header.php';
 ?>
 
-<main class="py-12">
-<div class="max-w-3xl mx-auto px-4">
+<main style="padding:3rem 0 4rem">
+<div style="max-width:42rem;margin:0 auto;padding:0 1rem">
 
 <?php if ($success): ?>
-  <div class="text-center py-16">
-    <div class="text-6xl mb-6">🎉</div>
-    <h1 class="font-display text-4xl mb-4">Объявление отправлено!</h1>
-    <p class="text-muted-foreground mb-8">Объявление на модерации. После проверки оно появится в каталоге.</p>
-    <div class="flex gap-3 justify-center">
-      <a href="/listing/<?=$success?>" class="inline-flex items-center justify-center rounded-lg bg-accent text-white hover:bg-accent/80 h-10 px-6 text-sm font-medium transition-all">Смотреть объявление</a>
-      <a href="/dashboard" class="inline-flex items-center justify-center rounded-lg bg-accent text-white hover:bg-accent/80 h-10 px-6 text-sm font-medium transition-all">В кабинет</a>
+  <div style="text-align:center;padding:4rem 0">
+    <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="1.5" style="margin-bottom:1.5rem">
+      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+    </svg>
+    <h1 style="font-family:Manrope,sans-serif;font-weight:700;font-size:2rem;letter-spacing:-0.02em;margin:0 0 0.5rem">Объявление отправлено!</h1>
+    <p style="color:#7A8A9A;margin:0 0 2rem;font-size:0.875rem">Объявление на модерации. После проверки оно появится в каталоге.</p>
+    <div style="display:flex;gap:0.75rem;justify-content:center;flex-wrap:wrap">
+      <a href="/listing/<?=$success?>" class="cta-btn" style="gap:0.375rem">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        Смотреть объявление
+      </a>
+      <a href="/dashboard" class="btn-outline">В кабинет</a>
     </div>
   </div>
 <?php else: ?>
 
-  <span class="text-xs uppercase tracking-[0.12em] text-accent font-medium">Новое объявление</span>
-  <h1 class="font-display text-4xl mt-1 mb-8">Расскажите о вашем предложении</h1>
+  <span style="font-size:0.6875rem;text-transform:uppercase;letter-spacing:0.1em;color:#7A8A9A;font-weight:500">Новое объявление</span>
+  <h1 style="font-family:Manrope,sans-serif;font-weight:700;font-size:2rem;letter-spacing:-0.02em;margin:0.25rem 0 2rem">Расскажите о вашем предложении</h1>
 
   <!-- Steps indicator -->
-  <div class="flex gap-2 mb-10">
-    <?php foreach ([1=>'Тип',2=>'Детали',3=>'Характеристики',4=>'Фото',5=>'Готово'] as $n=>$lbl): ?>
-    <div class="flex-1 flex items-center gap-2">
-      <div class="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold <?=$step>=$n?'bg-accent text-white':'bg-muted text-muted-foreground'?>"><?=$n?></div>
-      <span class="text-xs <?=$step>=$n?'text-foreground font-medium':'text-muted-foreground'?> hidden sm:inline"><?=$lbl?></span>
+  <div style="display:flex;align-items:center;gap:0;margin-bottom:2.5rem">
+    <?php
+    $stepLabels = [1=>'Тип',2=>'Детали',3=>'Характеристики',4=>'Фото',5=>'Готово'];
+    $stepIcons = [
+      1 => '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>',
+      2 => '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
+      3 => '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5 12 2"/><line x1="12" y1="22" x2="12" y2="15.5"/><polyline points="22 8.5 12 15.5 2 8.5"/></svg>',
+      4 => '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>',
+      5 => '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>',
+    ];
+    $totalSteps = count($stepLabels);
+    $i = 0;
+    foreach ($stepLabels as $n => $lbl):
+      $i++;
+      $done = $step > $n;
+      $active = $step === $n;
+    ?>
+    <div style="display:flex;align-items:center;gap:0.5rem;flex:1;min-width:0">
+      <div style="width:2.25rem;height:2.25rem;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:700;flex-shrink:0;transition:all 0.2s ease;<?=$done||$active?'background:#121E2B;color:#F7F9FB':'background:#EEF2F6;color:#7A8A9A'?>">
+        <?php if ($done): ?>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+        <?php else: ?>
+          <?=$stepIcons[$n]?>
+        <?php endif; ?>
+      </div>
+      <span style="font-size:0.75rem;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:<?=$done||$active?'#121E2B':'#7A8A9A'?>"><?=$lbl?></span>
     </div>
-    <?php if ($n<5): ?><div class="w-8 h-px bg-border self-center"></div><?php endif; ?>
+    <?php if ($i < $totalSteps): ?>
+    <div style="height:1px;background:<?=$done?'#121E2B':'#DFE4EA'?>;flex:0.5;margin:0 0.25rem"></div>
+    <?php endif; ?>
     <?php endforeach; ?>
   </div>
 
   <?php if (!empty($errors)): ?>
-    <div class="bg-red-50 border border-red-200 text-red-700 rounded-lg p-4 mb-6 text-sm space-y-1">
-      <?php foreach($errors as $e): ?><div>• <?=h($e)?></div><?php endforeach; ?>
+    <div style="background:#FEF2F2;border:1px solid #FECACA;color:#991B1B;border-radius:8px;padding:0.875rem 1rem;margin-bottom:1.5rem;font-size:0.8125rem">
+      <?php foreach($errors as $e): ?><div style="padding:0.125rem 0"><?=h($e)?></div><?php endforeach; ?>
     </div>
   <?php endif; ?>
 
-  <form method="post" enctype="multipart/form-data" class="bg-white border rounded-xl p-6 md:p-8 space-y-6">
+  <form method="post" enctype="multipart/form-data" style="background:#fff;border:1px solid #EEF2F6;border-radius:12px;padding:2rem;box-shadow:0 4px 12px rgba(15,23,32,0.06)">
     <?= csrf_field() ?>
     <input type="hidden" name="step" value="<?=$step?>">
 
     <?php if ($step === 1): ?>
       <!-- Step 1: Choose type -->
-      <h2 class="font-display text-2xl mb-4">Тип объявления</h2>
-      <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+      <h2 style="font-family:Manrope,sans-serif;font-weight:700;font-size:1.25rem;margin:0 0 1.5rem">Тип объявления</h2>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:0.75rem">
         <?php foreach($LISTING_LABELS as $k=>$v): $sel = ($_POST['listing_type']??'')===$k; ?>
-        <label class="relative rounded-xl border-2 p-4 cursor-pointer transition-all text-center <?=$sel?'border-accent bg-accent/5':'border-border hover:border-accent/30'?>">
-          <input type="radio" name="listing_type" value="<?=$k?>" class="sr-only" <?=$sel?'checked':''?>>
-          <div class="text-3xl mb-1"><?=$LISTING_EMOJI[$k]?></div>
-          <div class="text-sm font-medium"><?=$v?></div>
+        <label style="position:relative;border-radius:12px;border:2px solid <?=$sel?'#121E2B':'#EEF2F6'?>;padding:1.25rem 0.75rem;cursor:pointer;text-align:center;transition:all 0.15s ease;<?=$sel?'background:rgba(27,107,138,0.04)':''?>" onmouseover="if(!this.querySelector('input:checked')){this.style.borderColor='#C8D0DA'}" onmouseout="if(!this.querySelector('input:checked')){this.style.borderColor='#EEF2F6'}">
+          <input type="radio" name="listing_type" value="<?=$k?>" style="position:absolute;opacity:0" <?=$sel?'checked':''?> onchange="this.form.step.value=1;this.form.submit()">
+          <div style="color:<?=$sel?'#1B6B8A':'#7A8A9A'?>;margin-bottom:0.5rem"><?=$LISTING_ICONS[$k]?></div>
+          <div style="font-size:0.8125rem;font-weight:500"><?=$v?></div>
         </label>
         <?php endforeach; ?>
       </div>
 
       <!-- Subcategory -->
       <?php $slt = $_POST['listing_type'] ?? ''; if ($slt && isset($CATEGORY_OPTIONS[$slt])): ?>
-      <div class="mt-6"><h2 class="font-display text-2xl mb-4">Категория</h2>
-        <div class="grid grid-cols-2 gap-3">
+      <div style="margin-top:1.5rem">
+        <h2 style="font-family:Manrope,sans-serif;font-weight:700;font-size:1.25rem;margin:0 0 1rem">Категория</h2>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.625rem">
           <?php foreach($CATEGORY_OPTIONS[$slt] as $c): $sel = ($_POST['category']??'')===$c[0]; ?>
-          <label class="relative rounded-xl border-2 p-4 cursor-pointer transition-all <?=$sel?'border-accent bg-accent/5':'border-border hover:border-accent/30'?>">
-            <input type="radio" name="category" value="<?=$c[0]?>" class="sr-only" <?=$sel?'checked':''?>>
-            <div class="text-sm font-medium"><?=$c[1]?></div>
+          <label style="position:relative;border-radius:8px;border:1px solid <?=$sel?'#121E2B':'#DFE4EA'?>;padding:0.75rem 1rem;cursor:pointer;transition:all 0.15s ease;<?=$sel?'background:rgba(27,107,138,0.04)':''?>" onmouseover="if(!this.querySelector('input:checked')){this.style.borderColor='#C8D0DA'}" onmouseout="if(!this.querySelector('input:checked')){this.style.borderColor='#DFE4EA'}">
+            <input type="radio" name="category" value="<?=$c[0]?>" style="position:absolute;opacity:0" <?=$sel?'checked':''?>>
+            <div style="font-size:0.8125rem;font-weight:500;display:flex;align-items:center;gap:0.5rem">
+              <?php if($sel): ?><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1B6B8A" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg><?php endif; ?>
+              <?=$c[1]?>
+            </div>
           </label>
           <?php endforeach; ?>
         </div>
@@ -192,105 +228,118 @@ require __DIR__ . '/../includes/header.php';
 
     <?php elseif ($step === 2): ?>
       <!-- Step 2: Details -->
-      <h2 class="font-display text-2xl mb-6">Основная информация</h2>
+      <h2 style="font-family:Manrope,sans-serif;font-weight:700;font-size:1.25rem;margin:0 0 1.5rem">Основная информация</h2>
       <input type="hidden" name="listing_type" value="<?=h($_POST['listing_type']??'')?>">
       <input type="hidden" name="category" value="<?=h($_POST['category']??'')?>">
-      <div class="form-group"><label>Название объявления</label><input type="text" name="title" value="<?=h($_POST['title']??'')?>" class="w-full" placeholder="Напр. «Уютная квартира с видом на море»" required></div>
-      <div class="form-group"><label>Описание</label><textarea name="description" rows="5" class="w-full" placeholder="Опишите ваше предложение подробно..."><?=h($_POST['description']??'')?></textarea></div>
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div class="form-group"><label>Цена (<?=price_label($_POST['listing_type']??'')?>)</label><input type="number" name="price" value="<?=h($_POST['price']??'')?>" class="w-full" min="0" step="1" required></div>
+      <div class="form-group"><label>Название объявления</label><input type="text" name="title" value="<?=h($_POST['title']??'')?>" style="width:100%;box-sizing:border-box" placeholder="Напр. &laquo;Уютная квартира с видом на море&raquo;" required></div>
+      <div class="form-group"><label>Описание</label><textarea name="description" rows="5" style="width:100%;box-sizing:border-box" placeholder="Опишите ваше предложение подробно..."><?=h($_POST['description']??'')?></textarea></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+        <div class="form-group"><label>Цена (<?=price_label($_POST['listing_type']??'')?>)</label><input type="number" name="price" value="<?=h($_POST['price']??'')?>" style="width:100%;box-sizing:border-box" min="0" step="1" required></div>
         <div class="form-group"><label>Локация</label>
-          <select name="location" class="w-full"><option value="">Выберите...</option>
+          <select name="location" style="width:100%;box-sizing:border-box"><option value="">Выберите...</option>
             <?php foreach($LOCATIONS as $l): ?><option value="<?=$l?>" <?=($_POST['location']??'')===$l?'selected':''?>><?=$l?></option><?php endforeach; ?>
           </select>
         </div>
       </div>
       <?php $lt = $_POST['listing_type'] ?? ''; if ($lt === 'property' || $lt === 'tour' || $lt === 'fishing'): ?>
-      <div class="form-group"><label>Максимум гостей</label><input type="number" name="max_guests" value="<?=h($_POST['max_guests']??'2')?>" class="w-full" min="1"></div>
+      <div class="form-group"><label>Максимум гостей</label><input type="number" name="max_guests" value="<?=h($_POST['max_guests']??'2')?>" style="width:100%;box-sizing:border-box" min="1"></div>
       <?php endif; ?>
 
     <?php elseif ($step === 3): ?>
       <!-- Step 3: Type-specific fields -->
-      <h2 class="font-display text-2xl mb-6">Характеристики</h2>
+      <h2 style="font-family:Manrope,sans-serif;font-weight:700;font-size:1.25rem;margin:0 0 1.5rem">Характеристики</h2>
       <?php foreach(['listing_type','category','title','description','price','location','max_guests'] as $f): ?>
       <input type="hidden" name="<?=$f?>" value="<?=h($_POST[$f]??'')?>">
       <?php endforeach; ?>
       <?php $lt = $_POST['listing_type'] ?? ''; ?>
 
       <?php if ($lt === 'property'): ?>
-        <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
-          <div class="form-group"><label>Комнат</label><input type="number" name="rooms_count" value="<?=h($_POST['rooms_count']??'')?>" class="w-full" min="0"></div>
-          <div class="form-group"><label>Кроватей</label><input type="number" name="beds_count" value="<?=h($_POST['beds_count']??'')?>" class="w-full" min="0"></div>
-          <div class="form-group"><label>Санузлов</label><input type="number" name="bathrooms_count" value="<?=h($_POST['bathrooms_count']??'1')?>" class="w-full" min="0"></div>
-          <div class="form-group"><label>Площадь, м²</label><input type="number" name="area_sqm" value="<?=h($_POST['area_sqm']??'')?>" class="w-full" min="0"></div>
-          <div class="form-group"><label>Заезд (время)</label><input type="text" name="check_in" value="<?=h($_POST['check_in']??'14:00')?>" class="w-full"></div>
-          <div class="form-group"><label>Выезд (время)</label><input type="text" name="check_out" value="<?=h($_POST['check_out']??'12:00')?>" class="w-full"></div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:1rem">
+          <div class="form-group"><label>Комнат</label><input type="number" name="rooms_count" value="<?=h($_POST['rooms_count']??'')?>" style="width:100%;box-sizing:border-box" min="0"></div>
+          <div class="form-group"><label>Кроватей</label><input type="number" name="beds_count" value="<?=h($_POST['beds_count']??'')?>" style="width:100%;box-sizing:border-box" min="0"></div>
+          <div class="form-group"><label>Санузлов</label><input type="number" name="bathrooms_count" value="<?=h($_POST['bathrooms_count']??'1')?>" style="width:100%;box-sizing:border-box" min="0"></div>
+          <div class="form-group"><label>Площадь, м²</label><input type="number" name="area_sqm" value="<?=h($_POST['area_sqm']??'')?>" style="width:100%;box-sizing:border-box" min="0"></div>
+          <div class="form-group"><label>Заезд (время)</label><input type="text" name="check_in" value="<?=h($_POST['check_in']??'14:00')?>" style="width:100%;box-sizing:border-box"></div>
+          <div class="form-group"><label>Выезд (время)</label><input type="text" name="check_out" value="<?=h($_POST['check_out']??'12:00')?>" style="width:100%;box-sizing:border-box"></div>
         </div>
-        <div class="form-group"><label>Депозит (₽)</label><input type="number" name="deposit" value="<?=h($_POST['deposit']??'')?>" class="w-full" min="0"></div>
+        <div class="form-group"><label>Депозит (₽)</label><input type="number" name="deposit" value="<?=h($_POST['deposit']??'')?>" style="width:100%;box-sizing:border-box" min="0"></div>
       <?php elseif ($lt === 'tour'): ?>
-        <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
-          <div class="form-group"><label>Длительность, часов</label><input type="number" name="tour_hours" value="<?=h($_POST['tour_hours']??'')?>" class="w-full" min="0"></div>
-          <div class="form-group"><label>Длительность, дней</label><input type="number" name="tour_days" value="<?=h($_POST['tour_days']??'')?>" class="w-full" min="0"></div>
-          <div class="form-group"><label>Мин. группа</label><input type="number" name="group_min" value="<?=h($_POST['group_min']??'')?>" class="w-full" min="1"></div>
-          <div class="form-group"><label>Макс. группа</label><input type="number" name="group_max" value="<?=h($_POST['group_max']??'')?>" class="w-full" min="1"></div>
-          <div class="form-group"><label>Сложность</label><select name="difficulty" class="w-full"><option value="easy">Лёгкий</option><option value="medium" <?=($_POST['difficulty']??'')==='medium'?'selected':''?>>Средний</option><option value="hard" <?=($_POST['difficulty']??'')==='hard'?'selected':''?>>Сложный</option><option value="extreme" <?=($_POST['difficulty']??'')==='extreme'?'selected':''?>>Экстремальный</option></select></div>
-          <div class="form-group"><label>Точка старта</label><input type="text" name="start_point" value="<?=h($_POST['start_point']??'')?>" class="w-full"></div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:1rem">
+          <div class="form-group"><label>Длительность, часов</label><input type="number" name="tour_hours" value="<?=h($_POST['tour_hours']??'')?>" style="width:100%;box-sizing:border-box" min="0"></div>
+          <div class="form-group"><label>Длительность, дней</label><input type="number" name="tour_days" value="<?=h($_POST['tour_days']??'')?>" style="width:100%;box-sizing:border-box" min="0"></div>
+          <div class="form-group"><label>Мин. группа</label><input type="number" name="group_min" value="<?=h($_POST['group_min']??'')?>" style="width:100%;box-sizing:border-box" min="1"></div>
+          <div class="form-group"><label>Макс. группа</label><input type="number" name="group_max" value="<?=h($_POST['group_max']??'')?>" style="width:100%;box-sizing:border-box" min="1"></div>
+          <div class="form-group"><label>Сложность</label><select name="difficulty" style="width:100%;box-sizing:border-box"><option value="easy">Лёгкий</option><option value="medium" <?=($_POST['difficulty']??'')==='medium'?'selected':''?>>Средний</option><option value="hard" <?=($_POST['difficulty']??'')==='hard'?'selected':''?>>Сложный</option><option value="extreme" <?=($_POST['difficulty']??'')==='extreme'?'selected':''?>>Экстремальный</option></select></div>
+          <div class="form-group"><label>Точка старта</label><input type="text" name="start_point" value="<?=h($_POST['start_point']??'')?>" style="width:100%;box-sizing:border-box"></div>
         </div>
-        <div class="grid grid-cols-2 gap-3 mt-4">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-top:1rem">
           <?php foreach(['transport_inc'=>'Транспорт включён','border_permit'=>'Нужен погранпропуск','weather_dep'=>'Зависит от погоды','meals'=>'Питание включено'] as $fk=>$fl): ?>
-          <label class="flex items-center gap-2 p-3 rounded-lg border cursor-pointer hover:bg-muted/50"><input type="checkbox" name="<?=$fk?>" value="1" <?=($_POST[$fk]??'')?'checked':''?> class="rounded"><span class="text-sm"><?=$fl?></span></label>
+          <label style="display:flex;align-items:center;gap:0.5rem;padding:0.75rem 1rem;border-radius:8px;border:1px solid #DFE4EA;cursor:pointer;transition:all 0.15s ease" onmouseover="this.style.borderColor='#C8D0DA';this.style.background='#F7F9FB'" onmouseout="this.style.borderColor='#DFE4EA';this.style.background='transparent'">
+            <input type="checkbox" name="<?=$fk?>" value="1" <?=($_POST[$fk]??'')?'checked':''?> style="width:1rem;height:1rem;accent-color:#121E2B">
+            <span style="font-size:0.8125rem"><?=$fl?></span>
+          </label>
           <?php endforeach; ?>
         </div>
-        <div class="form-group mt-4"><label>Тип транспорта</label><input type="text" name="transport_type" value="<?=h($_POST['transport_type']??'')?>" class="w-full" placeholder="Джип, катер..."></div>
+        <div class="form-group" style="margin-top:1rem"><label>Тип транспорта</label><input type="text" name="transport_type" value="<?=h($_POST['transport_type']??'')?>" style="width:100%;box-sizing:border-box" placeholder="Джип, катер..."></div>
       <?php elseif ($lt === 'fishing'): ?>
-        <div class="grid grid-cols-2 gap-4">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
           <div class="form-group"><label>Тип рыбалки</label>
-            <select name="fishing_type" class="w-full"><option value="rechnaya">Речная</option><option value="morskaya">Морская</option><option value="ozernaya">Озёрная</option><option value="podlednaya">Подлёдная</option><option value="splav">Сплав</option></select>
+            <select name="fishing_type" style="width:100%;box-sizing:border-box"><option value="rechnaya">Речная</option><option value="morskaya">Морская</option><option value="ozernaya">Озёрная</option><option value="podlednaya">Подлёдная</option><option value="splav">Сплав</option></select>
           </div>
-          <div class="form-group"><label>Метод ловли</label><input type="text" name="fishing_method" value="<?=h($_POST['fishing_method']??'')?>" class="w-full" placeholder="Спиннинг, нахлыст..."></div>
+          <div class="form-group"><label>Метод ловли</label><input type="text" name="fishing_method" value="<?=h($_POST['fishing_method']??'')?>" style="width:100%;box-sizing:border-box" placeholder="Спиннинг, нахлыст..."></div>
         </div>
-        <div class="grid grid-cols-2 gap-3 mt-4">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-top:1rem">
           <?php foreach(['gear_inc'=>'Снаряжение включено','catch_g'=>'Гарантия улова','license'=>'Нужна лицензия','boat'=>'Лодка включена'] as $fk=>$fl): ?>
-          <label class="flex items-center gap-2 p-3 rounded-lg border cursor-pointer hover:bg-muted/50"><input type="checkbox" name="<?=$fk?>" value="1" <?=($_POST[$fk]??'')?'checked':''?> class="rounded"><span class="text-sm"><?=$fl?></span></label>
+          <label style="display:flex;align-items:center;gap:0.5rem;padding:0.75rem 1rem;border-radius:8px;border:1px solid #DFE4EA;cursor:pointer;transition:all 0.15s ease" onmouseover="this.style.borderColor='#C8D0DA';this.style.background='#F7F9FB'" onmouseout="this.style.borderColor='#DFE4EA';this.style.background='transparent'">
+            <input type="checkbox" name="<?=$fk?>" value="1" <?=($_POST[$fk]??'')?'checked':''?> style="width:1rem;height:1rem;accent-color:#121E2B">
+            <span style="font-size:0.8125rem"><?=$fl?></span>
+          </label>
           <?php endforeach; ?>
         </div>
       <?php elseif ($lt === 'rental_gear'): ?>
         <div class="form-group"><label>Состояние снаряжения</label>
-          <select name="gear_condition" class="w-full"><option value="new">Новое</option><option value="excellent">Отличное</option><option value="good">Хорошее</option><option value="used">Б/у</option></select>
+          <select name="gear_condition" style="width:100%;box-sizing:border-box"><option value="new">Новое</option><option value="excellent">Отличное</option><option value="good">Хорошее</option><option value="used">Б/у</option></select>
         </div>
-        <div class="form-group"><label>Депозит (₽)</label><input type="number" name="deposit" value="<?=h($_POST['deposit']??'')?>" class="w-full" min="0"></div>
+        <div class="form-group"><label>Депозит (₽)</label><input type="number" name="deposit" value="<?=h($_POST['deposit']??'')?>" style="width:100%;box-sizing:border-box" min="0"></div>
       <?php endif; ?>
 
       <!-- Common: Amenities -->
       <?php if ($lt === 'property' || $lt === 'tour'): ?>
-      <div class="mt-6"><h3 class="font-medium mb-3">Удобства</h3><div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+      <div style="margin-top:1.5rem">
+        <h3 style="font-family:Manrope,sans-serif;font-weight:600;font-size:0.9375rem;margin:0 0 0.75rem">Удобства</h3>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:0.375rem">
         <?php foreach($AMENITY_OPTIONS as $a): $ckd = in_array($a, $_POST['amenities']??[]); ?>
-        <label class="flex items-center gap-2 text-sm cursor-pointer hover:bg-muted/50 p-1.5 rounded"><input type="checkbox" name="amenities[]" value="<?=h($a)?>" <?=$ckd?'checked':''?> class="rounded"><?=$a?></label>
+        <label style="display:flex;align-items:center;gap:0.5rem;font-size:0.8125rem;cursor:pointer;padding:0.375rem 0.5rem;border-radius:6px;transition:background 0.15s ease" onmouseover="this.style.background='#F7F9FB'" onmouseout="this.style.background='transparent'">
+          <input type="checkbox" name="amenities[]" value="<?=h($a)?>" <?=$ckd?'checked':''?> style="width:1rem;height:1rem;accent-color:#121E2B"><?=$a?>
+        </label>
         <?php endforeach; ?>
-      </div></div>
+        </div>
+      </div>
       <?php endif; ?>
 
       <!-- Common: Season -->
-      <div class="form-group mt-4"><label>Сезон</label>
-        <select name="season" class="w-full"><option value="all_season">Круглый год</option><option value="summer">Лето</option><option value="winter">Зима</option></select>
+      <div class="form-group" style="margin-top:1rem"><label>Сезон</label>
+        <select name="season" style="width:100%;box-sizing:border-box"><option value="all_season">Круглый год</option><option value="summer">Лето</option><option value="winter">Зима</option></select>
       </div>
 
     <?php elseif ($step === 4): ?>
       <!-- Step 4: Photos -->
-      <h2 class="font-display text-2xl mb-6">Фотографии</h2>
+      <h2 style="font-family:Manrope,sans-serif;font-weight:700;font-size:1.25rem;margin:0 0 1.5rem">Фотографии</h2>
       <?php foreach(['listing_type','category','title','description','price','location','max_guests','rooms_count','beds_count','bathrooms_count','area_sqm','check_in','check_out','deposit','tour_hours','tour_days','difficulty','group_min','group_max','start_point','transport_inc','border_permit','weather_dep','meals','transport_type','gear_condition','fishing_type','fishing_method','gear_inc','catch_g','license','boat','season'] as $f): ?>
       <input type="hidden" name="<?=$f?>" value="<?=h($_POST[$f]??'')?>">
       <?php endforeach; ?>
       <?php if (isset($_POST['amenities'])): foreach($_POST['amenities'] as $a): ?><input type="hidden" name="amenities[]" value="<?=h($a)?>"><?php endforeach; endif; ?>
 
-      <div class="border-2 border-dashed rounded-xl p-8 text-center cursor-pointer hover:bg-muted/30 transition-colors" onclick="document.getElementById('imgInput').click()">
-        <div class="text-4xl mb-2">📸</div>
-        <p class="text-sm text-muted-foreground">Нажмите, чтобы выбрать фото</p>
-        <p class="text-xs text-muted-foreground mt-1">До 10 файлов, JPG/PNG</p>
-        <input type="file" id="imgInput" name="images[]" multiple accept="image/*" class="hidden" onchange="previewImages(event)">
+      <div style="border:2px dashed #DFE4EA;border-radius:12px;padding:2.5rem;text-align:center;cursor:pointer;transition:all 0.15s ease" onclick="document.getElementById('imgInput').click()" onmouseover="this.style.borderColor='#C8D0DA';this.style.background='rgba(238,242,246,0.3)'" onmouseout="this.style.borderColor='#DFE4EA';this.style.background='transparent'">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#7A8A9A" stroke-width="1.5" style="margin-bottom:0.75rem">
+          <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>
+        </svg>
+        <p style="font-size:0.875rem;color:#7A8A9A;margin:0">Нажмите, чтобы выбрать фото</p>
+        <p style="font-size:0.75rem;color:#7A8A9A;margin:0.25rem 0 0">До 10 файлов, JPG/PNG</p>
+        <input type="file" id="imgInput" name="images[]" multiple accept="image/*" hidden onchange="previewImages(event)">
       </div>
-      <div id="imgPreview" class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3 mt-4"></div>
-      <p id="imgCount" class="text-xs text-muted-foreground mt-2 hidden"></p>
+      <div id="imgPreview" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:0.75rem;margin-top:1rem"></div>
+      <p id="imgCount" style="font-size:0.75rem;color:#7A8A9A;margin:0.5rem 0 0;display:none"></p>
 
 <script>
 function previewImages(e) {
@@ -298,16 +347,16 @@ function previewImages(e) {
   var grid = document.getElementById('imgPreview');
   var count = document.getElementById('imgCount');
   grid.innerHTML = '';
-  if (files.length === 0) { count.classList.add('hidden'); return; }
-  count.classList.remove('hidden');
+  if (files.length === 0) { count.style.display = 'none'; return; }
+  count.style.display = 'block';
   count.textContent = files.length + ' фото выбрано';
   files.forEach(function(f,i) {
     var r = new FileReader();
     r.onload = function(ev) {
       var card = document.createElement('div');
-      card.className = 'relative aspect-square rounded-lg overflow-hidden border border-border bg-muted/30';
-      card.innerHTML = '<img src="'+ev.target.result+'" class="w-full h-full object-cover">' +
-        '<button type="button" class="absolute top-1 right-1 w-6 h-6 bg-black/50 hover:bg-black/70 text-white rounded-full text-xs flex items-center justify-center" onclick="removeImage('+i+');event.stopPropagation();">×</button>';
+      card.style.cssText = 'position:relative;aspect-ratio:1;border-radius:8px;overflow:hidden;border:1px solid #EEF2F6;background:rgba(238,242,246,0.4)';
+      card.innerHTML = '<img src="'+ev.target.result+'" style="width:100%;height:100%;object-fit:cover">' +
+        '<button type="button" style="position:absolute;top:4px;right:4px;width:1.5rem;height:1.5rem;background:rgba(0,0,0,0.5);border:0;color:#fff;border-radius:50%;font-size:0.75rem;display:flex;align-items:center;justify-content:center;cursor:pointer" onclick="removeImage('+i+');event.stopPropagation();">&times;</button>';
       card.dataset.idx = i;
       grid.appendChild(card);
     };
@@ -325,30 +374,51 @@ function removeImage(idx) {
 
     <?php elseif ($step === 5): ?>
       <!-- Step 5: Confirm -->
-      <h2 class="font-display text-2xl mb-6">Подтверждение</h2>
+      <h2 style="font-family:Manrope,sans-serif;font-weight:700;font-size:1.25rem;margin:0 0 1.5rem">Подтверждение</h2>
       <?php foreach(array_keys($_POST) as $f): if ($f==='step'||$f==='finish'||is_array($_POST[$f]??null)) continue; ?>
       <input type="hidden" name="<?=$f?>" value="<?=h($_POST[$f]??'')?>">
       <?php endforeach; ?>
       <input type="hidden" name="step" value="5">
       <?php if (isset($_POST['amenities'])): foreach($_POST['amenities'] as $a): ?><input type="hidden" name="amenities[]" value="<?=h($a)?>"><?php endforeach; endif; ?>
-      <div class="bg-secondary/50 rounded-xl p-6 space-y-3 text-sm">
-        <div class="flex justify-between"><span class="text-muted-foreground">Тип:</span><span class="font-medium"><?=$LISTING_EMOJI[$_POST['listing_type']??'']??''?> <?=$LISTING_LABELS[$_POST['listing_type']??'']??''?></span></div>
-        <div class="flex justify-between"><span class="text-muted-foreground">Название:</span><span class="font-medium"><?=h($_POST['title']??'')?></span></div>
-        <div class="flex justify-between"><span class="text-muted-foreground">Цена:</span><span class="font-display text-lg"><?=number_format((float)($_POST['price']??0),0,'.',' ')?> <?=price_label($_POST['listing_type']??'')?></span></div>
-        <div class="flex justify-between"><span class="text-muted-foreground">Локация:</span><span class="font-medium"><?=h($_POST['location']??'')?></span></div>
-        <div class="flex justify-between"><span class="text-muted-foreground">Фото:</span><span class="font-medium"><?=empty($_SESSION['tmp_images'])?'Нет':count($_SESSION['tmp_images']).' фото'?></span></div>
+      <div style="background:#F7F9FB;border-radius:12px;padding:1.5rem;font-size:0.875rem">
+        <?php
+        $fields = [
+          'Тип' => $LISTING_LABELS[$_POST['listing_type']??''] ?? '',
+          'Категория' => $_POST['category'] ?? '',
+          'Название' => $_POST['title'] ?? '',
+          'Цена' => number_format((float)($_POST['price']??0),0,'.',' ').' '.price_label($_POST['listing_type']??''),
+          'Локация' => $_POST['location'] ?? '',
+          'Фото' => empty($_SESSION['tmp_images'])?'Нет':count($_SESSION['tmp_images']).' фото',
+        ];
+        foreach ($fields as $k => $v):
+          if (!$v) continue;
+        ?>
+        <div style="display:flex;justify-content:space-between;padding:0.5rem 0;border-bottom:1px solid #EEF2F6">
+          <span style="color:#7A8A9A"><?=$k?>:</span>
+          <span style="font-weight:500;color:#121E2B"><?=h($v)?></span>
+        </div>
+        <?php endforeach; ?>
       </div>
     <?php endif; ?>
 
     <!-- Navigation -->
-    <div class="flex justify-between pt-6 border-t">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:2rem;padding-top:1.25rem;border-top:1px solid #EEF2F6">
       <?php if ($step > 1): ?>
-      <button type="submit" name="step" value="<?=$step-1?>" class="inline-flex items-center justify-center rounded-lg border border-border hover:bg-muted h-10 px-6 text-sm font-medium transition-all">← Назад</button>
+      <button type="submit" name="step" value="<?=$step-1?>" style="display:inline-flex;align-items:center;gap:0.375rem;border-radius:8px;border:1px solid #DFE4EA;background:#fff;padding:0.625rem 1.25rem;font-size:0.8125rem;font-weight:500;cursor:pointer;color:#3A4A5C;font-family:inherit;transition:all 0.15s ease" onmouseover="this.style.background='#F7F9FB';this.style.borderColor='#C8D0DA'" onmouseout="this.style.background='#fff';this.style.borderColor='#DFE4EA'">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+        Назад
+      </button>
       <?php else: ?><div></div><?php endif; ?>
       <?php if ($step < 5): ?>
-      <button type="submit" name="step" value="<?=$step+1?>" class="inline-flex items-center justify-center rounded-lg bg-accent text-white hover:bg-accent/80 h-10 px-6 text-sm font-medium transition-all">Далее →</button>
+      <button type="submit" name="step" value="<?=$step+1?>" style="display:inline-flex;align-items:center;gap:0.375rem;border-radius:8px;border:0;background:#121E2B;color:#F7F9FB;padding:0.625rem 1.25rem;font-size:0.8125rem;font-weight:600;cursor:pointer;font-family:inherit;transition:background 0.15s ease" onmouseover="this.style.background='#1A2937'" onmouseout="this.style.background='#121E2B'">
+        Далее
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+      </button>
       <?php else: ?>
-      <button type="submit" name="finish" value="1" class="inline-flex items-center justify-center rounded-lg bg-accent text-white hover:bg-accent/80 h-10 px-8 text-sm font-medium transition-all">Опубликовать 🚀</button>
+      <button type="submit" name="finish" value="1" style="display:inline-flex;align-items:center;gap:0.375rem;border-radius:8px;border:0;background:#121E2B;color:#F7F9FB;padding:0.625rem 1.5rem;font-size:0.8125rem;font-weight:600;cursor:pointer;font-family:inherit;transition:background 0.15s ease" onmouseover="this.style.background='#1A2937'" onmouseout="this.style.background='#121E2B'">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+        Опубликовать
+      </button>
       <?php endif; ?>
     </div>
   </form>
