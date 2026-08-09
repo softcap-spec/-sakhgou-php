@@ -29,6 +29,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['promote'])) {
 
   $pdo->prepare('INSERT INTO notifications (user_id, type, text, link, is_read, created_at) VALUES (?,?,?,?,0,NOW())')->execute([$cu['id'], 'promo', "Заявка на продвижение «{$listing['title']}» принята. Ожидайте подтверждения.", '/dashboard']);
 
+  // Notify all admins
+  $admins = $pdo->query("SELECT id FROM users WHERE role = 'admin'")->fetchAll();
+  foreach ($admins as $a) {
+    $pdo->prepare('INSERT INTO notifications (user_id, type, text, link, is_read, created_at) VALUES (?,?,?,?,0,NOW())')->execute([$a['id'], 'promo', "Новая заявка на продвижение от {$cu['name']}: «{$listing['title']}»", '/admin?tab=payments']);
+  }
+
   header('Location: /dashboard');
   exit;
 }

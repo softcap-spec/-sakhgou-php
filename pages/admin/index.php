@@ -111,6 +111,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     exit;
   }
 
+  // Promo approve/reject
+  if ($_POST['action'] === 'approve_promo') {
+    $pid = (int)$_POST['id'];
+    $promo = $pdo->prepare("SELECT p.*, l.title AS listing_title FROM promotions p JOIN listings l ON p.listing_id = l.id WHERE p.id = ?");
+    $promo->execute([$pid]);
+    $p = $promo->fetch();
+    if ($p) {
+      $pdo->prepare("UPDATE promotions SET status = 'active', payment_status = 'paid' WHERE id = ?")->execute([$pid]);
+      $pdo->prepare("INSERT INTO notifications (user_id, type, text, link, is_read, created_at) VALUES (?,?,?,?,0,NOW())")->execute([$p['host_id'], 'promo', "Ваше продвижение «{$p['listing_title']}» одобрено и активировано!", '/dashboard']);
+    }
+    header('Location: /admin?tab=payments&ok=approved'); exit;
+  }
+  if ($_POST['action'] === 'reject_promo') {
+    $pid = (int)$_POST['id'];
+    $reason = trim($_POST['reason'] ?? '');
+    $promo = $pdo->prepare("SELECT p.*, l.title AS listing_title FROM promotions p JOIN listings l ON p.listing_id = l.id WHERE p.id = ?");
+    $promo->execute([$pid]);
+    $p = $promo->fetch();
+    if ($p) {
+      $pdo->prepare("UPDATE promotions SET status = 'rejected', payment_status = 'rejected' WHERE id = ?")->execute([$pid]);
+      $msg = "Ваше продвижение «{$p['listing_title']}» отклонено." . ($reason ? " Причина: $reason" : '');
+      $pdo->prepare("INSERT INTO notifications (user_id, type, text, link, is_read, created_at) VALUES (?,?,?,?,0,NOW())")->execute([$p['host_id'], 'promo', $msg, '/dashboard']);
+    }
+    header('Location: /admin?tab=payments&ok=rejected'); exit;
+  }
+
   // Maintenance toggle
   if ($_POST['action'] === 'toggle_maintenance') {
     $current = $pdo->query("SELECT setting_value FROM settings WHERE setting_key = 'maintenance'")->fetchColumn();
@@ -383,7 +409,7 @@ elseif ($tab === 'payments'):
     <h2 class="font-display text-xl mb-4">Платные услуги / Продвижение</h2>
     <div class="bg-white border rounded-xl overflow-hidden">
       <table class="w-full text-sm">
-        <thead><tr class="border-b bg-muted/30"><th class="px-4 py-3 text-left">ID</th><th class="px-4 py-3 text-left">Пользователь</th><th class="px-4 py-3 text-left hidden sm:table-cell">Объявление</th><th class="px-4 py-3 text-center hidden sm:table-cell">Тип</th><th class="px-4 py-3 text-right hidden sm:table-cell">Сумма</th><th class="px-4 py-3 text-center">Статус</th><th class="px-4 py-3 text-right hidden sm:table-cell">Дата</th></tr></thead>
+        <thead><tr class="border-b bg-muted/30"><th class="px-4 py-3 text-left">ID</th><th class="px-4 py-3 text-left">Пользователь</th><th class="px-4 py-3 text-left hidden sm:table-cell">Объявление</th><th class="px-4 py-3 text-center hidden sm:table-cell">Тип</th><th class="px-4 py-3 text-right hidden sm:table-cell">Сумма</th><th class="px-4 py-3 text-center">Статус</th><th class="px-4 py-3 text-right hidden sm:table-cell">Дата</th><th class="px-4 py-3 text-center">Действия</th></tr></thead>
         <tbody>
           <?php while ($pm = $promos->fetch()): ?>
             <tr class="border-b hover:bg-muted/20">
@@ -396,11 +422,44 @@ elseif ($tab === 'payments'):
               <td class="px-4 py-3 text-right text-xs hidden sm:table-cell"><?=number_format((float)$pm['payment_amount'],0,',',' ')?> ₽</td>
               <td class="px-4 py-3 text-center"><span class="text-xs px-2 py-0.5 rounded-full <?= $pm['payment_status']==='paid' ? 'bg-green-100 text-green-700' : ($pm['payment_status']==='refunded' ? 'bg-gray-100 text-gray-600' : 'bg-yellow-100 text-yellow-700') ?>"><?=h($pm['payment_status'])?></span></td>
               <td class="px-4 py-3 text-xs text-muted-foreground text-right hidden sm:table-cell"><?=date('d.m.Y', strtotime($pm['created_at']))?></td>
+              <td class="px-4 py-3 text-center">
+                <?php if ($pm['payment_status'] === 'pending'): ?>
+                  <div class="flex items-center justify-center gap-1">
+                    <form method="post" class="inline" onsubmit="return confirm('Одобрить продвижение?')">
+                      <?= csrf_field() ?>
+                      <input type="hidden" name="action" value="approve_promo">
+                      <input type="hidden" name="id" value="<?=$pm['id']?>">
+                      <button class="text-xs bg-green-600 text-white px-2 py-1 rounded hover:bg-green-700">Одобрить</button>
+                    </form>
+                    <button class="text-xs bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600" onclick="rejectPromo(<?=$pm['id']?>)">Отклонить</button>
+                  </div>
+                <?php else: ?>
+                  <span class="text-xs text-muted-foreground">—</span>
+                <?php endif; ?>
+              </td>
             </tr>
           <?php endwhile; ?>
         </tbody>
       </table>
     </div>
+
+<!-- Reject Modal -->
+<div id="rejectModal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center hidden">
+  <div class="bg-white rounded-xl p-6 w-full max-w-sm mx-4">
+    <h3 class="font-display text-lg mb-3">Причина отказа</h3>
+    <form method="post">
+      <?= csrf_field() ?>
+      <input type="hidden" name="action" value="reject_promo">
+      <input type="hidden" name="id" id="rejectPromoId">
+      <textarea name="reason" rows="2" class="w-full border rounded-lg p-2 text-sm" placeholder="Необязательно"></textarea>
+      <div class="flex gap-2 mt-3">
+        <button type="button" onclick="document.getElementById('rejectModal').classList.add('hidden')" class="flex-1 btn-outline text-sm py-2">Отмена</button>
+        <button type="submit" class="flex-1 bg-red-500 text-white rounded-lg text-sm py-2 hover:bg-red-600">Отклонить</button>
+      </div>
+    </form>
+  </div>
+</div>
+<script>function rejectPromo(id){document.getElementById('rejectPromoId').value=id;document.getElementById('rejectModal').classList.remove('hidden');}</script>
 
 <?php
 // ── MAINTENANCE ──
