@@ -79,6 +79,45 @@ switch ($page) {
   case 'help':
     require __DIR__ . '/pages/help.php';
     break;
+  case 'api':
+    // AJAX API for chat
+    header('Content-Type: application/json; charset=utf-8');
+    $cu = auth_user();
+    if (!$cu) { echo json_encode(['error'=>'auth']); exit; }
+    $action = $sub ?? '';
+    $pdo = db();
+    if ($action === 'messages' && $_SERVER['REQUEST_METHOD'] === 'GET') {
+      // Get messages for a listing with another user
+      $lid = (int)($_GET['lid'] ?? 0);
+      $other = (int)($_GET['uid'] ?? 0);
+      $stmt = $pdo->prepare('SELECT * FROM messages WHERE listing_id=? AND ((sender_id=? AND receiver_id=?) OR (sender_id=? AND receiver_id=?)) ORDER BY created_at ASC');
+      $stmt->execute([$lid,$cu['id'],$other,$other,$cu['id']]);
+      $msgs = $stmt->fetchAll();
+      // Mark as read
+      $pdo->prepare('UPDATE messages SET is_read=1 WHERE listing_id=? AND receiver_id=? AND sender_id=?')->execute([$lid,$cu['id'],$other]);
+      echo json_encode(['messages'=>$msgs]);
+      exit;
+    }
+    if ($action === 'send' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+      $lid = (int)($_POST['lid'] ?? 0);
+      $text = trim($_POST['text'] ?? '');
+      if ($lid > 0 && $text !== '') {
+        // Find listing owner
+        $stmt = $pdo->prepare('SELECT user_id, title FROM listings WHERE id=?');
+        $stmt->execute([$lid]);
+        $listing = $stmt->fetch();
+        if ($listing && $listing['user_id'] != $cu['id']) {
+          $pdo->prepare('INSERT INTO messages (listing_id,sender_id,receiver_id,text,is_read,created_at) VALUES (?,?,?,?,0,NOW())')->execute([$lid,$cu['id'],$listing['user_id'],$text]);
+          $pdo->prepare('INSERT INTO notifications (user_id,type,text,link,is_read,created_at) VALUES (?,?,?,?,0,NOW())')->execute([$listing['user_id'],'message','Новое сообщение по объявлению «'.$listing['title'].'»','/dashboard']);
+          echo json_encode(['ok'=>true]);
+          exit;
+        }
+      }
+      echo json_encode(['error'=>'invalid']);
+      exit;
+    }
+    echo json_encode(['error'=>'unknown']);
+    exit;
   case 'privacy':
     require __DIR__ . '/pages/privacy.php';
     break;

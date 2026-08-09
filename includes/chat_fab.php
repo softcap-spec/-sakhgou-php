@@ -1,129 +1,347 @@
 <?php
-// chat_fab.php — плавающая кнопка чата + notification bell
-// Подключается в footer.php перед </body>
+// chat_fab.php — Avito-style chat widget v3
 $cu = auth_user();
-if (!$cu) return; // только для залогиненных
+if (!$cu) return;
 $pdo = db();
 
-// Unread messages count
+// Unread counts
+$unread_msgs = (int)$pdo->prepare('SELECT COUNT(*) FROM messages WHERE receiver_id = ? AND is_read = 0');
+$pdo->prepare('SELECT COUNT(*) FROM messages WHERE receiver_id = ? AND is_read = 0')->execute([$cu['id']]);
 $stmt = $pdo->prepare('SELECT COUNT(*) FROM messages WHERE receiver_id = ? AND is_read = 0');
 $stmt->execute([$cu['id']]);
 $unread_msgs = (int)$stmt->fetchColumn();
 
-// Unread notifications count
 $stmt = $pdo->prepare('SELECT COUNT(*) FROM notifications WHERE user_id = ? AND is_read = 0');
 $stmt->execute([$cu['id']]);
 $unread_notifs = (int)$stmt->fetchColumn();
 
-// Recent notifications
 $stmt = $pdo->prepare('SELECT * FROM notifications WHERE user_id = ? ORDER BY created_at DESC LIMIT 5');
 $stmt->execute([$cu['id']]);
 $notifs = $stmt->fetchAll();
 
-// Chat previews
-$stmt = $pdo->prepare('
-  SELECT m.*, l.title AS listing_title, u.name AS other_name
+// Chat list with last message
+$stmt = $pdo->prepare("
+  SELECT m.*, l.title AS listing_title, l.id AS lid,
+    u.name AS other_name, u.avatar_url AS other_avatar
   FROM messages m
   JOIN listings l ON m.listing_id = l.id
   JOIN users u ON IF(m.sender_id = ?, m.receiver_id, m.sender_id) = u.id
   WHERE (m.sender_id = ? OR m.receiver_id = ?)
   GROUP BY m.listing_id, IF(m.sender_id = ?, m.receiver_id, m.sender_id)
-  ORDER BY m.created_at DESC LIMIT 10
-');
+  ORDER BY m.created_at DESC LIMIT 20
+");
 $stmt->execute([$cu['id'], $cu['id'], $cu['id'], $cu['id']]);
 $chats = $stmt->fetchAll();
+
+// Unread per chat
+$unreadByChat = [];
+foreach ($chats as $c) {
+  $other = ($c['sender_id'] == $cu['id']) ? $c['receiver_id'] : $c['sender_id'];
+  $key = $c['lid'] . '_' . $other;
+  if (!isset($unreadByChat[$key])) {
+    $stmt2 = $pdo->prepare('SELECT COUNT(*) FROM messages WHERE listing_id=? AND sender_id=? AND receiver_id=? AND is_read=0');
+    $stmt2->execute([$c['lid'], $other, $cu['id']]);
+    $unreadByChat[$key] = (int)$stmt2->fetchColumn();
+  }
+}
 ?>
 <style>
-.fab-container { position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 90; display: flex; flex-direction: column; gap: 0.5rem; }
-.fab-btn { width: 3.5rem; height: 3.5rem; border-radius: 50%; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; box-shadow: 0 4px 12px rgba(0,0,0,0.15); transition: transform 0.15s; position: relative; }
-.fab-btn:hover { transform: scale(1.05); }
-.fab-btn:active { transform: scale(0.95); }
-.fab-chat { background: var(--primary); color: #fff; }
-.fab-bell { background: #fff; color: var(--primary); border: 1px solid var(--border); }
-.fab-badge { position: absolute; top: -2px; right: -2px; background: #dc2626; color: #fff; font-size: 0.625rem; font-weight: 700; min-width: 1.25rem; height: 1.25rem; border-radius: 9999px; display: flex; align-items: center; justify-content: center; padding: 0 0.25rem; }
+.chat-fab-container { position: fixed; bottom: 1.25rem; right: 1.25rem; z-index: 90; display: flex; flex-direction: column; gap: 0.625rem; }
+.chat-fab-btn {
+  width: 3rem; height: 3rem; border-radius: 50%; border: 0; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 4px 12px rgba(15,23,32,0.12);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  position: relative;
+}
+.chat-fab-btn:hover { transform: scale(1.06); box-shadow: 0 6px 18px rgba(15,23,32,0.18); }
+.chat-fab-btn:active { transform: scale(0.95); }
+.chat-fab-chat { background: #121E2B; color: #fff; }
+.chat-fab-bell { background: #fff; color: #121E2B; border: 1px solid #DFE4EA; }
+.chat-fab-badge {
+  position: absolute; top: -4px; right: -4px;
+  background: #DC2626; color: #fff; font-size: 0.625rem; font-weight: 700;
+  min-width: 1.125rem; height: 1.125rem; border-radius: 9999px;
+  display: flex; align-items: center; justify-content: center;
+  border: 2px solid #fff; padding: 0 0.25rem;
+}
 
-.fab-panel { position: fixed; bottom: 6rem; right: 1.5rem; z-index: 91; width: 22rem; max-height: 28rem; background: #fff; border-radius: 0.75rem; box-shadow: 0 20px 60px -15px rgba(0,0,0,0.2); display: none; flex-direction: column; overflow: hidden; }
-.fab-panel.open { display: flex; }
-.fab-panel-header { padding: 1rem; border-bottom: 1px solid var(--border); font-weight: 600; display: flex; justify-content: space-between; align-items: center; }
-.fab-panel-body { flex: 1; overflow-y: auto; }
-.fab-panel-item { padding: 0.75rem 1rem; border-bottom: 1px solid var(--border); cursor: pointer; transition: background 0.1s; }
-.fab-panel-item:hover { background: var(--secondary); }
-.fab-panel-empty { padding: 2rem 1rem; text-align: center; color: var(--muted-fg); font-size: 0.875rem; }
-.fab-panel-close { cursor: pointer; color: var(--muted-fg); font-size: 1.25rem; background: none; border: none; padding: 0; }
+.chat-widget {
+  position: fixed; bottom: 4.5rem; right: 1.25rem; z-index: 91;
+  width: 24rem; height: 32rem; max-height: calc(100vh - 6rem);
+  background: #fff; border-radius: 12px;
+  box-shadow: 0 20px 50px -10px rgba(15,23,32,0.2);
+  display: none; flex-direction: column; overflow: hidden;
+  border: 1px solid #EBEEF2;
+}
+.chat-widget.open { display: flex; }
+
+.chat-widget-header {
+  padding: 0.875rem 1rem; border-bottom: 1px solid #EBEEF2;
+  display: flex; align-items: center; justify-content: space-between;
+  background: #fff;
+}
+.chat-widget-title { font-size: 0.875rem; font-weight: 600; color: #121E2B; }
+.chat-widget-close {
+  width: 1.75rem; height: 1.75rem; border: 0; background: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 6px; color: #7A8A9A; transition: all 0.15s;
+}
+.chat-widget-close:hover { background: #F7F9FB; color: #121E2B; }
+
+.chat-widget-body { flex: 1; overflow-y: auto; }
+.chat-widget-empty { padding: 2rem 1rem; text-align: center; color: #9AAAB8; font-size: 0.8125rem; }
+
+/* Chat list */
+.chat-list-item {
+  padding: 0.75rem 1rem; border-bottom: 1px solid #F0F3F7;
+  cursor: pointer; transition: background 0.15s;
+  display: flex; gap: 0.625rem; align-items: start;
+}
+.chat-list-item:hover { background: #F7F9FB; }
+.chat-list-item.active { background: #EEF2F6; }
+.chat-list-name { font-size: 0.8125rem; font-weight: 600; color: #121E2B; }
+.chat-list-preview { font-size: 0.75rem; color: #7A8A9A; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-top: 0.125rem; }
+.chat-list-meta { font-size: 0.625rem; color: #9AAAB8; margin-top: 0.25rem; }
+.chat-list-unread {
+  background: #DC2626; color: #fff; font-size: 0.5625rem; font-weight: 700;
+  min-width: 1rem; height: 1rem; border-radius: 9999px;
+  display: flex; align-items: center; justify-content: center;
+  padding: 0 0.25rem; margin-left: auto;
+}
+
+/* Chat thread */
+.chat-thread { display: none; flex-direction: column; height: 100%; }
+.chat-thread.active { display: flex; }
+.chat-thread-back {
+  display: flex; align-items: center; gap: 0.5rem;
+  padding: 0.625rem 0.875rem; border-bottom: 1px solid #EBEEF2;
+  cursor: pointer; font-size: 0.8125rem; font-weight: 500; color: #54677A;
+}
+.chat-thread-back:hover { background: #F7F9FB; }
+.chat-thread-name { font-weight: 600; color: #121E2B; }
+.chat-thread-listing { font-size: 0.6875rem; color: #9AAAB8; margin-top: 0.125rem; }
+
+.chat-messages { flex: 1; overflow-y: auto; padding: 0.75rem; display: flex; flex-direction: column; gap: 0.5rem; }
+.chat-msg { max-width: 75%; padding: 0.5rem 0.75rem; border-radius: 8px; font-size: 0.8125rem; line-height: 1.4; word-wrap: break-word; }
+.chat-msg-out { background: #1B6B8A; color: #fff; align-self: flex-end; border-bottom-right-radius: 2px; }
+.chat-msg-in { background: #EEF2F6; color: #121E2B; align-self: flex-start; border-bottom-left-radius: 2px; }
+.chat-msg-time { font-size: 0.5625rem; color: #9AAAB8; margin-top: 0.125rem; }
+
+.chat-input-area { border-top: 1px solid #EBEEF2; padding: 0.625rem; display: flex; gap: 0.5rem; }
+.chat-input {
+  flex: 1; border: 1px solid #DFE4EA; border-radius: 8px;
+  padding: 0.5rem 0.75rem; font-size: 0.8125rem; outline: none;
+  transition: border-color 0.15s;
+}
+.chat-input:focus { border-color: #1B6B8A; }
+.chat-send-btn {
+  width: 2.25rem; height: 2.25rem; border: 0; border-radius: 8px;
+  background: #1B6B8A; color: #fff; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.15s;
+}
+.chat-send-btn:hover { background: #155A75; }
+.chat-send-btn:disabled { background: #C8D0DA; cursor: not-allowed; }
+
+/* Notification panel */
+.notif-panel {
+  position: fixed; bottom: 4.5rem; right: 1.25rem; z-index: 91;
+  width: 20rem; max-height: 24rem; background: #fff;
+  border-radius: 12px; box-shadow: 0 20px 50px -10px rgba(15,23,32,0.2);
+  display: none; flex-direction: column; overflow: hidden;
+  border: 1px solid #EBEEF2;
+}
+.notif-panel.open { display: flex; }
+.notif-item { padding: 0.75rem 1rem; border-bottom: 1px solid #F0F3F7; cursor: pointer; transition: background 0.15s; }
+.notif-item:hover { background: #F7F9FB; }
+.notif-text { font-size: 0.8125rem; color: #121E2B; }
+.notif-time { font-size: 0.6875rem; color: #9AAAB8; margin-top: 0.25rem; }
 </style>
 
-<div class="fab-container">
-  <!-- Notification Bell -->
-  <button class="fab-btn fab-bell" onclick="togglePanel('bell')" title="Уведомления">
-    🔔
-    <?php if ($unread_notifs > 0): ?><span class="fab-badge"><?= $unread_notifs ?></span><?php endif; ?>
+<!-- FAB buttons -->
+<div class="chat-fab-container">
+  <button class="chat-fab-btn chat-fab-bell" onclick="toggleNotif()" title="Уведомления">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+    <?php if ($unread_notifs > 0): ?><span class="chat-fab-badge"><?=$unread_notifs?></span><?php endif; ?>
   </button>
-
-  <!-- Chat FAB -->
-  <button class="fab-btn fab-chat" onclick="togglePanel('chat')" title="Сообщения">
-    💬
-    <?php if ($unread_msgs > 0): ?><span class="fab-badge"><?= $unread_msgs ?></span><?php endif; ?>
+  <button class="chat-fab-btn chat-fab-chat" onclick="toggleChat()" title="Сообщения">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+    <?php if ($unread_msgs > 0): ?><span class="chat-fab-badge"><?=$unread_msgs?></span><?php endif; ?>
   </button>
 </div>
 
-<!-- Bell Panel -->
-<div id="bellPanel" class="fab-panel">
-  <div class="fab-panel-header">
-    <span>Уведомления</span>
-    <button class="fab-panel-close" onclick="togglePanel('bell')">×</button>
+<!-- Notification panel -->
+<div id="notifPanel" class="notif-panel">
+  <div class="chat-widget-header">
+    <span class="chat-widget-title">Уведомления</span>
+    <button class="chat-widget-close" onclick="toggleNotif()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+    </button>
   </div>
-  <div class="fab-panel-body">
+  <div class="chat-widget-body">
     <?php if (empty($notifs)): ?>
-      <div class="fab-panel-empty">Нет уведомлений</div>
-    <?php else: ?>
-      <?php foreach ($notifs as $n): ?>
-      <div class="fab-panel-item" <?= $n['link'] ? 'onclick="window.location.href=\'' . h($n['link']) . '\'"' : '' ?>>
-        <div class="text-sm"><?= h($n['text']) ?></div>
-        <div class="text-xs text-muted-foreground mt-1"><?= time_ago($n['created_at']) ?></div>
+      <div class="chat-widget-empty">Нет уведомлений</div>
+    <?php else: foreach($notifs as $n): ?>
+      <div class="notif-item" <?= $n['link'] ? 'onclick="window.location.href=\''.h($n['link']).'\'"' : '' ?>>
+        <div class="notif-text"><?=h($n['text'])?></div>
+        <div class="notif-time"><?=time_ago($n['created_at'])?></div>
       </div>
-      <?php endforeach; ?>
-    <?php endif; ?>
+    <?php endforeach; endif; ?>
   </div>
 </div>
 
-<!-- Chat Panel -->
-<div id="chatPanel" class="fab-panel">
-  <div class="fab-panel-header">
-    <span>Сообщения</span>
-    <button class="fab-panel-close" onclick="togglePanel('chat')">×</button>
+<!-- Chat widget -->
+<div id="chatWidget" class="chat-widget">
+  <!-- Chat list view -->
+  <div id="chatListView" class="chat-thread active">
+    <div class="chat-widget-header">
+      <span class="chat-widget-title">Сообщения</span>
+      <button class="chat-widget-close" onclick="toggleChat()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="chat-widget-body">
+      <?php if (empty($chats)): ?>
+        <div class="chat-widget-empty">
+          Нет сообщений<br><br>
+          <a href="/catalog" class="text-accent font-medium hover:underline">Найти объявления</a>
+        </div>
+      <?php else: foreach($chats as $c):
+        $other = ($c['sender_id'] == $cu['id']) ? $c['receiver_id'] : $c['sender_id'];
+        $key = $c['lid'].'_'.$other;
+        $unr = $unreadByChat[$key] ?? 0;
+      ?>
+        <div class="chat-list-item" onclick="openThread(<?=$c['lid']?>, <?=$other?>, '<?=h(addslashes($c['other_name']))?>', '<?=h(addslashes($c['listing_title']))?>')">
+          <?= avatar_html(['name'=>$c['other_name'],'avatar_url'=>$c['other_avatar']], 'w-9 h-9', 'text-xs') ?>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-2">
+              <span class="chat-list-name"><?=h($c['other_name'])?></span>
+              <?php if ($unr > 0): ?><span class="chat-list-unread"><?=$unr?></span><?php endif; ?>
+            </div>
+            <div class="chat-list-preview"><?=h(mb_substr($c['text'],0,60))?></div>
+            <div class="chat-list-meta"><?=h($c['listing_title'])?> · <?=time_ago($c['created_at'])?></div>
+          </div>
+        </div>
+      <?php endforeach; endif; ?>
+    </div>
   </div>
-  <div class="fab-panel-body">
-    <?php if (empty($chats)): ?>
-      <div class="fab-panel-empty">Нет сообщений<br><br><a href="/catalog" style="color:var(--accent)">Найти объявления →</a></div>
-    <?php else: ?>
-      <?php foreach ($chats as $c): ?>
-      <div class="fab-panel-item" onclick="window.location.href='/listing/<?= $c['listing_id'] ?>'">
-        <div class="font-medium text-sm"><?= h($c['other_name']) ?></div>
-        <div class="text-xs text-muted-foreground truncate"><?= h(mb_substr($c['text'], 0, 50)) ?></div>
-        <div class="text-xs text-muted-foreground mt-0.5"><?= h($c['listing_title']) ?> · <?= time_ago($c['created_at']) ?></div>
+
+  <!-- Chat thread view -->
+  <div id="chatThreadView" class="chat-thread">
+    <div class="chat-thread-back" onclick="backToList()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      <div>
+        <div class="chat-thread-name" id="threadName"></div>
+        <div class="chat-thread-listing" id="threadListing"></div>
       </div>
-      <?php endforeach; ?>
-    <?php endif; ?>
+    </div>
+    <div class="chat-messages" id="chatMessages"></div>
+    <div class="chat-input-area">
+      <input type="text" class="chat-input" id="chatInput" placeholder="Сообщение..." onkeydown="if(event.key==='Enter')sendMessage()">
+      <button class="chat-send-btn" onclick="sendMessage()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+      </button>
+    </div>
   </div>
 </div>
 
 <script>
-function togglePanel(which) {
-  var bell = document.getElementById('bellPanel');
-  var chat = document.getElementById('chatPanel');
-  if (which === 'bell') {
-    bell.classList.toggle('open');
-    chat.classList.remove('open');
-  } else {
-    chat.classList.toggle('open');
-    bell.classList.remove('open');
+var currentLid = 0, currentUid = 0, pollTimer = null;
+
+function toggleChat() {
+  var w = document.getElementById('chatWidget');
+  var n = document.getElementById('notifPanel');
+  n.classList.remove('open');
+  w.classList.toggle('open');
+  if (!w.classList.contains('open')) {
+    backToList();
+    if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
   }
 }
+
+function toggleNotif() {
+  var n = document.getElementById('notifPanel');
+  var w = document.getElementById('chatWidget');
+  w.classList.remove('open');
+  n.classList.toggle('open');
+}
+
+function openThread(lid, uid, name, listing) {
+  currentLid = lid; currentUid = uid;
+  document.getElementById('threadName').textContent = name;
+  document.getElementById('threadListing').textContent = listing;
+  document.getElementById('chatListView').classList.remove('active');
+  document.getElementById('chatThreadView').classList.add('active');
+  document.getElementById('chatMessages').innerHTML = '<div class="chat-widget-empty">Загрузка...</div>';
+  loadMessages();
+  if (pollTimer) clearInterval(pollTimer);
+  pollTimer = setInterval(loadMessages, 5000);
+}
+
+function backToList() {
+  document.getElementById('chatThreadView').classList.remove('active');
+  document.getElementById('chatListView').classList.add('active');
+  if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+  currentLid = 0; currentUid = 0;
+}
+
+function loadMessages() {
+  if (!currentLid || !currentUid) return;
+  fetch('/api/messages?lid=' + currentLid + '&uid=' + currentUid)
+    .then(function(r){return r.json()})
+    .then(function(data){
+      var box = document.getElementById('chatMessages');
+      if (!data.messages || data.messages.length === 0) {
+        box.innerHTML = '<div class="chat-widget-empty">Нет сообщений</div>';
+        return;
+      }
+      var html = '';
+      for (var i=0; i<data.messages.length; i++) {
+        var m = data.messages[i];
+        var cls = (m.sender_id == <?=json_encode($cu['id'])?>) ? 'chat-msg-out' : 'chat-msg-in';
+        var time = new Date(m.created_at.replace(/-/g,'/')).toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'});
+        html += '<div class="'+cls+'"><div>'+escapeHtml(m.text)+'</div><div class="chat-msg-time">'+time+'</div></div>';
+      }
+      box.innerHTML = html;
+      box.scrollTop = box.scrollHeight;
+    })
+    .catch(function(){});
+}
+
+function sendMessage() {
+  var input = document.getElementById('chatInput');
+  var text = input.value.trim();
+  if (!text || !currentLid) return;
+  input.value = '';
+  input.disabled = true;
+  fetch('/api/send', {
+    method: 'POST',
+    headers: {'Content-Type':'application/x-www-form-urlencoded'},
+    body: 'lid=' + currentLid + '&text=' + encodeURIComponent(text)
+  })
+  .then(function(r){return r.json()})
+  .then(function(data){
+    input.disabled = false;
+    input.focus();
+    if (data.ok) loadMessages();
+    else alert('Ошибка отправки');
+  })
+  .catch(function(){ input.disabled = false; });
+}
+
+function escapeHtml(s) {
+  var d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
 // Close on outside click
 document.addEventListener('click', function(e) {
-  if (!e.target.closest('.fab-container') && !e.target.closest('.fab-panel')) {
-    document.getElementById('bellPanel').classList.remove('open');
-    document.getElementById('chatPanel').classList.remove('open');
+  if (!e.target.closest('.chat-fab-container') && !e.target.closest('.chat-widget') && !e.target.closest('.notif-panel')) {
+    document.getElementById('chatWidget').classList.remove('open');
+    document.getElementById('notifPanel').classList.remove('open');
+    if (document.getElementById('chatThreadView').classList.contains('active')) backToList();
   }
 });
 </script>
