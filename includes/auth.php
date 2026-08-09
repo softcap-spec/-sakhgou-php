@@ -59,9 +59,15 @@ function auth_logout(): void {
 function auth_user(): ?array {
   if (empty($_SESSION['user_id'])) return null;
   $pdo = db();
-  $stmt = $pdo->prepare('SELECT id, email, name, phone, role, created_at FROM users WHERE id = ?');
+  $stmt = $pdo->prepare('SELECT id, email, name, phone, role, avatar_url, created_at FROM users WHERE id = ?');
   $stmt->execute([$_SESSION['user_id']]);
-  return $stmt->fetch() ?: null;
+  $u = $stmt->fetch() ?: null;
+  if ($u) {
+    $cn = db()->prepare('SELECT COUNT(*) FROM notifications WHERE user_id = ? AND is_read = 0');
+    $cn->execute([$u['id']]);
+    $u['unread_notifications'] = (int)$cn->fetchColumn();
+  }
+  return $u;
 }
 
 function auth_required(): array {
