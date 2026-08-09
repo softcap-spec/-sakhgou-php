@@ -241,10 +241,10 @@ require __DIR__ . '/../includes/header.php';
             <?php endif; ?>
 
             <?php if($cu && !$isOwner): ?>
-            <a href="/inbox?listing=<?=$lid?>" class="w-full inline-flex items-center justify-center gap-1.5 rounded-lg border border-[#DFE4EA] hover:bg-[#F7F9FB] h-11 px-4 text-sm font-medium transition-colors">
+            <button onclick="openChatModal()" class="w-full inline-flex items-center justify-center gap-1.5 rounded-lg border border-[#DFE4EA] hover:bg-[#F7F9FB] h-11 px-4 text-sm font-medium transition-colors">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
               Написать сообщение
-            </a>
+            </button>
             <?php endif; ?>
 
             <?php if ($cu): ?>
@@ -327,6 +327,102 @@ require __DIR__ . '/../includes/header.php';
   </div>
 </section>
 <?php endif; ?>
+
+<!-- Chat Modal -->
+<?php if ($cu && !$isOwner): ?>
+<div id="chatModal" class="fixed inset-0 z-[100] hidden" style="background:rgba(15,23,32,0.4)">
+  <div class="absolute inset-0" onclick="closeChatModal()"></div>
+  <div class="absolute bottom-0 right-0 sm:bottom-6 sm:right-6 w-full sm:w-96 h-[70vh] sm:h-[32rem] bg-white sm:rounded-xl flex flex-col overflow-hidden shadow-2xl">
+    <!-- Header -->
+    <div class="flex items-center justify-between px-4 py-3 border-b border-[#EBEEF2]">
+      <div class="flex items-center gap-2.5 min-w-0">
+        <?= avatar_html(['name'=>$item['host_name'],'avatar_url'=>$item['host_avatar']], 'w-8 h-8', 'text-xs') ?>
+        <div class="min-w-0">
+          <div class="text-sm font-semibold truncate"><?=h($item['host_name'])?></div>
+          <div class="text-xs text-[#9AAAB8] truncate"><?=h($item['title'])?></div>
+        </div>
+      </div>
+      <button onclick="closeChatModal()" class="w-8 h-8 flex items-center justify-center rounded-lg text-[#7A8A9A] hover:bg-[#F7F9FB] hover:text-foreground transition-colors">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <!-- Messages -->
+    <div id="cmMessages" class="flex-1 overflow-y-auto p-4 flex flex-col gap-2">
+      <div class="text-center text-xs text-[#9AAAB8] py-4">Загрузка...</div>
+    </div>
+    <!-- Input -->
+    <div class="border-t border-[#EBEEF2] p-3 flex gap-2">
+      <input type="text" id="cmInput" placeholder="Сообщение..." class="flex-1 border border-[#DFE4EA] rounded-lg px-3 py-2 text-sm outline-none focus:border-accent" onkeydown="if(event.key==='Enter')cmSend()">
+      <button onclick="cmSend()" class="w-9 h-9 rounded-lg bg-accent text-white flex items-center justify-center hover:bg-accent/90 transition-colors">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+      </button>
+    </div>
+  </div>
+</div>
+<script>
+var cmLid = <?=$lid?>;
+var cmUid = <?=json_encode($cu['id'])?>;
+var cmHost = <?=json_encode((int)$item['user_id'])?>;
+var cmPoll = null;
+
+function openChatModal() {
+  document.getElementById('chatModal').classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+  cmLoad();
+  cmPoll = setInterval(cmLoad, 4000);
+  setTimeout(function(){ document.getElementById('cmInput').focus(); }, 100);
+}
+function closeChatModal() {
+  document.getElementById('chatModal').classList.add('hidden');
+  document.body.style.overflow = '';
+  if (cmPoll) { clearInterval(cmPoll); cmPoll = null; }
+}
+function cmLoad() {
+  fetch('/api/messages?lid=' + cmLid + '&uid=' + cmHost)
+    .then(function(r){return r.json()})
+    .then(function(data){
+      var box = document.getElementById('cmMessages');
+      if (!data.messages || data.messages.length === 0) {
+        box.innerHTML = '<div class="text-center text-xs text-[#9AAAB8] py-4">Напишите первое сообщение</div>';
+        return;
+      }
+      var html = '';
+      for (var i=0; i<data.messages.length; i++) {
+        var m = data.messages[i];
+        var mine = m.sender_id == cmUid;
+        var cls = mine ? 'bg-accent text-white self-end' : 'bg-[#EEF2F6] text-foreground self-start';
+        var time = new Date(m.created_at.replace(/-/g,'/')).toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'});
+        html += '<div class="'+cls+' rounded-lg px-3 py-1.5 text-sm max-w-[80%]" style="word-wrap:break-word">'+escapeHtml(m.text)+'<div class="text-[0.625rem] '+(mine?'text-white/60':'text-[#9AAAB8]')+' mt-0.5">'+time+'</div></div>';
+      }
+      box.innerHTML = html;
+      box.scrollTop = box.scrollHeight;
+    })
+    .catch(function(){});
+}
+function cmSend() {
+  var input = document.getElementById('cmInput');
+  var text = input.value.trim();
+  if (!text) return;
+  input.value = '';
+  input.disabled = true;
+  fetch('/api/send', {
+    method: 'POST',
+    headers: {'Content-Type':'application/x-www-form-urlencoded'},
+    body: 'lid=' + cmLid + '&text=' + encodeURIComponent(text)
+  })
+  .then(function(r){return r.json()})
+  .then(function(data){
+    input.disabled = false;
+    input.focus();
+    if (data.ok) cmLoad();
+    else { alert('Ошибка отправки'); }
+  })
+  .catch(function(){ input.disabled = false; });
+}
+function escapeHtml(s){var d=document.createElement('div');d.textContent=s;return d.innerHTML;}
+</script>
+<?php endif; ?>
+
 </main>
 
 <script>
