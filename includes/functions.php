@@ -278,15 +278,22 @@ function avatar_html(?array $user, string $size_class = 'w-8 h-8', string $text_
 }
 
 /**
- * Get promo prices from settings (with defaults)
+ * Get promo prices from settings: prices[type][days] = rub
  */
 function get_promo_prices(): array {
   $pdo = db();
+  $defaults = [
+    'top' => ['7'=>4900,'14'=>8400,'30'=>15000],
+    'highlight' => ['7'=>2800,'14'=>4800,'30'=>8500],
+    'urgent' => ['7'=>1400,'14'=>2400,'30'=>4200],
+  ];
   $stmt = $pdo->query("SELECT setting_key, setting_value FROM settings WHERE setting_key LIKE 'promo_%'");
-  $prices = ['top' => 700, 'highlight' => 400, 'urgent' => 200];
   while ($row = $stmt->fetch()) {
-    $key = str_replace('promo_', '', $row['setting_key']);
-    $prices[$key] = (int)$row['setting_value'];
+    // key format: promo_top_14
+    $parts = explode('_', $row['setting_key']); // ['promo','top','14']
+    if (count($parts) === 3 && isset($defaults[$parts[1]])) {
+      $defaults[$parts[1]][$parts[2]] = (int)$row['setting_value'];
+    }
   }
-  return $prices;
+  return $defaults;
 }

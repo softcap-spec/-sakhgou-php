@@ -407,8 +407,10 @@ elseif ($tab === 'payments'):
   // Handle price save
   if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'save_prices') {
     foreach (['top','highlight','urgent'] as $t) {
-      $val = max(1, (int)($_POST['price_' . $t] ?? 100));
-      $pdo->prepare("UPDATE settings SET setting_value = ? WHERE setting_key = ?")->execute([$val, 'promo_' . $t]);
+      foreach (['7','14','30'] as $d) {
+        $val = max(1, (int)($_POST['price_' . $t . '_' . $d] ?? 100));
+        $pdo->prepare("UPDATE settings SET setting_value = ? WHERE setting_key = ?")->execute([$val, 'promo_' . $t . '_' . $d]);
+      }
     }
     header('Location: /admin?tab=payments&ok=prices'); exit;
   }
@@ -419,28 +421,39 @@ elseif ($tab === 'payments'):
 
     <!-- Price Editor -->
     <div class="bg-white border rounded-xl p-6 mb-6">
-      <div class="flex items-center justify-between mb-3">
-        <h3 class="font-display text-lg">Настройка цен (₽/день)</h3>
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="font-display text-lg">Настройка цен (₽ за пакет)</h3>
         <?php if (isset($_GET['ok']) && $_GET['ok']==='prices'): ?>
           <span class="text-xs text-green-600">✓ Сохранено</span>
         <?php endif; ?>
       </div>
-      <form method="post" class="flex flex-wrap gap-4 items-end">
+      <form method="post">
         <?= csrf_field() ?>
         <input type="hidden" name="action" value="save_prices">
-        <?php
-        $priceDefs = [
-          ['top', '🔝 Top', $promoPrices['top']],
-          ['highlight', '💡 Highlight', $promoPrices['highlight']],
-          ['urgent', '⚡ Срочно', $promoPrices['urgent']],
-        ];
-        foreach ($priceDefs as $pd): ?>
-          <label class="flex flex-col gap-1">
-            <span class="text-xs text-muted-foreground"><?=$pd[1]?></span>
-            <input type="number" name="price_<?=$pd[0]?>" value="<?=$pd[2]?>" min="1" class="w-24 border rounded-lg px-3 py-2 text-sm">
-          </label>
-        <?php endforeach; ?>
-        <button type="submit" class="btn-accent text-sm py-2 px-4">Сохранить</button>
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead><tr class="border-b"><th class="px-3 py-2 text-left">Тариф</th><th class="px-3 py-2 text-center">7 дней</th><th class="px-3 py-2 text-center">14 дней</th><th class="px-3 py-2 text-center">30 дней</th></tr></thead>
+            <tbody>
+              <?php
+              $editDefs = [
+                ['top','🔝 Top'],
+                ['highlight','💡 Highlight'],
+                ['urgent','⚡ Срочно'],
+              ];
+              foreach ($editDefs as $ed): ?>
+                <tr class="border-b">
+                  <td class="px-3 py-3 font-medium"><?=$ed[1]?></td>
+                  <?php foreach (['7','14','30'] as $d): ?>
+                    <td class="px-3 py-2 text-center">
+                      <input type="number" name="price_<?=$ed[0]?>_<?=$d?>" value="<?=$promoPrices[$ed[0]][$d]?>" min="1" class="w-24 border rounded-lg px-3 py-2 text-sm text-center">
+                    </td>
+                  <?php endforeach; ?>
+                </tr>
+              <?php endforeach; ?>
+            </tbody>
+          </table>
+        </div>
+        <button type="submit" class="btn-accent text-sm py-2 px-6 mt-4">Сохранить</button>
       </form>
     </div>
 

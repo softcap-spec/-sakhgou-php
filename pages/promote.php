@@ -21,7 +21,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['promote'])) {
   csrf_check();
   $promoType = $_POST['promo_type'] ?? 'top';
   $duration = (int)($_POST['duration'] ?? 7);
-  $budget = $prices[$promoType] * $duration;
+  $budget = $prices[$promoType][$duration] ?? 0;
   $starts = date('Y-m-d H:i:s');
   $expires = date('Y-m-d H:i:s', strtotime("+{$duration} days"));
 
@@ -54,7 +54,7 @@ require __DIR__ . '/../includes/header.php';
 
   <?php if ($activePromo): ?>
     <div class="bg-green-50 border border-green-200 rounded-xl p-6 text-center mb-6">
-      <span style="font-size:2rem">🚀</span>
+      <div class="text-4xl mb-2">🚀</div>
       <p class="font-medium text-green-800 mt-2">Уже продвигается!</p>
       <p class="text-sm text-green-700">Тип: <?=$activePromo['promo_type']?> · До: <?=$activePromo['expires_at']?></p>
       <a href="/dashboard" class="btn-outline mt-3" style="display:inline-flex">В кабинет</a>
@@ -62,37 +62,50 @@ require __DIR__ . '/../includes/header.php';
   <?php else: ?>
   <form method="post">
     <?= csrf_field() ?>
+
+    <!-- Package selector -->
+    <div class="mb-4">
+      <label class="text-sm font-medium mb-2 block">Пакет</label>
+      <select name="duration" class="w-full border rounded-lg px-4 py-2.5 text-sm" id="packageSelect">
+        <option value="7">7 дней</option>
+        <option value="14">14 дней</option>
+        <option value="30">30 дней</option>
+      </select>
+    </div>
+
+    <!-- Plan cards -->
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
       <?php
-      $plans = [
-        ['top','🔝 Top','Наверху списка',$prices['top'].' ₽/день',['Максимальная видимость','Первое место в выдаче','Статистика показов']],
-        ['highlight','💡 Highlight','Выделено цветом',$prices['highlight'].' ₽/день',['Жёлтый фон в выдаче','Выше обычных','Статистика кликов']],
-        ['urgent','⚡ Срочно','Метка срочности',$prices['urgent'].' ₽/день',['Красная метка','Привлекает внимание','Повышает конверсию']],
+      $planTypes = ['top','highlight','urgent'];
+      $planIcons = ['top'=>'🔝','highlight'=>'💡','urgent'=>'⚡'];
+      $planNames = ['top'=>'Top','highlight'=>'Highlight','urgent'=>'Срочно'];
+      $planDescs = ['top'=>'Наверху списка','highlight'=>'Выделено цветом','urgent'=>'Метка срочности'];
+      $planFeats = [
+        'top' => ['Максимальная видимость','Первое место в выдаче','Статистика показов'],
+        'highlight' => ['Яркий фон в выдаче','Выше обычных','Статистика кликов'],
+        'urgent' => ['Красная метка','Привлекает внимание','Повышает конверсию'],
       ];
-      foreach ($plans as $p):
+      foreach ($planTypes as $t):
       ?>
-      <label class="cursor-pointer">
-        <input type="radio" name="promo_type" value="<?=$p[0]?>" <?=$p[0]==='top'?'checked':''?> style="display:none" onchange="selectPlan(this)">
+      <label class="cursor-pointer" data-type="<?=$t?>">
+        <input type="radio" name="promo_type" value="<?=$t?>" <?=$t==='top'?'checked':''?> class="hidden" onchange="selectPlan(this)">
         <div class="promo-card border-2 rounded-xl p-5 text-center transition-all" style="border-color:var(--border)">
-          <div class="text-3xl mb-2"><?=$p[1]?></div>
-          <div class="font-display text-lg"><?=$p[2]?></div>
-          <div class="text-xs text-muted-foreground mt-1 mb-3"><?=$p[3]?></div>
+          <div class="text-3xl mb-2"><?=$planIcons[$t]?></div>
+          <div class="font-display text-lg"><?=$planNames[$t]?></div>
+          <div class="text-xs text-muted-foreground mt-1 mb-1"><?=$planDescs[$t]?></div>
+          <div class="font-display text-xl text-accent mb-3 package-price" id="price_<?=$t?>"><?=number_format($prices[$t][7],0,',',' ')?> ₽</div>
           <ul class="text-xs text-muted-foreground space-y-1 text-left">
-            <?php foreach($p[4] as $f):?><li>✓ <?=$f?></li><?php endforeach;?>
+            <?php foreach($planFeats[$t] as $f):?><li>✓ <?=$f?></li><?php endforeach;?>
           </ul>
         </div>
       </label>
       <?php endforeach; ?>
     </div>
 
-    <div class="form-group"><label>Длительность (дней)</label>
-      <select name="duration" class="w-full"><?php foreach([7,14,30] as $d):?><option value="<?=$d?>"><?=$d?> дней</option><?php endforeach;?></select>
-    </div>
-
-    <div class="bg-muted/30 rounded-xl p-4 mb-6" id="priceEstimate">
-      <div class="flex justify-between text-sm"><span>Тариф Top</span><span id="calcLabel">7 × <?=$prices['top']?> ₽</span></div>
+    <div class="bg-muted/30 rounded-xl p-4 mb-6">
+      <div class="flex justify-between text-sm"><span>Пакет</span><span id="packageLabel">Top · 7 дней</span></div>
       <hr class="my-2">
-      <div class="flex justify-between font-medium"><span>Итого</span><span class="font-display text-lg" id="totalPrice"><?=number_format($prices['top']*7,0,',',' ')?> ₽</span></div>
+      <div class="flex justify-between font-medium"><span>Итого</span><span class="font-display text-lg" id="totalPrice"><?=number_format($prices['top'][7],0,',',' ')?> ₽</span></div>
     </div>
 
     <div class="flex gap-2">
@@ -113,13 +126,26 @@ function selectPlan(input) {
   card.style.borderColor = 'var(--accent)'; card.style.background = 'rgba(27,107,138,0.05)';
   updatePrice();
 }
-document.querySelector('select[name="duration"]').addEventListener('change', updatePrice);
+document.getElementById('packageSelect').addEventListener('change', function() {
+  updatePrice();
+  updateCardPrices();
+});
+function updateCardPrices() {
+  var days = document.getElementById('packageSelect').value;
+  ['top','highlight','urgent'].forEach(function(t) {
+    var el = document.getElementById('price_' + t);
+    if (el && prices[t] && prices[t][days]) {
+      el.textContent = prices[t][days].toLocaleString('ru-RU') + ' ₽';
+    }
+  });
+}
 function updatePrice() {
   var type = document.querySelector('input[name="promo_type"]:checked').value;
-  var days = parseInt(document.querySelector('select[name="duration"]').value);
-  var total = prices[type] * days;
-  document.getElementById('calcLabel').textContent = days + ' × ' + prices[type].toLocaleString('ru-RU') + ' ₽';
+  var days = document.getElementById('packageSelect').value;
+  var total = (prices[type] && prices[type][days]) ? prices[type][days] : 0;
+  document.getElementById('packageLabel').textContent = typeNames[type] + ' · ' + days + ' дней';
   document.getElementById('totalPrice').textContent = total.toLocaleString('ru-RU') + ' ₽';
 }
+updateCardPrices();
 </script>
 <?php require __DIR__ . '/../includes/footer.php'; ?>
