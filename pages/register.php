@@ -5,8 +5,12 @@ if (isset($_SESSION['user_id'])) { header('Location: /'); exit; }
 $errors = [];
 $_pdo = db();
 $_recent = $_pdo->query('SELECT l.id, l.title, l.price, l.listing_type, l.location,
-  (SELECT filename FROM listing_images WHERE listing_id = l.id ORDER BY sort_order LIMIT 1) AS image
-  FROM listings l WHERE l.status = "active" ORDER BY l.created_at DESC LIMIT 12')->fetchAll();
+  (SELECT filename FROM listing_images WHERE listing_id = l.id ORDER BY sort_order LIMIT 1) AS image,
+  (p.id IS NOT NULL AND p.status = "active" AND p.expires_at > NOW()) AS is_promoted
+  FROM listings l
+  LEFT JOIN promotions p ON l.id = p.listing_id AND p.status = "active" AND p.expires_at > NOW()
+  WHERE l.status = "active"
+  ORDER BY is_promoted DESC, l.created_at DESC LIMIT 12')->fetchAll();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   csrf_check();
@@ -60,13 +64,17 @@ $page_title = 'Регистрация — СахGO';
     </div>
 
     <!-- Carousel -->
-    <?php if (!empty($_recent)): $cardW = 196; $gap = 14; ?>
+    <?php if (!empty($_recent)): $cardW = 196; $gap = 14; $total = count($_recent); ?>
     <div class="relative flex-1 flex flex-col justify-center px-12 py-6">
       <p class="text-white/50 text-xs uppercase tracking-wider mb-3">Свежие объявления</p>
       <div class="relative overflow-hidden" id="carouselViewport">
-        <div id="regCarousel" class="flex" style="gap:<?=$gap?>px;transition:transform 0.5s cubic-bezier(0.25,0.1,0.25,1)">
+        <div id="regCarousel" class="flex" style="gap:<?=$gap?>px">
+          <?php for ($dup = 0; $dup < 2; $dup++): ?>
           <?php foreach ($_recent as $ri => $r): ?>
-          <a href="/listing/<?=$r['id']?>" class="shrink-0 bg-white/95 backdrop-blur rounded-xl overflow-hidden hover:bg-white transition-colors group" style="width:<?=$cardW?>px">
+          <a href="/listing/<?=$r['id']?>" class="shrink-0 bg-white/95 backdrop-blur rounded-xl overflow-hidden hover:bg-white transition-colors relative" style="width:<?=$cardW?>px">
+            <?php if ($r['is_promoted']): ?>
+            <div class="absolute top-2 left-2 z-10 bg-accent text-white text-[9px] font-semibold px-1.5 py-0.5 rounded-md">Продвигается</div>
+            <?php endif; ?>
             <?php if (!empty($r['image'])): ?>
             <img src="/uploads/<?=h($r['image'])?>" alt="" class="w-full aspect-[4/3] object-cover">
             <?php else: ?>
@@ -79,11 +87,12 @@ $page_title = 'Регистрация — СахGO';
             </div>
           </a>
           <?php endforeach; ?>
+          <?php endfor; ?>
         </div>
       </div>
       <div class="flex justify-center gap-1.5 mt-3">
-        <?php foreach ($_recent as $ri => $_): ?>
-        <button onclick="slideTo(<?=$ri?>)" class="w-1 h-1 rounded-full transition-all <?=$ri===0?'bg-white w-3':'bg-white/30'?>" id="dot_<?=$ri?>"></button>
+        <?php foreach ($_recent as $ri => $r): ?>
+        <button onclick="goTo(<?=$ri?>, false)" class="w-1 h-1 rounded-full transition-all <?=$ri===0?'bg-white w-3':'bg-white/30'?>" id="dot_<?=$ri?>"></button>
         <?php endforeach; ?>
       </div>
     </div>
@@ -199,25 +208,51 @@ function togglePw(){
 var cardW = <?=$cardW?>;
 var gap = <?=$gap?>;
 var step = cardW + gap;
-var total = <?=count($_recent)?>;
-var maxIdx = <?=count($_recent) - 1?>;
+var total = <?=$total?>;
 var cIdx = 0;
 var track = document.getElementById('regCarousel');
+var animating = false;
 
-function slideTo(i){
-  cIdx = Math.max(0, Math.min(i, maxIdx));
-  track.style.transform = 'translateX(-'+(cIdx*step)+'px)';
+function goTo(i, instant){
+  if(animating && !instant) return;
+  cIdx = i;
+  var real = ((i % total) + total) % total;
+  track.style.transition = instant ? 'none' : 'transform 0.5s cubic-bezier(0.25,0.1,0.25,1)';
+  track.style.transform = 'translateX(-'+(i*step)+'px)';
   for(var j=0;j<total;j++){
     var d=document.getElementById('dot_'+j);
     if(d){
-      d.className = 'w-1 h-1 rounded-full transition-all '+(j===cIdx?'bg-white w-3':'bg-white/30');
+      d.className = 'w-1 h-1 rounded-full transition-all '+(j===real?'bg-white w-3':'bg-white/30');
     }
   }
+  if(!instant) animating = true;
 }
 
+function onTransEnd(){
+  animating = false;
+  if(cIdx >= total * 2){
+    cIdx = cIdx - total;
+    goTo(cIdx, true);
+  }
+  if(cIdx < 0){
+    cIdx = total + cIdx;
+    goTo(cIdx, true);
+  }
+}
+track.addEventListener('transitionend', onTransEnd);
+
 setInterval(function(){
-  cIdx = (cIdx + 1) % total;
-  slideTo(cIdx);
+  cIdx++;
+  goTo(cIdx, false);
+  if(cIdx >= total * 2 - 1){
+    setTimeout(function(){
+      var ct = cIdx % total;
+      track.style.transition = 'none';
+      track.style.transform = 'translateX(-'+(ct*step)+'px)';
+      cIdx = ct;
+      animating = false;
+    }, 550);
+  }
 }, 3000);
 
 var startX = 0, startPos = 0;
@@ -225,18 +260,24 @@ track.addEventListener('touchstart',function(e){
   startX = e.touches[0].clientX;
   startPos = cIdx * step;
   track.style.transition = 'none';
+  animating = false;
 });
 track.addEventListener('touchmove',function(e){
   var dx = startX - e.touches[0].clientX;
   track.style.transform = 'translateX(-'+(startPos + dx)+'px)';
 });
 track.addEventListener('touchend',function(e){
-  track.style.transition = 'transform 0.5s cubic-bezier(0.25,0.1,0.25,1)';
   var dx = startX - (e.changedTouches[0]||{}).clientX || 0;
   if(Math.abs(dx) > 40){
-    cIdx = Math.max(0, Math.min(maxIdx, Math.round((startPos + dx) / step)));
+    cIdx = Math.round((startPos + dx) / step);
   }
-  slideTo(cIdx);
+  goTo(cIdx, false);
 });
+
+document.getElementById('carouselViewport').addEventListener('wheel',function(e){
+  e.preventDefault();
+  if(e.deltaX > 20 || e.deltaY > 20) goTo(cIdx+1, false);
+  else if(e.deltaX < -20 || e.deltaY < -20) goTo(cIdx-1, false);
+},{passive:false});
 </script>
 </body></html>
