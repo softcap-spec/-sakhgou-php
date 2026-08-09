@@ -6,7 +6,7 @@ $cat_counts = []; $cat_images = [];
 foreach (['property','tour','fishing','rental_gear','car_rental'] as $slug) {
   $r = get_listings($slug, '', 1);
   $cat_counts[$slug] = $r['total'];
-  $img = $_pdo->prepare('SELECT li.filename FROM listing_images li JOIN listings l ON li.listing_id=l.id JOIN categories c ON l.category_id=c.id WHERE c.slug=? ORDER BY RAND() LIMIT 1');
+  $img = db()->prepare('SELECT li.filename FROM listing_images li JOIN listings l ON li.listing_id=l.id JOIN categories c ON l.category_id=c.id WHERE c.slug=? ORDER BY RAND() LIMIT 1');
   $img->execute([$slug]);
   $cat_images[$slug] = $img->fetchColumn();
 }
