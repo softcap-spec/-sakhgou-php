@@ -1,7 +1,7 @@
 <?php
-// home.php — сахгоу.рф v3
+// home.php — сахгоу.рф v4
 $cu = auth_user();
-$recent = get_recent_listings(8);
+$recent = get_recent_listings(24);
 $cat_counts = [];
 foreach (['property','tour','fishing','rental_gear','car_rental'] as $slug) {
   $r = get_listings($slug, '', 1);
@@ -57,22 +57,24 @@ require __DIR__ . '/../includes/header.php';
 <!-- ═══ Quick Picks ═══ -->
 <section class="pb-16">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+    <span class="text-xs uppercase tracking-[0.12em] text-accent font-medium mb-1 inline-block">Быстрые подборки</span>
+    <h2 class="font-display text-3xl sm:text-4xl mb-8">Куда поедем?</h2>
+    <div class="grid grid-cols-2 lg:grid-cols-5 gap-3 md:gap-4">
       <?php
       $picks = [
-        ['Жильё','property','qp-zhilyo','M3 12l9-9 9 9M5 10v10h14V10'],
-        ['Морские выходы','tour','qp-morskie','M3 18l1.5-2.5h15L21 18M5 18v2M19 18v2M7 15.5l5-7 5 7'],
-        ['Джип-туры','tour','qp-dzhip','M5 11l1.5-4.5h11L19 11M3 11h18v6H3zM6.5 17v2M17.5 17v2'],
-        ['Рыбалка','fishing','qp-rybalka','M16 3l-4 4M12 7c-3 0-6 2-6 5s3 5 6 5M18 12c0-1.5-1-3-2.5-4M12 17v4'],
+        ['Жильё','property','qp-zhilyo'],
+        ['Туры','tour','qp-morskie'],
+        ['Рыбалка','fishing','qp-rybalka'],
+        ['Снаряжение','rental_gear','qp-dzhip'],
+        ['Прокат авто','car_rental','qp-prokat'],
       ];
-      foreach ($picks as $p):
+      foreach ($picks as $pi => $p):
       ?>
       <a href="/catalog/<?=$p[1]?>" class="qp-card <?=$p[2]?>">
         <div class="qp-overlay"></div>
         <div class="qp-content">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="mb-2 opacity-90"><path d="<?=$p[3]?>"/></svg>
           <span class="qp-count"><?=$cat_counts[$p[1]]?> вариантов</span>
-          <h3 class="font-display text-lg mt-0.5 leading-tight"><?=$p[0]?></h3>
+          <h3 class="font-display text-xl mt-0.5 leading-tight"><?=$p[0]?></h3>
         </div>
       </a>
       <?php endforeach; ?>
@@ -85,12 +87,12 @@ require __DIR__ . '/../includes/header.php';
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
     <div class="flex flex-wrap items-end justify-between gap-4 mb-10">
       <div>
-        <h2 class="font-display text-3xl sm:text-4xl tracking-tight">Выбор путешественников</h2>
-        <p class="text-sm text-[#7A8A9A] mt-1.5">Популярные объявления на этой неделе</p>
+        <span class="text-xs uppercase tracking-[0.12em] text-accent font-medium">Популярное сейчас</span>
+        <h2 class="font-display text-3xl sm:text-4xl tracking-tight mt-1">Выбор путешественников</h2>
       </div>
       <div class="flex gap-1 flex-wrap">
         <?php
-        $cats_filter = ['all'=>'Все','property'=>'Жильё','tour'=>'Туры','fishing'=>'Рыбалка','rental_gear'=>'Снаряжение','car_rental'=>'Прокат авто'];
+        $cats_filter = ['all'=>'Всё','property'=>'Жильё','tour'=>'Туры','fishing'=>'Рыбалка','rental_gear'=>'Снаряжение','car_rental'=>'Прокат авто'];
         $active_cat = $_GET['cat'] ?? 'all';
         foreach ($cats_filter as $k=>$v):
         ?>
@@ -100,22 +102,23 @@ require __DIR__ . '/../includes/header.php';
     </div>
 
     <?php if (empty($recent)): ?>
-      <div class="text-center py-20">
-        <p class="text-lg font-medium text-[#3A4A5C]">Объявлений пока нет</p>
-        <p class="text-sm text-[#7A8A9A] mt-1 mb-5">Станьте первым организатором на Сахалине</p>
+      <div class="text-center py-20 text-muted-foreground">
+        <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[#EEF2F6] mb-4">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#9AAAB8" stroke-width="1.5"><rect x="2" y="2" width="20" height="20" rx="2"/><path d="M12 8v8M8 12h8"/></svg>
+        </div>
+        <p class="text-lg font-medium text-[#3A4A5C]">Ничего не найдено</p>
+        <p class="text-sm text-[#7A8A9A] mt-1 mb-4">Станьте первым организатором на Сахалине</p>
         <a href="/create" class="cta-btn">Подать объявление</a>
       </div>
     <?php else: ?>
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <?php foreach ($recent as $item): ?>
-        <a href="/listing/<?=$item['id']?>" class="listing-card">
-          <?php if (!empty($item['image'])): ?>
+        <a href="/listing/<?=$item['id']?>" class="listing-card hover:-translate-y-0.5 hover:shadow-[0_8px_24px_-8px_rgba(0,0,0,0.12)]">
           <div class="listing-img">
+            <?php if (!empty($item['image'])): ?>
             <img src="/uploads/<?=h($item['image'])?>" alt="<?=h($item['title'])?>" loading="lazy">
+            <?php endif; ?>
           </div>
-          <?php else: ?>
-          <div class="listing-img bg-[#EEF2F6]"></div>
-          <?php endif; ?>
           <?php if (!empty($item['promo_type'])): ?>
           <span class="promo-badge absolute top-2.5 left-2.5 <?=$item['promo_type']==='top'?'bg-red-600':($item['promo_type']==='highlight'?'bg-amber-500':'bg-red-500')?>"><?=$item['promo_type']==='top'?'TOP':($item['promo_type']==='highlight'?'PROMO':'Срочно')?></span>
           <?php endif; ?>
@@ -131,6 +134,15 @@ require __DIR__ . '/../includes/header.php';
         </a>
         <?php endforeach; ?>
       </div>
+
+      <?php if (count($recent) >= 24): ?>
+      <div class="text-center mt-10">
+        <a href="/catalog" class="inline-flex items-center justify-center border border-[#DFE4EA] hover:border-accent hover:text-accent rounded-lg h-10 px-6 text-sm font-medium transition-colors">
+          Все объявления
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" class="ml-1.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </a>
+      </div>
+      <?php endif; ?>
     <?php endif; ?>
   </div>
 </section>
