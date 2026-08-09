@@ -67,6 +67,9 @@ $my_count = $cu ? ($cu['unread_notifications'] ?? '') : '';
       <?php if ($cu): ?>
         <?= avatar_html($cu, 'w-7 h-7', 'text-[0.6rem]') ?>
         <a href="/dashboard" class="inline-flex items-center justify-center h-7 gap-1 rounded-md px-2.5 text-[0.8rem] font-medium bg-accent text-white hover:bg-accent/80 transition-all">Кабинет</a>
+      <?php else: ?>
+        <a href="/login" class="inline-flex items-center justify-center h-7 gap-1 rounded-md px-2.5 text-[0.8rem] font-medium bg-accent text-white hover:bg-accent/80 transition-all">Войти</a>
+      <?php endif; ?>
     </div>
   </div>
 </header>
