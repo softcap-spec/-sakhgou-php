@@ -97,10 +97,10 @@ require __DIR__ . '/../includes/header.php';
         <?php endif; ?>
       </div>
       <!-- Sidebar -->
-      <div class="lg:sticky lg:top-20 self-start">
-        <div class="bg-white border rounded-xl p-6 space-y-5">
-          <div>
-            <div class="font-display text-3xl"><?=number_format((float)$item['price'],0,'.',' ')?> <?=price_label($item['listing_type'])?></div>
+      <div class="lg:sticky lg:top-24 self-start">
+        <div class="bg-white border border-border/60 rounded-2xl p-7 space-y-5 shadow-[0_8px_30px_-8px_rgba(18,30,43,0.08)]">
+          <div class="pb-4 border-b border-border/30">
+            <div class="font-display text-3xl text-foreground"><?=number_format((float)$item['price'],0,'.',' ')?> <span class="text-base font-medium text-muted-foreground"><?=price_label($item['listing_type'])?></span></div>
           </div>
           <div class="space-y-1 text-sm"><span class="text-muted-foreground">Тип:</span> <?=$TYPE_EMOJI[$lt]??''?> <?=$TYPE_LABEL[$lt]??''?></div>
           <?php if (!empty($item['location'])): ?>
@@ -201,12 +201,15 @@ require __DIR__ . '/../includes/header.php';
       </div>
 
       <!-- Host card -->
-      <div class="lg:sticky lg:top-20 self-start">
-        <div class="bg-white border rounded-xl p-6">
-          <h3 class="font-display text-lg mb-4">Организатор</h3>
-          <div class="flex items-center gap-3 mb-3">
+      <div class="lg:sticky lg:top-24 self-start">
+        <div class="bg-white border border-border/60 rounded-2xl p-7 shadow-[0_4px_20px_-4px_rgba(18,30,43,0.06)]">
+          <h3 class="font-display text-lg mb-5">Организатор</h3>
+          <div class="flex items-center gap-3.5 mb-4">
             <?= avatar_html(['name' => $item['host_name'], 'avatar_url' => $item['host_avatar']], 'w-12 h-12', 'text-xl') ?>
-            <div><div class="font-medium"><?=h($item['host_name'])?></div><div class="text-xs text-muted-foreground">Присоединился <?=date('m.Y',strtotime($item['created_at']))?></div></div>
+            <div>
+              <div class="font-semibold"><?=h($item['host_name'])?></div>
+              <div class="text-xs text-muted-foreground">На сайте с <?=date('m.Y',strtotime($item['created_at']))?></div>
+            </div>
           </div>
           <?php if(!empty($item['host_phone'])): ?>
             <div class="text-sm mb-2" id="phoneBlock">
