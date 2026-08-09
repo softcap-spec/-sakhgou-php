@@ -302,9 +302,6 @@ function get_promo_prices(): array {
  * Get price suffix for listing type
  */
 function price_label(?string $type): string {
-  $per_night = ['property'];
-  $per_day = ['car_rental', 'rental_gear', 'fishing'];
-  if (in_array($type, $per_night)) return '₽ / ночь';
-  if (in_array($type, $per_day)) return '₽ / сутки';
-  return '₽';
+  $per_day = ['property', 'car_rental', 'rental_gear', 'fishing'];
+  return in_array($type, $per_day) ? '₽ / сутки' : '₽';
 }
