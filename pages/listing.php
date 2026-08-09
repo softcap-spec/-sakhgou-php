@@ -49,7 +49,8 @@ if (empty($images) && !empty($item['cover_image'])) $images = [$item['cover_imag
 $TYPE_BG = ['property'=>'linear-gradient(135deg,#C5D5E4,#8FB0C8,#5A8AA8)','tour'=>'linear-gradient(135deg,#D4CBB8,#B5A080,#8B7250)','fishing'=>'linear-gradient(135deg,#70A8B0,#388890,#186068)','rental_gear'=>'linear-gradient(135deg,#C8C0B8,#A09888,#686050)','car_rental'=>'linear-gradient(135deg,#B8C8D0,#688898,#385060)',];
 $TYPE_LABEL = ['property'=>'Жильё','tour'=>'Тур','fishing'=>'Рыбалка','rental_gear'=>'Снаряжение','car_rental'=>'Прокат авто'];
 $TYPE_EMOJI = ['property'=>'🏠','tour'=>'🏔️','fishing'=>'🎣','rental_gear'=>'🔧','car_rental'=>'🚗'];
-$PRICE_UNIT = ['property'=>'за ночь','tour'=>'за человека','fishing'=>'за человека','rental_gear'=>'за сутки','car_rental'=>'за сутки'];
+
+// price_label() in functions.php handles unit display
 
 $lt = $item['listing_type'] ?? 'tour';
 $cu = auth_user();
@@ -100,7 +101,6 @@ require __DIR__ . '/../includes/header.php';
         <div class="bg-white border rounded-xl p-6 space-y-5">
           <div>
             <div class="font-display text-3xl"><?=number_format((float)$item['price'],0,'.',' ')?> <?=price_label($item['listing_type'])?></div>
-            <div class="text-sm text-muted-foreground"><?=$PRICE_UNIT[$lt]??''?></div>
           </div>
           <div class="space-y-1 text-sm"><span class="text-muted-foreground">Тип:</span> <?=$TYPE_EMOJI[$lt]??''?> <?=$TYPE_LABEL[$lt]??''?></div>
           <?php if (!empty($item['location'])): ?>
