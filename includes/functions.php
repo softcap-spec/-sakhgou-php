@@ -322,15 +322,15 @@ function render_banners(string $placement): void {
       if ($b['type'] === 'image') {
         $img = '<img src="' . h($b['content']) . '" alt="' . h($b['title']) . '" class="w-full h-auto rounded-lg" loading="lazy">';
         if (!empty($b['link'])) {
-          $html = '<a href="' . h($b['link']) . '" class="block">' . $img . '</a>';
+          $html = '<a href="' . h($b['link']) . '" class="block max-w-3xl mx-auto">' . $img . '</a>';
         } else {
-          $html = $img;
+          $html = '<div class="max-w-3xl mx-auto">' . $img . '</div>';
         }
       } else {
         $html = $b['content']; // raw HTML
       }
       
-      echo '<div class="my-4">' . $html . '</div>';
+      echo '<div class="my-4 max-w-7xl mx-auto">' . $html . '</div>';
     }
   } catch (Exception $e) {
     // Silently fail — banners shouldn't break the page
