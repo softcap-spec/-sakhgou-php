@@ -99,11 +99,11 @@ label { display: block; font-size: 0.8125rem; font-weight: 500; margin-bottom: 0
   border-color: #D97706;
   box-shadow: 0 0 0 2px rgba(245,158,11,0.3), 0 12px 32px -8px rgba(245,158,11,0.18);
 }
-.listing-card.promo-promo {
+.listing-card.promo-highlight {
   border: 2px solid #8B5CF6;
   box-shadow: 0 0 0 1px rgba(139,92,246,0.25), 0 4px 16px -4px rgba(139,92,246,0.12);
 }
-.listing-card.promo-promo:hover {
+.listing-card.promo-highlight:hover {
   border-color: #7C3AED;
   box-shadow: 0 0 0 2px rgba(139,92,246,0.3), 0 12px 32px -8px rgba(139,92,246,0.18);
 }
