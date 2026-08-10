@@ -3,17 +3,9 @@
 $cu = auth_user();
 $recent = get_recent_listings(24);
 $cat_counts = []; $cat_images = [];
-$_db = db();
 foreach (['property','tour','fishing','rental_gear','car_rental'] as $slug) {
   $r = get_listings($slug, '', 1);
   $cat_counts[$slug] = $r['total'];
-  try {
-    $s = $_db->prepare('SELECT li.filename FROM listing_images li JOIN listings l ON li.listing_id=l.id JOIN categories c ON l.category_id=c.id WHERE c.slug=? AND l.status="active" ORDER BY RAND() LIMIT 1');
-    $s->execute([$slug]);
-    $cat_images[$slug] = $s->fetchColumn() ?: '';
-  } catch (Exception $e) {
-    $cat_images[$slug] = '';
-  }
 }
 $page_title = 'СахGO — жильё, туры, рыбалка и снаряжение. Сахалин и Курилы';
 require __DIR__ . '/../includes/header.php';
@@ -90,8 +82,6 @@ require __DIR__ . '/../includes/header.php';
         <a href="/catalog/<?=$p[1]?>" class="shrink-0 relative rounded-2xl overflow-hidden group hover:shadow-lg transition-shadow" style="width:<?=$pw?>px;height:150px">
           <?php if (!empty($cat_images[$p[1]])): ?>
           <img src="/uploads/<?=h($cat_images[$p[1]])?>" alt="" class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105">
-          <?php else: ?>
-          <div class="absolute inset-0 bg-gradient-to-br from-accent/20 to-accent/40"></div>
           <?php endif; ?>
           <div class="absolute inset-0" style="background:linear-gradient(to top, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.1) 60%)"></div>
           <div class="absolute inset-0 p-4 flex flex-col justify-end">
