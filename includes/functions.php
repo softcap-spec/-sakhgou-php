@@ -306,3 +306,33 @@ function price_label(?string $type): string {
   if ($type === 'property') return '₽ / сутки';
   return '₽ / чел.';
 }
+
+/**
+ * Render banners for a specific placement
+ */
+function render_banners(string $placement): void {
+  try {
+    $pdo = db();
+    $stmt = $pdo->prepare("SELECT * FROM banners WHERE placement = ? AND is_active = 1 ORDER BY sort_order, id");
+    $stmt->execute([$placement]);
+    $banners = $stmt->fetchAll();
+    
+    foreach ($banners as $b) {
+      $html = '';
+      if ($b['type'] === 'image') {
+        $img = '<img src="' . h($b['content']) . '" alt="' . h($b['title']) . '" class="w-full h-auto rounded-lg" loading="lazy">';
+        if (!empty($b['link'])) {
+          $html = '<a href="' . h($b['link']) . '" class="block">' . $img . '</a>';
+        } else {
+          $html = $img;
+        }
+      } else {
+        $html = $b['content']; // raw HTML
+      }
+      
+      echo '<div class="my-4">' . $html . '</div>';
+    }
+  } catch (Exception $e) {
+    // Silently fail — banners shouldn't break the page
+  }
+}

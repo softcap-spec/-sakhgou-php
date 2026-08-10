@@ -145,6 +145,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     header('Location: /admin?tab=maintenance&ok=' . ($newVal === '1' ? 'on' : 'off'));
     exit;
   }
+
+  // Banner: add
+  if ($_POST['action'] === 'add_banner') {
+    $pdo->prepare("INSERT INTO banners (title, type, content, link, placement, sort_order, is_active) VALUES (?, ?, ?, ?, ?, ?, ?)")
+      ->execute([$_POST['title'], $_POST['type'], $_POST['content'], $_POST['link'] ?: null, $_POST['placement'], (int)$_POST['sort_order'], isset($_POST['is_active']) ? 1 : 0]);
+    header('Location: /admin?tab=banners&ok=1');
+    exit;
+  }
+  // Banner: edit
+  if ($_POST['action'] === 'edit_banner') {
+    $pdo->prepare("UPDATE banners SET title=?, type=?, content=?, link=?, placement=?, sort_order=?, is_active=? WHERE id=?")
+      ->execute([$_POST['title'], $_POST['type'], $_POST['content'], $_POST['link'] ?: null, $_POST['placement'], (int)$_POST['sort_order'], isset($_POST['is_active']) ? 1 : 0, (int)$_POST['id']]);
+    header('Location: /admin?tab=banners&ok=1');
+    exit;
+  }
+  // Banner: delete
+  if ($_POST['action'] === 'delete_banner') {
+    $pdo->prepare("DELETE FROM banners WHERE id=?")->execute([(int)$_POST['id']]);
+    header('Location: /admin?tab=banners&ok=1');
+    exit;
+  }
+  // Banner: toggle
+  if ($_POST['action'] === 'toggle_banner') {
+    $pdo->prepare("UPDATE banners SET is_active = CASE WHEN is_active=1 THEN 0 ELSE 1 END WHERE id=?")->execute([(int)$_POST['id']]);
+    header('Location: /admin?tab=banners&ok=1');
+    exit;
+  }
 }
 
 // ── Data loaders ──
@@ -605,22 +632,148 @@ elseif ($tab === 'categories'):
 <?php
 // ── BANNERS ──
 elseif ($tab === 'banners'):
+  $banners = $pdo->query("SELECT * FROM banners ORDER BY sort_order, id")->fetchAll();
+  $edit_banner = null;
+  if (isset($_GET['edit'])) {
+    $eb = $pdo->prepare("SELECT * FROM banners WHERE id=?");
+    $eb->execute([(int)$_GET['edit']]);
+    $edit_banner = $eb->fetch();
+  }
 ?>
-    <h2 class="font-display text-xl mb-4">Управление баннерами</h2>
-    <div class="bg-white border rounded-xl p-8 text-center text-muted-foreground">
-      <p class="text-4xl mb-2">🪧</p>
-      <p>Управление баннерами будет доступно в следующем обновлении</p>
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="font-display text-xl">Баннеры</h2>
+      <button onclick="document.getElementById('bannerForm').classList.toggle('hidden')" class="cta-btn text-sm">
+        <?= $edit_banner ? '✎ Редактировать' : '+ Добавить баннер' ?>
+      </button>
     </div>
 
+    <div id="bannerForm" class="<?= $edit_banner ? '' : 'hidden' ?> bg-white border rounded-xl p-6 mb-6">
+      <form method="post">
+        <?= csrf_field() ?>
+        <input type="hidden" name="action" value="<?= $edit_banner ? 'edit_banner' : 'add_banner' ?>">
+        <?php if ($edit_banner): ?><input type="hidden" name="id" value="<?= $edit_banner['id'] ?>"><?php endif; ?>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium mb-1">Название</label>
+            <input name="title" value="<?= $edit_banner ? h($edit_banner['title']) : '' ?>" required class="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-accent">
+          </div>
+          <div>
+            <label class="block text-sm font-medium mb-1">Тип</label>
+            <select name="type" class="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-accent">
+              <option value="image" <?= $edit_banner && $edit_banner['type']==='image' ? 'selected' : '' ?>>Изображение</option>
+              <option value="code" <?= $edit_banner && $edit_banner['type']==='code' ? 'selected' : '' ?>>HTML-код</option>
+            </select>
+          </div>
+          <div class="sm:col-span-2">
+            <label class="block text-sm font-medium mb-1"><?= ($edit_banner && $edit_banner['type']==='code') ? 'HTML-код' : 'URL изображения' ?></label>
+            <textarea name="content" rows="4" class="w-full border rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:border-accent" placeholder="<?= ($edit_banner && $edit_banner['type']==='code') ? '<div>...' : '/uploads/banner.jpg' ?>"><?= $edit_banner ? h($edit_banner['content']) : '' ?></textarea>
+          </div>
+          <div>
+            <label class="block text-sm font-medium mb-1">Ссылка (необязательно)</label>
+            <input name="link" value="<?= $edit_banner ? h($edit_banner['link'] ?? '') : '' ?>" class="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-accent" placeholder="/catalog/...">
+          </div>
+          <div>
+            <label class="block text-sm font-medium mb-1">Размещение</label>
+            <select name="placement" class="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-accent">
+              <?php $pls = ['home_hero_bottom'=>'Главная: под Hero','home_picks_bottom'=>'Главная: под подборками','home_listings_top'=>'Главная: над объявлениями','home_listings_bottom'=>'Главная: под объявлениями','catalog_top'=>'Каталог: сверху','catalog_sidebar'=>'Каталог: сбоку','listing_sidebar'=>'Объявление: сбоку'];
+              foreach ($pls as $pv=>$pl): ?>
+              <option value="<?=$pv?>" <?= ($edit_banner && $edit_banner['placement']===$pv) ? 'selected' : '' ?>><?=$pl?></option>
+              <?php endforeach; ?>
+            </select>
+          </div>
+          <div class="flex items-end gap-4">
+            <div>
+              <label class="block text-sm font-medium mb-1">Порядок</label>
+              <input name="sort_order" type="number" value="<?= $edit_banner ? (int)$edit_banner['sort_order'] : 0 ?>" class="w-20 border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-accent">
+            </div>
+            <label class="flex items-center gap-2 text-sm pb-2">
+              <input type="checkbox" name="is_active" <?= (!$edit_banner || $edit_banner['is_active']) ? 'checked' : '' ?> class="rounded"> Активен
+            </label>
+          </div>
+        </div>
+        <div class="flex gap-2 mt-4">
+          <button type="submit" class="cta-btn text-sm"><?= $edit_banner ? 'Сохранить' : 'Добавить' ?></button>
+          <?php if ($edit_banner): ?>
+          <a href="?tab=banners" class="px-4 py-2 text-sm border rounded-lg hover:bg-muted">Отмена</a>
+          <?php endif; ?>
+        </div>
+      </form>
+    </div>
+
+    <?php if (empty($banners)): ?>
+    <div class="bg-white border rounded-xl p-8 text-center text-muted-foreground">
+      <p class="text-4xl mb-2">🪧</p>
+      <p>Баннеров пока нет. Добавьте первый.</p>
+    </div>
+    <?php else: ?>
+    <div class="bg-white border rounded-xl overflow-hidden">
+      <table class="w-full text-sm">
+        <thead><tr class="border-b bg-muted/30">
+          <th class="text-left px-4 py-3">ID</th><th class="text-left px-4 py-3">Название</th><th class="text-left px-4 py-3">Тип</th>
+          <th class="text-left px-4 py-3 hidden sm:table-cell">Размещение</th><th class="text-center px-4 py-3">Активен</th>
+          <th class="text-right px-4 py-3">Действия</th>
+        </tr></thead>
+        <tbody>
+          <?php foreach ($banners as $b): ?>
+          <tr class="border-b hover:bg-muted/20">
+            <td class="px-4 py-3">#<?=$b['id']?></td>
+            <td class="px-4 py-3 font-medium"><?=h($b['title'])?></td>
+            <td class="px-4 py-3"><span class="text-xs px-2 py-0.5 rounded-full <?=$b['type']==='code'?'bg-purple-100 text-purple-700':'bg-blue-100 text-blue-700'?>"><?=$b['type']==='code'?'HTML':'IMG'?></span></td>
+            <td class="px-4 py-3 text-xs text-muted-foreground hidden sm:table-cell"><?=h($b['placement'])?></td>
+            <td class="px-4 py-3 text-center">
+              <form method="post" class="inline"><input type="hidden" name="action" value="toggle_banner"><input type="hidden" name="id" value="<?=$b['id']?>"><button type="submit" class="text-lg"><?=$b['is_active']?'🟢':'🔴'?></button></form>
+            </td>
+            <td class="px-4 py-3 text-right space-x-2">
+              <a href="?tab=banners&edit=<?=$b['id']?>" class="text-accent hover:underline text-xs">Ред.</a>
+              <form method="post" class="inline" onsubmit="return confirm('Удалить баннер?')"><input type="hidden" name="action" value="delete_banner"><input type="hidden" name="id" value="<?=$b['id']?>"><button type="submit" class="text-red-500 hover:underline text-xs">Удалить</button></form>
+            </td>
+          </tr>
+          <?php endforeach; ?>
+        </tbody>
+      </table>
+    </div>
+    <?php endif; ?>
+
 <?php
-// ── CONTENT ──
+// ── REVISIONS ──
 elseif ($tab === 'content'):
+  // Try to get git log
+  $revisions = [];
+  $git_log = @shell_exec('cd ' . escapeshellarg(dirname(dirname(__DIR__))) . ' && git log --oneline -20 2>/dev/null');
+  if ($git_log) {
+    foreach (explode("
+", trim($git_log)) as $line) {
+      if (preg_match('/^([a-f0-9]+)\s+(.+)$/', $line, $m)) {
+        $revisions[] = ['hash' => $m[1], 'message' => $m[2]];
+      }
+    }
+  }
 ?>
-    <h2 class="font-display text-xl mb-4">Редактирование контента</h2>
+    <h2 class="font-display text-xl mb-4">Ревизии</h2>
+    <?php if (!empty($revisions)): ?>
+    <div class="bg-white border rounded-xl overflow-hidden">
+      <table class="w-full text-sm">
+        <thead><tr class="border-b bg-muted/30">
+          <th class="text-left px-4 py-3">#</th><th class="text-left px-4 py-3">Коммит</th><th class="text-left px-4 py-3">Описание</th>
+        </tr></thead>
+        <tbody>
+          <?php $rn = count($revisions); foreach ($revisions as $i => $r): ?>
+          <tr class="border-b hover:bg-muted/20">
+            <td class="px-4 py-3 text-muted-foreground"><?=$rn - $i?></td>
+            <td class="px-4 py-3 font-mono text-xs"><?=substr($r['hash'],0,7)?></td>
+            <td class="px-4 py-3"><?=h($r['message'])?></td>
+          </tr>
+          <?php endforeach; ?>
+        </tbody>
+      </table>
+    </div>
+    <p class="text-xs text-muted-foreground mt-2">Коммитов: <?=count($revisions)?>. Данные из git-репозитория на сервере.</p>
+    <?php else: ?>
     <div class="bg-white border rounded-xl p-8 text-center text-muted-foreground">
       <p class="text-4xl mb-2">📝</p>
-      <p>Редактор контента будет доступен в следующем обновлении</p>
+      <p>История ревизий недоступна (git не найден на сервере)</p>
     </div>
+    <?php endif; ?>
 <?php endif; ?>
   </div>
 </section>

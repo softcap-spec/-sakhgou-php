@@ -63,6 +63,8 @@ require __DIR__ . '/../includes/header.php';
   </div>
 </section>
 
+<?php render_banners('home_hero_bottom'); ?>
+
 <!-- ═══ Quick Picks ═══ -->
 <section class="pb-16">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -94,6 +96,8 @@ require __DIR__ . '/../includes/header.php';
   </div>
 </section>
 
+<?php render_banners('home_picks_bottom'); ?>
+
 <!-- ═══ Popular Listings ═══ -->
 <section class="py-16 bg-white border-t border-[#EBEEF2]">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -113,7 +117,8 @@ require __DIR__ . '/../includes/header.php';
       </div>
     </div>
 
-    <?php if (empty($recent)): ?>
+    <?php render_banners('home_listings_top'); ?>
+      <?php if (empty($recent)): ?>
       <div class="text-center py-20 text-muted-foreground">
         <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[#EEF2F6] mb-4">
           <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#9AAAB8" stroke-width="1.5"><rect x="2" y="2" width="20" height="20" rx="2"/><path d="M12 8v8M8 12h8"/></svg>
@@ -147,6 +152,7 @@ require __DIR__ . '/../includes/header.php';
         <?php endforeach; ?>
       </div>
 
+      <?php render_banners('home_listings_bottom'); ?>
       <?php if (count($recent) >= 24): ?>
       <div class="text-center mt-10">
         <a href="/catalog" class="inline-flex items-center justify-center border border-[#DFE4EA] hover:border-accent hover:text-accent rounded-lg h-10 px-6 text-sm font-medium transition-colors">

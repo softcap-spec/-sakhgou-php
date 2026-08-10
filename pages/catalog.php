@@ -38,7 +38,8 @@ require __DIR__ . '/../includes/header.php';
         <a href="/create" class="inline-flex items-center justify-center rounded-lg border border-border bg-background hover:bg-muted h-8 px-2.5 text-sm font-medium transition-all">Подать объявление</a>
       </div>
     <?php else: ?>
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+      <?php render_banners('catalog_top'); ?>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
         <?php foreach ($listings as $item): ?>
         <a href="/listing/<?=$item['id']?>" class="listing-card">
           <div class="listing-img">
