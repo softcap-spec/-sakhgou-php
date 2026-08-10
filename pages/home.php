@@ -68,27 +68,25 @@ require __DIR__ . '/../includes/header.php';
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
     <span class="text-xs uppercase tracking-[0.12em] text-accent font-medium mb-1 inline-block">Быстрые подборки</span>
     <h2 class="font-display text-3xl sm:text-4xl mb-8">Куда поедем?</h2>
-
-    <?php
-    $picks = [
-      ['Жильё','property'],
-      ['Туры','tour'],
-      ['Рыбалка','fishing'],
-      ['Снаряжение','rental_gear'],
-      ['Прокат авто','car_rental'],
-    ];
-    ?>
-    <div class="flex gap-3 overflow-x-auto pb-3 snap-x snap-mandatory scrollbar-hide" style="-ms-overflow-style:none;scrollbar-width:none">
-      <style>.scrollbar-hide::-webkit-scrollbar{display:none}</style>
-      <?php foreach ($picks as $p): ?>
-      <a href="/catalog/<?=$p[1]?>" class="shrink-0 snap-start relative rounded-2xl overflow-hidden group hover:shadow-lg transition-shadow" style="width:220px;height:150px">
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+      <?php
+      $picks = [
+        ['Жильё','property',"#4A90A4"],
+        ['Морские прогулки','tour',"#3E7A8E"],
+        ['Рыбалка','fishing',"#5E948B"],
+        ['Снаряжение','rental_gear',"#8B7E6A"],
+        ['Прокат авто','car_rental',"#7B6FA8"],
+      ];
+      foreach ($picks as $p):
+      ?>
+      <a href="/catalog/<?=$p[1]?>" class="relative rounded-xl overflow-hidden min-h-[160px] flex items-end text-left transition-all hover:-translate-y-0.5 hover:shadow-lg" style="background:linear-gradient(150deg,<?=$p[2]?> 0%,<?=$p[2]?>88 60%,<?=$p[2]?>55 100%)">
         <?php if (!empty($cat_images[$p[1]])): ?>
-        <img src="/uploads/<?=h($cat_images[$p[1]])?>" alt="" class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" loading="lazy">
+        <img src="/uploads/<?=h($cat_images[$p[1]])?>" alt="" class="absolute inset-0 w-full h-full object-cover opacity-40" loading="lazy">
         <?php endif; ?>
-        <div class="absolute inset-0" style="background:linear-gradient(to top, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.08) 60%)"></div>
-        <div class="absolute inset-0 p-4 flex flex-col justify-end">
-          <span class="text-white/70 text-[11px]"><?=$cat_counts[$p[1]]?> вариантов</span>
-          <h3 class="font-display text-lg leading-tight text-white mt-0.5"><?=$p[0]?></h3>
+        <div class="absolute inset-0" style="background:linear-gradient(to top, rgba(0,0,0,0.55) 0%, transparent 60%)"></div>
+        <div class="relative p-5 w-full">
+          <span class="text-white/70 text-xs"><?=$cat_counts[$p[1]]?> вариантов</span>
+          <h3 class="font-display text-xl leading-tight text-white mt-0.5"><?=$p[0]?></h3>
         </div>
       </a>
       <?php endforeach; ?>
