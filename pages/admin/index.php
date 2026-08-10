@@ -44,6 +44,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     exit;
   }
 
+  // Unblock listing
+  if ($_POST['action'] === 'unblock' && isset($_POST['id'])) {
+    $lid = (int)$_POST['id'];
+    $pdo->prepare("UPDATE listings SET status = 'active' WHERE id = ?")->execute([$lid]);
+    $ul = $pdo->prepare("SELECT user_id, title FROM listings WHERE id = ?");
+    $ul->execute([$lid]);
+    $ub = $ul->fetch();
+    if ($ub) {
+      $pdo->prepare("INSERT INTO notifications (user_id, type, text, link) VALUES (?, 'moderation', ?, ?)")
+        ->execute([$ub['user_id'], 'Объявление «'.$ub['title'].'» разблокировано', '/listing/'.$lid]);
+    }
+    header('Location: /admin?tab=moderation&ok=unblocked');
+    exit;
+  }
+
   // User edit
   if ($_POST['action'] === 'edit_user') {
     $uid = (int)$_POST['user_id'];
@@ -181,6 +196,7 @@ $total_users = (int)$pdo->query("SELECT COUNT(*) FROM users")->fetchColumn();
 $total_listings = (int)$pdo->query("SELECT COUNT(*) FROM listings")->fetchColumn();
 $active_listings = (int)$pdo->query("SELECT COUNT(*) FROM listings WHERE status = 'active'")->fetchColumn();
 $pending_listings = (int)$pdo->query("SELECT COUNT(*) FROM listings WHERE status = 'pending'")->fetchColumn();
+$unread_notifs = (int)$pdo->query("SELECT COUNT(*) FROM notifications WHERE user_id = 0 AND is_read = 0")->fetchColumn();
 $total_bookings = (int)$pdo->query("SELECT COUNT(*) FROM bookings")->fetchColumn();
 $promo_revenue = (int)$pdo->query("SELECT COALESCE(SUM(payment_amount), 0) FROM promotions WHERE payment_status = 'paid'")->fetchColumn();
 $new_week_users = (int)$pdo->query("SELECT COUNT(*) FROM users WHERE created_at > DATE_SUB(NOW(), INTERVAL 7 DAY)")->fetchColumn();
@@ -222,12 +238,12 @@ require_once __DIR__ . '/../../includes/header.php';
           'maintenance' => '🔧 Техработы',
           'categories' => '📂 Категории',
           'banners' => '🪧 Баннеры',
-          'content' => '📝 Контент',
+          'notifications' => '🔔 Уведомления',
         ];
         foreach ($tabs as $k => $v):
           $active = $tab === $k;
         ?>
-          <a href="?tab=<?= $k ?>" class="px-4 py-2.5 text-sm font-medium whitespace-nowrap border-b-2 transition-colors <?= $active ? 'border-accent text-accent' : 'border-transparent text-muted-foreground hover:text-foreground' ?>"><?= $v ?><?= $k === 'moderation' && $pending_listings ? ' <span class="bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full">'.$pending_listings.'</span>' : '' ?></a>
+          <a href="?tab=<?= $k ?>" class="px-4 py-2.5 text-sm font-medium whitespace-nowrap border-b-2 transition-colors <?= $active ? 'border-accent text-accent' : 'border-transparent text-muted-foreground hover:text-foreground' ?>"><?= $v ?><?= $k === 'moderation' && $pending_listings ? ' <span class="bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full">'.$pending_listings.'</span>' : '' ?><?= $k === 'notifications' && $unread_notifs ? ' <span class="bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full">'.$unread_notifs.'</span>' : '' ?></a>
         <?php endforeach; ?>
       </nav>
     </div>
@@ -296,6 +312,32 @@ elseif ($tab === 'moderation'):
                 <button class="px-4 py-1.5 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition-colors">Отклонить</button>
               </form>
             </div>
+          </div>
+        <?php endwhile; ?>
+      </div>
+    <?php endif; ?>
+
+    <!-- Blocked / Rejected listings -->
+    <h2 class="font-display text-xl mb-4 mt-8">Заблокированные объявления</h2>
+    <?php
+    $blocked = $pdo->query("SELECT l.*, u.name AS host_name, u.email AS host_email FROM listings l JOIN users u ON l.user_id = u.id WHERE l.status = 'rejected' ORDER BY l.created_at DESC LIMIT 100");
+    ?>
+    <?php if ($blocked->rowCount() === 0): ?>
+      <p class="text-muted-foreground text-sm">Нет заблокированных объявлений.</p>
+    <?php else: ?>
+      <div class="space-y-3">
+        <?php while ($b = $blocked->fetch()): ?>
+          <div class="bg-white border border-red-200 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center gap-3">
+            <div class="flex-1 min-w-0">
+              <div class="font-medium text-sm truncate"><a href="/listing/<?= $b['id'] ?>" class="hover:text-accent"><?= h($b['title']) ?></a></div>
+              <p class="text-xs text-muted-foreground mt-0.5"><?= h($b['listing_type']) ?> · <?= h($b['host_name']) ?> · <?= date('d.m.Y H:i', strtotime($b['created_at'])) ?></p>
+            </div>
+            <form method="post" class="shrink-0">
+              <input type="hidden" name="action" value="unblock">
+              <input type="hidden" name="id" value="<?= $b['id'] ?>">
+              <?= csrf_field() ?>
+              <button class="px-4 py-1.5 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700 transition-colors">Разблокировать</button>
+            </form>
           </div>
         <?php endwhile; ?>
       </div>
@@ -784,6 +826,41 @@ elseif ($tab === 'content'):
       <p>История ревизий недоступна (git не найден на сервере)</p>
     </div>
     <?php endif; ?>
+
+<?php elseif ($tab === 'notifications'): ?>
+    <h2 class="font-display text-xl mb-4">Уведомления</h2>
+    <?php
+    // Mark all as read if requested
+    if (isset($_GET['mark_read'])) {
+      $pdo->exec("UPDATE notifications SET is_read = 1 WHERE user_id = 0");
+      header('Location: /admin?tab=notifications'); exit;
+    }
+    $notifs = $pdo->query("SELECT * FROM notifications WHERE user_id = 0 ORDER BY created_at DESC LIMIT 50");
+    ?>
+    <?php if ($notifs->rowCount() === 0): ?>
+      <div class="text-center py-12 bg-white border rounded-xl">
+        <p class="text-4xl mb-2">🔔</p>
+        <p class="text-muted-foreground">Нет уведомлений</p>
+      </div>
+    <?php else: ?>
+      <div class="flex justify-end mb-3">
+        <a href="?tab=notifications&mark_read=1" class="text-xs text-accent hover:underline">Отметить все прочитанными</a>
+      </div>
+      <div class="space-y-2">
+        <?php while ($n = $notifs->fetch()): ?>
+          <div class="bg-white border rounded-xl p-4 flex items-start gap-3 <?= $n['is_read'] ? '' : 'border-l-4 border-l-accent' ?>">
+            <div class="flex-1 min-w-0">
+              <div class="text-sm"><?= h($n['text']) ?></div>
+              <div class="text-xs text-muted-foreground mt-1"><?= date('d.m.Y H:i', strtotime($n['created_at'])) ?></div>
+            </div>
+            <?php if ($n['link']): ?>
+              <a href="<?= h($n['link']) ?>" class="text-xs text-accent hover:underline shrink-0">Перейти</a>
+            <?php endif; ?>
+          </div>
+        <?php endwhile; ?>
+      </div>
+    <?php endif; ?>
+
 <?php endif; ?>
   </div>
 </section>

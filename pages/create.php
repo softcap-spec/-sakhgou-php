@@ -101,6 +101,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['finish'])) {
     ]);
     $lid = $pdo->lastInsertId();
     $success = $lid;
+    // Notify admin
+    $pdo->prepare("INSERT INTO notifications (user_id, type, text, link) VALUES (0, 'new_listing', ?, ?)")
+      ->execute(['Новое объявление: ' . $title, '/admin?tab=moderation']);
     } catch (PDOException $e) {
       $errors[] = 'Ошибка БД: ' . $e->getMessage();
     }
