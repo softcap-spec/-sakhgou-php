@@ -26,7 +26,7 @@ if (!$item) {
 $pdo->prepare('UPDATE listings SET view_count = COALESCE(view_count, 0) + 1 WHERE id = ?')->execute([$lid]);
 $item['view_count'] = ($item['view_count'] ?? 0) + 1;
 
-$stmt = $pdo->prepare('SELECT l.*, c.slug AS cat_slug FROM listings l JOIN categories c ON l.category_id = c.id WHERE l.listing_type = ? AND l.id != ? AND l.status = ? ORDER BY RAND() LIMIT 4');
+$stmt = $pdo->prepare('SELECT l.*, c.slug AS cat_slug FROM listings l JOIN categories c ON l.category_id = c.id LEFT JOIN promotions promo ON l.id = promo.listing_id AND promo.status = \'active\' AND promo.expires_at > NOW() WHERE l.listing_type = ? AND l.id != ? AND l.status = ? ORDER BY CASE WHEN promo.id IS NOT NULL THEN 0 ELSE 1 END, RAND() LIMIT 4');
 $stmt->execute([$item['listing_type'] ?? 'tour', $lid, 'active']);
 $similar = $stmt->fetchAll();
 
@@ -285,7 +285,7 @@ require __DIR__ . '/../includes/header.php';
         $cross = ['property'=>['car_rental','tour','fishing','rental_gear'],'tour'=>['car_rental','property','fishing','rental_gear'],'fishing'=>['car_rental','tour','rental_gear','property'],'rental_gear'=>['car_rental','tour','fishing','property'],'car_rental'=>['tour','fishing','rental_gear','property']];
         $ct = $cross[$lt] ?? ['tour','property','fishing','rental_gear'];
         $ct_placeholders = implode(',', array_fill(0, count($ct), '?'));
-        $ct_items = $pdo->prepare("SELECT l.id, l.title, l.price, l.listing_type, (SELECT filename FROM listing_images WHERE listing_id=l.id ORDER BY sort_order LIMIT 1) AS img, c.name AS cat_name, c.slug AS cat_slug FROM listings l JOIN categories c ON l.category_id=c.id WHERE l.status='active' AND l.id!=? AND c.slug IN ($ct_placeholders) ORDER BY RAND() LIMIT 4");
+        $ct_items = $pdo->prepare("SELECT l.id, l.title, l.price, l.listing_type, (SELECT filename FROM listing_images WHERE listing_id=l.id ORDER BY sort_order LIMIT 1) AS img, c.name AS cat_name, c.slug AS cat_slug FROM listings l JOIN categories c ON l.category_id=c.id LEFT JOIN promotions promo ON l.id = promo.listing_id AND promo.status = 'active' AND promo.expires_at > NOW() WHERE l.status='active' AND l.id!=? AND c.slug IN ($ct_placeholders) ORDER BY CASE WHEN promo.id IS NOT NULL THEN 0 ELSE 1 END, RAND() LIMIT 4");
         $ct_items->execute(array_merge([$lid], $ct));
         $crossItems = $ct_items->fetchAll();
         ?>
