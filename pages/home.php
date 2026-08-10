@@ -8,6 +8,9 @@ foreach (['property','tour','fishing','rental_gear','car_rental'] as $slug) {
   $cat_counts[$slug] = $r['total'];
 }
 $page_title = 'СахGO — жильё, туры, рыбалка и снаряжение. Сахалин и Курилы';
+header('Cache-Control: no-cache, no-store, must-revalidate');
+header('Pragma: no-cache');
+header('Expires: 0');
 require __DIR__ . '/../includes/header.php';
 ?>
 
