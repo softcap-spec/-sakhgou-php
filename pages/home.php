@@ -60,6 +60,7 @@ require __DIR__ . '/../includes/header.php';
 </section>
 
 <!-- ═══ Quick Picks Carousel ═══ -->
+<!-- DEBUG: before picks -->
 <section class="pb-16">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
     <span class="text-xs uppercase tracking-[0.12em] text-accent font-medium mb-1 inline-block">Быстрые подборки</span>
@@ -74,7 +75,7 @@ require __DIR__ . '/../includes/header.php';
       ['Прокат авто','car_rental'],
     ];
     $pw = 220; $pgap = 12; $ptotal = count($picks);
-    ?>
+    echo '<!-- QP: '.$ptotal.' cards -->'; ?>
     <div class="relative overflow-hidden" id="picksViewport">
       <div id="picksTrack" class="flex" style="gap:<?=$pgap?>px">
         <?php for ($dup = 0; $dup < 2; $dup++): ?>
