@@ -47,7 +47,7 @@ require __DIR__ . '/../includes/header.php';
       <?php render_banners('catalog_top'); ?>
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
         <?php foreach ($listings as $item): ?>
-        <a href="/listing/<?=$item['id']?>" class="listing-card">
+        <a href="/listing/<?=$item['id']?>" class="listing-card <?=!empty($item['promo_type'])?'promo-'.h($item['promo_type']):''?>">
           <div class="listing-img">
             <?php if (!empty($item['image'])): ?>
             <img src="/uploads/<?=h($item['image'])?>" alt="<?=h($item['title'])?>" loading="lazy">

@@ -90,14 +90,30 @@ label { display: block; font-size: 0.8125rem; font-weight: 500; margin-bottom: 0
   transform: translateY(-2px);
 }
 
-/* Promoted listings — distinctive frame */
-.listing-card.promo {
+/* Promoted listings — tariff-specific frames */
+.listing-card.promo-top {
   border: 2px solid #F59E0B;
-  box-shadow: 0 0 0 1px rgba(245, 158, 11, 0.25), 0 4px 16px -4px rgba(245, 158, 11, 0.12);
+  box-shadow: 0 0 0 1px rgba(245,158,11,0.25), 0 4px 16px -4px rgba(245,158,11,0.12);
 }
-.listing-card.promo:hover {
+.listing-card.promo-top:hover {
   border-color: #D97706;
-  box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.3), 0 12px 32px -8px rgba(245, 158, 11, 0.18);
+  box-shadow: 0 0 0 2px rgba(245,158,11,0.3), 0 12px 32px -8px rgba(245,158,11,0.18);
+}
+.listing-card.promo-promo {
+  border: 2px solid #8B5CF6;
+  box-shadow: 0 0 0 1px rgba(139,92,246,0.25), 0 4px 16px -4px rgba(139,92,246,0.12);
+}
+.listing-card.promo-promo:hover {
+  border-color: #7C3AED;
+  box-shadow: 0 0 0 2px rgba(139,92,246,0.3), 0 12px 32px -8px rgba(139,92,246,0.18);
+}
+.listing-card.promo-urgent {
+  border: 2px solid #EF4444;
+  box-shadow: 0 0 0 1px rgba(239,68,68,0.25), 0 4px 16px -4px rgba(239,68,68,0.12);
+}
+.listing-card.promo-urgent:hover {
+  border-color: #DC2626;
+  box-shadow: 0 0 0 2px rgba(239,68,68,0.3), 0 12px 32px -8px rgba(239,68,68,0.18);
 }
 
 .listing-img { aspect-ratio: 16/10; background: #EEF2F6; overflow: hidden; position: relative; }
