@@ -18,6 +18,12 @@ require __DIR__ . '/../includes/header.php';
 
 <main class="py-12">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <?php
+    $bc = ['Главная'=>'/'];
+    if ($category) $bc[h($category['name'])] = '';
+    else $bc['Все объявления'] = '';
+    breadcrumbs($bc);
+    ?>
     <div class="flex flex-wrap items-end justify-between gap-4 mb-10">
       <div>
         <span class="text-xs uppercase tracking-[0.12em] text-accent font-medium">Каталог</span>

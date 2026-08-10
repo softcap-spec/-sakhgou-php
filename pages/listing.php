@@ -58,14 +58,7 @@ require __DIR__ . '/../includes/header.php';
 <main class="py-4">
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
-  <!-- Breadcrumbs -->
-  <nav class="flex items-center gap-1.5 text-xs text-[#9AAAB8] mb-4 flex-wrap">
-    <a href="/" class="hover:text-accent transition-colors">Главная</a>
-    <span>/</span>
-    <a href="/catalog/<?=$lt?>" class="hover:text-accent transition-colors"><?=$TYPE_LABEL[$lt]??'Каталог'?></a>
-    <span>/</span>
-    <span class="text-[#54677A] truncate max-w-[300px]"><?=h($item['title'])?></span>
-  </nav>
+  <?php breadcrumbs(['Главная'=>'/', ($TYPE_LABEL[$lt]??'Каталог')=>'/catalog/'.$lt, h($item['title'])=>'']); ?>
 
   <div class="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-6">
 
@@ -109,7 +102,7 @@ require __DIR__ . '/../includes/header.php';
         <div class="flex gap-2 mt-2 overflow-x-auto pb-1">
           <?php foreach ($images as $i => $img): ?>
           <button onclick="setMainImg(this)" data-src="/uploads/<?=h($img)?>" class="shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 <?=$i===0?'border-accent':'border-[#EBEEF2]'?> hover:border-accent/50 transition-colors">
-            <img src="/uploads/<?=h($img)?>" alt="" class="w-full h-full object-cover" loading="lazy">
+            <img src="/uploads/<?=h($img)?>" alt="<?=h($item['title'])?> — фото <?=$i+1?>" class="w-full h-full object-cover" loading="lazy">
           </button>
           <?php endforeach; ?>
         </div>
@@ -314,7 +307,7 @@ require __DIR__ . '/../includes/header.php';
       <a href="/listing/<?=$s['id']?>" class="listing-card">
         <div class="listing-img">
           <?php $simg = $pdo->query("SELECT filename FROM listing_images WHERE listing_id={$s['id']} ORDER BY sort_order LIMIT 1")->fetchColumn(); ?>
-          <?php if($simg): ?><img src="/uploads/<?=h($simg)?>" alt="" loading="lazy"><?php endif; ?>
+          <?php if($simg): ?><img src="/uploads/<?=h($simg)?>" alt="<?=h($s['title'])?>" loading="lazy"><?php endif; ?>
         </div>
         <div class="listing-body">
           <div class="listing-price"><?=number_format((float)$s['price'],0,'.',' ')?> <span class="text-[0.625rem] font-normal text-[#9AAAB8]"><?=price_label($s['listing_type'])?></span></div>
@@ -423,6 +416,35 @@ function escapeHtml(s){var d=document.createElement('div');d.textContent=s;retur
 </script>
 <?php endif; ?>
 
+<?php
+// JSON-LD Product markup
+$ld_image = !empty($images) ? 'https://сахгоу.рф/uploads/'.h($images[0]) : '';
+$ld_price = number_format((float)$item['price'], 0, '.', '');
+$ld_currency = 'RUB';
+$ld_avail = 'https://schema.org/InStock';
+?>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Product",
+  "name": "<?=h($item['title'])?>",
+  "description": "<?=h(mb_substr($item['description'] ?? $item['title'], 0, 300))?>",
+  "image": "<?=$ld_image?>",
+  "sku": "SAKHGO-<?=$item['id']?>",
+  "offers": {
+    "@type": "Offer",
+    "price": "<?=$ld_price?>",
+    "priceCurrency": "<?=$ld_currency?>",
+    "availability": "<?=$ld_avail?>",
+    "url": "https://сахгоу.рф/listing/<?=$item['id']?>"
+  }<?php if ($item['avg_rating'] && $item['reviews_count']): ?>,
+  "aggregateRating": {
+    "@type": "AggregateRating",
+    "ratingValue": "<?=round($item['avg_rating'],1)?>",
+    "reviewCount": "<?=$item['reviews_count']?>"
+  }<?php endif; ?>
+}
+</script>
 </main>
 
 <script>

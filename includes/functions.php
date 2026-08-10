@@ -360,3 +360,24 @@ function render_banners(string $placement): void {
     // Silently fail — banners shouldn't break the page
   }
 }
+
+/**
+ * Breadcrumbs with JSON-LD
+ */
+function breadcrumbs($items) {
+  $json = ['@context'=>'https://schema.org','@type'=>'BreadcrumbList','itemListElement'=>[]];
+  $pos = 1;
+  echo '<nav aria-label="Хлебные крошки" class="text-xs text-[#7A8A9A] mb-4"><ol class="flex flex-wrap items-center gap-1">';
+  $last = count($items); $i = 0;
+  foreach ($items as $name => $url) {
+    $i++;
+    $json['itemListElement'][] = ['@type'=>'ListItem','position'=>$pos++,'name'=>$name,'item'=>$url];
+    if ($i === $last) {
+      echo '<li class="text-[#3A4A5C] font-medium">' . h($name) . '</li>';
+    } else {
+      echo '<li><a href="' . h($url) . '" class="hover:text-accent transition-colors">' . h($name) . '</a></li><li class="text-[#D5DCE5]">/</li>';
+    }
+  }
+  echo '</ol></nav>';
+  echo '<script type="application/ld+json">' . json_encode($json, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES) . '</script>';
+}

@@ -37,7 +37,7 @@ require __DIR__ . '/../includes/header.php';
       </p>
     </div>
     <div class="hidden lg:block shrink-0">
-      <img src="/hero-bear.png" alt="" class="h-52 w-auto opacity-90">
+      <img src="/hero-bear.png" alt="Медведь — Сахалин" class="h-52 w-auto opacity-90">
     </div>
     </div>
 
@@ -86,7 +86,7 @@ require __DIR__ . '/../includes/header.php';
       ?>
       <a href="/catalog/<?=$p[1]?>" class="relative rounded-xl overflow-hidden min-h-[160px] shrink-0 flex items-end text-left transition-all hover:-translate-y-0.5 hover:shadow-lg w-[180px] sm:w-[200px] lg:flex-1" style="background:linear-gradient(150deg,<?=$p[2]?> 0%,<?=$p[2]?>88 60%,<?=$p[2]?>55 100%)">
         <?php if (!empty($cat_images[$p[1]])): ?>
-        <img src="/uploads/<?=h($cat_images[$p[1]])?>" alt="" class="absolute inset-0 w-full h-full object-cover opacity-40" loading="lazy">
+        <img src="/uploads/<?=h($cat_images[$p[1]])?>" alt="<?=h($p[0])?> — Сахалин" class="absolute inset-0 w-full h-full object-cover opacity-40" loading="lazy">
         <?php endif; ?>
         <div class="absolute inset-0" style="background:linear-gradient(to top, rgba(0,0,0,0.55) 0%, transparent 60%)"></div>
         <div class="relative p-4 sm:p-5 w-full">
