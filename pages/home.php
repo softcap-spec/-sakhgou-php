@@ -2,10 +2,14 @@
 // home.php — сахгоу.рф v4
 $cu = auth_user();
 $recent = get_recent_listings(24);
-$cat_counts = [];
+$cat_counts = []; $cat_images = [];
+$_db = db();
 foreach (['property','tour','fishing','rental_gear','car_rental'] as $slug) {
   $r = get_listings($slug, '', 1);
   $cat_counts[$slug] = $r['total'];
+  $s = $_db->prepare('SELECT li.filename FROM listing_images li JOIN listings l ON li.listing_id=l.id JOIN categories c ON l.category_id=c.id WHERE c.slug=? AND l.status="active" ORDER BY RAND() LIMIT 1');
+  $s->execute([$slug]);
+  $cat_images[$slug] = $s->fetchColumn() ?: '';
 }
 $page_title = 'СахGO — жильё, туры, рыбалка и снаряжение. Сахалин и Курилы';
 require __DIR__ . '/../includes/header.php';
@@ -64,23 +68,25 @@ require __DIR__ . '/../includes/header.php';
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
     <span class="text-xs uppercase tracking-[0.12em] text-accent font-medium mb-1 inline-block">Быстрые подборки</span>
     <h2 class="font-display text-3xl sm:text-4xl mb-8">Куда поедем?</h2>
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+    <div class="flex gap-3 md:gap-4 overflow-x-auto">
       <?php
       $picks = [
-        ['Жильё','property','qp-zhilyo',"https://images.unsplash.com/photo-1560185893-a55cbc8c57e8?w=400&h=320&fit=crop","#4A90A4"],
-        ['Туры','tour','qp-morskie',"https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=320&fit=crop","#3E7A8E"],
-        ['Рыбалка','fishing','qp-rybalka',"https://images.unsplash.com/photo-1545259003-0262736c4985?w=400&h=320&fit=crop","#5E948B"],
-        ['Снаряжение','rental_gear','qp-dzhip',"https://images.unsplash.com/photo-1505051507923-00c6c8f97767?w=400&h=320&fit=crop","#8B7E6A"],
-        ['Прокат','car_rental','qp-prokat',"https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?w=400&h=300&fit=crop","#7B6FA8"],
+        ['Жильё','property',"#4A90A4"],
+        ['Морские прогулки','tour',"#3E7A8E"],
+        ['Рыбалка','fishing',"#5E948B"],
+        ['Снаряжение','rental_gear',"#8B7E6A"],
+        ['Прокат авто','car_rental',"#7B6FA8"],
       ];
-      foreach ($picks as $pi => $p):
+      foreach ($picks as $p):
       ?>
-      <a href="/catalog/<?=$p[1]?>" class="relative rounded-xl overflow-hidden min-h-[160px] flex items-end text-left transition-all hover:-translate-y-0.5 hover:shadow-lg" style="background:linear-gradient(150deg,<?=$p[4]?> 0%,<?=$p[4]?>88 60%,<?=$p[4]?>55 100%)">
-        <img src="<?=$p[3]?>" alt="" class="absolute inset-0 w-full h-full object-cover opacity-40 mix-blend-overlay" referrerpolicy="no-referrer" loading="lazy">
+      <a href="/catalog/<?=$p[1]?>" class="relative rounded-xl overflow-hidden min-h-[160px] shrink-0 flex items-end text-left transition-all hover:-translate-y-0.5 hover:shadow-lg w-[180px] sm:w-[200px] lg:flex-1" style="background:linear-gradient(150deg,<?=$p[2]?> 0%,<?=$p[2]?>88 60%,<?=$p[2]?>55 100%)">
+        <?php if (!empty($cat_images[$p[1]])): ?>
+        <img src="/uploads/<?=h($cat_images[$p[1]])?>" alt="" class="absolute inset-0 w-full h-full object-cover opacity-40" loading="lazy">
+        <?php endif; ?>
         <div class="absolute inset-0" style="background:linear-gradient(to top, rgba(0,0,0,0.55) 0%, transparent 60%)"></div>
-        <div class="relative p-5 w-full">
+        <div class="relative p-4 sm:p-5 w-full">
           <span class="text-white/70 text-xs"><?=$cat_counts[$p[1]]?> вариантов</span>
-          <h3 class="font-display text-xl leading-tight text-white mt-0.5"><?=$p[0]?></h3>
+          <h3 class="font-display text-lg sm:text-xl leading-tight text-white mt-0.5"><?=$p[0]?></h3>
         </div>
       </a>
       <?php endforeach; ?>
