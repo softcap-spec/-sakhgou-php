@@ -3,14 +3,15 @@
 $cu = auth_user();
 $recent = get_recent_listings(24);
 $cat_counts = []; $cat_images = [];
+$_db = db();
 foreach (['property','tour','fishing','rental_gear','car_rental'] as $slug) {
   $r = get_listings($slug, '', 1);
   $cat_counts[$slug] = $r['total'];
+  $s = $_db->prepare('SELECT li.filename FROM listing_images li JOIN listings l ON li.listing_id=l.id JOIN categories c ON l.category_id=c.id WHERE c.slug=? AND l.status="active" ORDER BY RAND() LIMIT 1');
+  $s->execute([$slug]);
+  $cat_images[$slug] = $s->fetchColumn() ?: '';
 }
 $page_title = 'СахGO — жильё, туры, рыбалка и снаряжение. Сахалин и Курилы';
-header('Cache-Control: no-cache, no-store, must-revalidate');
-header('Pragma: no-cache');
-header('Expires: 0');
 require __DIR__ . '/../includes/header.php';
 ?>
 
@@ -63,8 +64,6 @@ require __DIR__ . '/../includes/header.php';
 </section>
 
 <!-- ═══ Quick Picks Carousel ═══ -->
-<!-- DEBUG: before picks -->
-<?php echo '<!-- QP_START: '.count($cat_counts).' -->'; ?>
 <section class="pb-16">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
     <span class="text-xs uppercase tracking-[0.12em] text-accent font-medium mb-1 inline-block">Быстрые подборки</span>
@@ -78,30 +77,20 @@ require __DIR__ . '/../includes/header.php';
       ['Снаряжение','rental_gear'],
       ['Прокат авто','car_rental'],
     ];
-    $pw = 220; $pgap = 12; $ptotal = count($picks);
-    echo '<!-- QP: '.$ptotal.' cards -->'; ?>
-    <div class="relative overflow-hidden" id="picksViewport">
-      <div id="picksTrack" class="flex" style="gap:<?=$pgap?>px">
-        <?php for ($dup = 0; $dup < 2; $dup++): ?>
-        <?php foreach ($picks as $pi => $p): ?>
-        <a href="/catalog/<?=$p[1]?>" class="shrink-0 relative rounded-2xl overflow-hidden group hover:shadow-lg transition-shadow" style="width:<?=$pw?>px;height:150px">
-          <?php if (!empty($cat_images[$p[1]])): ?>
-          <img src="/uploads/<?=h($cat_images[$p[1]])?>" alt="" class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105">
-          <?php endif; ?>
-          <div class="absolute inset-0" style="background:linear-gradient(to top, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.1) 60%)"></div>
-          <div class="absolute inset-0 p-4 flex flex-col justify-end">
-            <span class="text-white/70 text-[11px]"><?=$cat_counts[$p[1]]?> вариантов</span>
-            <h3 class="font-display text-lg leading-tight text-white mt-0.5"><?=$p[0]?></h3>
-          </div>
-        </a>
-        <?php endforeach; ?>
-        <?php endfor; ?>
-      </div>
-    </div>
-
-    <div class="flex justify-center gap-1.5 mt-4">
-      <?php foreach ($picks as $pi => $_): ?>
-      <button onclick="goPicks(<?=$pi?>)" class="w-1.5 h-1.5 rounded-full transition-all <?=$pi===0?'bg-accent w-6':'bg-accent/20'?>" id="pdot_<?=$pi?>"></button>
+    ?>
+    <div class="flex gap-3 overflow-x-auto pb-3 snap-x snap-mandatory scrollbar-hide" style="-ms-overflow-style:none;scrollbar-width:none">
+      <style>.scrollbar-hide::-webkit-scrollbar{display:none}</style>
+      <?php foreach ($picks as $p): ?>
+      <a href="/catalog/<?=$p[1]?>" class="shrink-0 snap-start relative rounded-2xl overflow-hidden group hover:shadow-lg transition-shadow" style="width:220px;height:150px">
+        <?php if (!empty($cat_images[$p[1]])): ?>
+        <img src="/uploads/<?=h($cat_images[$p[1]])?>" alt="" class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" loading="lazy">
+        <?php endif; ?>
+        <div class="absolute inset-0" style="background:linear-gradient(to top, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.08) 60%)"></div>
+        <div class="absolute inset-0 p-4 flex flex-col justify-end">
+          <span class="text-white/70 text-[11px]"><?=$cat_counts[$p[1]]?> вариантов</span>
+          <h3 class="font-display text-lg leading-tight text-white mt-0.5"><?=$p[0]?></h3>
+        </div>
+      </a>
       <?php endforeach; ?>
     </div>
   </div>
@@ -187,43 +176,4 @@ require __DIR__ . '/../includes/header.php';
 </section>
 
 </main>
-
-<script>
-var pStep = <?=$pw + $pgap?>;
-var pTotal = <?=$ptotal?>;
-var pIdx = 0;
-var pTrack = document.getElementById('picksTrack');
-var pAnim = false;
-
-function goPicks(i){
-  pIdx = Math.max(0, Math.min(i, pTotal * 2 - 1));
-  var real = ((pIdx % pTotal) + pTotal) % pTotal;
-  pTrack.style.transition = 'transform 0.5s cubic-bezier(0.25,0.1,0.25,1)';
-  pTrack.style.transform = 'translateX(-'+(pIdx*pStep)+'px)';
-  for(var j=0;j<pTotal;j++){
-    var d=document.getElementById('pdot_'+j);
-    if(d)d.className='w-1.5 h-1.5 rounded-full transition-all '+(j===real?'bg-accent w-6':'bg-accent/20');
-  }
-  pAnim = true;
-}
-
-pTrack.addEventListener('transitionend',function(){
-  pAnim = false;
-  if(pIdx>=pTotal*2){pIdx-=pTotal;pTrack.style.transition='none';pTrack.style.transform='translateX(-'+(pIdx*pStep)+'px)';}
-  if(pIdx<0){pIdx+=pTotal;pTrack.style.transition='none';pTrack.style.transform='translateX(-'+(pIdx*pStep)+'px)';}
-});
-
-setInterval(function(){
-  if(pAnim)return;
-  pIdx++;
-  goPicks(pIdx);
-  if(pIdx>=pTotal*2-1)setTimeout(function(){pIdx%=pTotal;pTrack.style.transition='none';pTrack.style.transform='translateX(-'+(pIdx*pStep)+'px)';pAnim=false;},550);
-},4000);
-
-var psX=0,psP=0;
-pTrack.addEventListener('touchstart',function(e){psX=e.touches[0].clientX;psP=pIdx*pStep;pTrack.style.transition='none';pAnim=false;});
-pTrack.addEventListener('touchmove',function(e){pTrack.style.transform='translateX(-'+(psP+psX-e.touches[0].clientX)+'px)';});
-pTrack.addEventListener('touchend',function(e){var d=psX-(e.changedTouches[0]||{}).clientX||0;if(Math.abs(d)>30)pIdx=Math.round((psP+d)/pStep);goPicks(pIdx);});
-</script>
-
 <?php require __DIR__ . '/../includes/footer.php'; ?>
