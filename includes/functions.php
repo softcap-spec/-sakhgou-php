@@ -330,7 +330,14 @@ function render_banners(string $placement): void {
         $html = $b['content']; // raw HTML
       }
       
-      echo '<div class="my-4 max-w-7xl mx-auto">' . $html . '</div>';
+      echo '<div class="my-4 max-w-7xl mx-auto relative">' . $html;
+      if (!empty($b['is_ad'])) {
+        $adInfo = 'Реклама';
+        if (!empty($b['advertiser'])) $adInfo .= '. ' . h($b['advertiser']);
+        if (!empty($b['erid'])) $adInfo .= '. erid: ' . h($b['erid']);
+        echo '<span class="absolute top-1 right-2 bg-black/60 text-white text-[10px] px-1.5 py-0.5 rounded" title="' . h($adInfo) . '">Реклама</span>';
+      }
+      echo '</div>';
     }
   } catch (Exception $e) {
     // Silently fail — banners shouldn't break the page

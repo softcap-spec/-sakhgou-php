@@ -691,6 +691,16 @@ elseif ($tab === 'banners'):
             </label>
           </div>
         </div>
+        <div class="border-t pt-4 mt-4">
+          <p class="text-sm font-medium mb-2">Маркировка рекламы (закон «О рекламе»)</p>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <label class="flex items-center gap-2 text-sm">
+              <input type="checkbox" name="is_ad" <?= ($edit_banner && $edit_banner['is_ad']) ? 'checked' : '' ?> class="rounded"> Это реклама
+            </label>
+            <input name="advertiser" value="<?= $edit_banner ? h($edit_banner['advertiser'] ?? '') : '' ?>" placeholder="Рекламодатель (название / ИНН)" class="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-accent">
+            <input name="erid" value="<?= $edit_banner ? h($edit_banner['erid'] ?? '') : '' ?>" placeholder="erid (токен)" class="border rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:border-accent">
+          </div>
+        </div>
         <div class="flex gap-2 mt-4">
           <button type="submit" class="cta-btn text-sm"><?= $edit_banner ? 'Сохранить' : 'Добавить' ?></button>
           <?php if ($edit_banner): ?>
@@ -710,7 +720,7 @@ elseif ($tab === 'banners'):
       <table class="w-full text-sm">
         <thead><tr class="border-b bg-muted/30">
           <th class="text-left px-4 py-3">ID</th><th class="text-left px-4 py-3">Название</th><th class="text-left px-4 py-3">Тип</th>
-          <th class="text-left px-4 py-3 hidden sm:table-cell">Размещение</th><th class="text-center px-4 py-3">Активен</th>
+          <th class="text-left px-4 py-3 hidden sm:table-cell">Размещение</th><th class="text-center px-4 py-3">Активен</th><th class="text-center px-4 py-3">Реклама</th>
           <th class="text-right px-4 py-3">Действия</th>
         </tr></thead>
         <tbody>
