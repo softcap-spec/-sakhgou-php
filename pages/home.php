@@ -134,7 +134,7 @@ require __DIR__ . '/../includes/header.php';
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <?php $i = 0; foreach ($recent as $item): $i++; ?>
         <?php if ($i === 6) render_banners('home_listings_inline'); ?>
-        <a href="/listing/<?=$item['id']?>" class="listing-card hover:-translate-y-0.5 hover:shadow-[0_8px_24px_-8px_rgba(0,0,0,0.12)]">
+        <a href="/listing/<?=$item['id']?>" class="listing-card <?=!empty($item['promo_type'])?'promo':''?> hover:-translate-y-0.5 hover:shadow-[0_8px_24px_-8px_rgba(0,0,0,0.12)]">
           <div class="listing-img">
             <?php if (!empty($item['image'])): ?>
             <img src="/uploads/<?=h($item['image'])?>" alt="<?=h($item['title'])?>" loading="lazy">
