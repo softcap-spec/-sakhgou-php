@@ -63,6 +63,13 @@ function auth_user(): ?array {
   $stmt->execute([$_SESSION['user_id']]);
   $u = $stmt->fetch() ?: null;
   if ($u) {
+    // Update last_seen (throttled: every 60s)
+    $ls = db()->prepare('SELECT last_seen FROM users WHERE id=?');
+    $ls->execute([$u['id']]);
+    $lsr = $ls->fetch();
+    if (!$lsr['last_seen'] || (time() - strtotime($lsr['last_seen'])) > 60) {
+      db()->prepare('UPDATE users SET last_seen = NOW() WHERE id = ?')->execute([$u['id']]);
+    }
     $cn = db()->prepare('SELECT COUNT(*) FROM notifications WHERE user_id = ? AND is_read = 0');
     $cn->execute([$u['id']]);
     $u['unread_notifications'] = (int)$cn->fetchColumn();

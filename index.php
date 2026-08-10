@@ -87,15 +87,36 @@ switch ($page) {
     $action = $sub ?? '';
     $pdo = db();
     if ($action === 'messages' && $_SERVER['REQUEST_METHOD'] === 'GET') {
-      // Get messages for a listing with another user
+      // Get messages + other user info
       $lid = (int)($_GET['lid'] ?? 0);
       $other = (int)($_GET['uid'] ?? 0);
       $stmt = $pdo->prepare('SELECT * FROM messages WHERE listing_id=? AND ((sender_id=? AND receiver_id=?) OR (sender_id=? AND receiver_id=?)) ORDER BY created_at ASC');
       $stmt->execute([$lid,$cu['id'],$other,$other,$cu['id']]);
       $msgs = $stmt->fetchAll();
       // Mark as read
-      $pdo->prepare('UPDATE messages SET is_read=1 WHERE listing_id=? AND receiver_id=? AND sender_id=?')->execute([$lid,$cu['id'],$other]);
-      echo json_encode(['messages'=>$msgs]);
+      $pdo->prepare('UPDATE messages SET is_read=1 WHERE listing_id=? AND receiver_id=? AND sender_id=? AND is_read=0')->execute([$lid,$cu['id'],$other]);
+      // Other user info
+      $ou = $pdo->prepare('SELECT name, avatar_url, last_seen FROM users WHERE id=?');
+      $ou->execute([$other]);
+      $otherUser = $ou->fetch();
+      // Typing status
+      $typing = $pdo->prepare('SELECT typing_lid, typing_at FROM users WHERE id=?');
+      $typing->execute([$other]);
+      $t = $typing->fetch();
+      $isTyping = ($t && $t['typing_lid'] == $lid && time() - strtotime($t['typing_at']) < 8);
+      echo json_encode([
+        'messages' => $msgs,
+        'other' => $otherUser ? ['name'=>$otherUser['name'],'avatar'=>$otherUser['avatar_url'],'last_seen'=>$otherUser['last_seen']] : null,
+        'typing' => $isTyping
+      ]);
+      exit;
+    }
+    if ($action === 'typing' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+      $lid = (int)($_POST['lid'] ?? 0);
+      if ($lid > 0) {
+        $pdo->prepare('UPDATE users SET typing_lid=?, typing_at=NOW() WHERE id=?')->execute([$lid, $cu['id']]);
+      }
+      echo json_encode(['ok'=>true]);
       exit;
     }
     if ($action === 'send' && $_SERVER['REQUEST_METHOD'] === 'POST') {
