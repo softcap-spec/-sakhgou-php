@@ -2,13 +2,10 @@
 // home.php — сахгоу.рф v4
 $cu = auth_user();
 $recent = get_recent_listings(24);
-$cat_counts = []; $cat_images = [];
+$cat_counts = [];
 foreach (['property','tour','fishing','rental_gear','car_rental'] as $slug) {
   $r = get_listings($slug, '', 1);
   $cat_counts[$slug] = $r['total'];
-  $img = db()->prepare('SELECT li.filename FROM listing_images li JOIN listings l ON li.listing_id=l.id JOIN categories c ON l.category_id=c.id WHERE c.slug=? ORDER BY RAND() LIMIT 1');
-  $img->execute([$slug]);
-  $cat_images[$slug] = $img->fetchColumn();
 }
 $page_title = 'СахGO — жильё, туры, рыбалка и снаряжение. Сахалин и Курилы';
 require __DIR__ . '/../includes/header.php';
@@ -62,45 +59,30 @@ require __DIR__ . '/../includes/header.php';
   </div>
 </section>
 
-<!-- ═══ Quick Picks Carousel ═══ -->
+<!-- ═══ Quick Picks ═══ -->
 <section class="pb-16">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
     <span class="text-xs uppercase tracking-[0.12em] text-accent font-medium mb-1 inline-block">Быстрые подборки</span>
     <h2 class="font-display text-3xl sm:text-4xl mb-8">Куда поедем?</h2>
-
-    <?php
-    $picks = [
-      ['Жильё','property',130],
-      ['Морские туры','tour',90],
-      ['Рыбалка','fishing',70],
-      ['Снаряжение','rental_gear',110],
-      ['Прокат авто','car_rental',100],
-    ];
-    $pw = 248; $pgap = 14;
-    ?>
-    <div class="relative overflow-hidden" id="picksViewport">
-      <div id="picksTrack" class="flex" style="gap:<?=$pgap?>px">
-        <?php for ($dup = 0; $dup < 2; $dup++): ?>
-        <?php foreach ($picks as $pi => $p): ?>
-        <a href="/catalog/<?=$p[1]?>" class="shrink-0 relative rounded-2xl overflow-hidden group" style="width:<?=$pw?>px;height:<?=$p[3]?>px">
-          <?php if (!empty($cat_images[$p[1]])): ?>
-          <img src="/uploads/<?=h($cat_images[$p[1]])?>" alt="" class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105">
-          <?php endif; ?>
-          <div class="absolute inset-0" style="background:linear-gradient(to top, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.15) 50%, rgba(0,0,0,0.05) 100%)"></div>
-          <div class="absolute inset-0 p-5 flex flex-col justify-end">
-            <span class="text-white/70 text-xs"><?=$cat_counts[$p[1]]?> вариантов</span>
-            <h3 class="font-display text-xl leading-tight text-white mt-0.5"><?=$p[0]?></h3>
-          </div>
-        </a>
-        <?php endforeach; ?>
-        <?php endfor; ?>
-      </div>
-    </div>
-
-    <!-- Dots -->
-    <div class="flex justify-center gap-1.5 mt-4">
-      <?php foreach ($picks as $pi => $_): ?>
-      <button onclick="goPicks(<?=$pi?>)" class="w-1.5 h-1.5 rounded-full transition-all <?=$pi===0?'bg-accent w-5':'bg-accent/20'?>" id="pdot_<?=$pi?>"></button>
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+      <?php
+      $picks = [
+        ['Жильё','property','qp-zhilyo',"https://images.unsplash.com/photo-1560185893-a55cbc8c57e8?w=400&h=320&fit=crop","#4A90A4"],
+        ['Туры','tour','qp-morskie',"https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=320&fit=crop","#3E7A8E"],
+        ['Рыбалка','fishing','qp-rybalka',"https://images.unsplash.com/photo-1545259003-0262736c4985?w=400&h=320&fit=crop","#5E948B"],
+        ['Снаряжение','rental_gear','qp-dzhip',"https://images.unsplash.com/photo-1505051507923-00c6c8f97767?w=400&h=320&fit=crop","#8B7E6A"],
+        ['Прокат','car_rental','qp-prokat',"https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?w=400&h=300&fit=crop","#7B6FA8"],
+      ];
+      foreach ($picks as $pi => $p):
+      ?>
+      <a href="/catalog/<?=$p[1]?>" class="relative rounded-xl overflow-hidden min-h-[160px] flex items-end text-left transition-all hover:-translate-y-0.5 hover:shadow-lg" style="background:linear-gradient(150deg,<?=$p[4]?> 0%,<?=$p[4]?>88 60%,<?=$p[4]?>55 100%)">
+        <img src="<?=$p[3]?>" alt="" class="absolute inset-0 w-full h-full object-cover opacity-40 mix-blend-overlay" referrerpolicy="no-referrer" loading="lazy">
+        <div class="absolute inset-0" style="background:linear-gradient(to top, rgba(0,0,0,0.55) 0%, transparent 60%)"></div>
+        <div class="relative p-5 w-full">
+          <span class="text-white/70 text-xs"><?=$cat_counts[$p[1]]?> вариантов</span>
+          <h3 class="font-display text-xl leading-tight text-white mt-0.5"><?=$p[0]?></h3>
+        </div>
+      </a>
       <?php endforeach; ?>
     </div>
   </div>
@@ -186,59 +168,4 @@ require __DIR__ . '/../includes/header.php';
 </section>
 
 </main>
-
-<script>
-var pStep = <?=$pw + $pgap?>;
-var pTotal = <?=count($picks)?>;
-var pIdx = 0;
-var pTrack = document.getElementById('picksTrack');
-var pAnim = false;
-
-function goPicks(i){
-  pIdx = Math.max(0, Math.min(i, pTotal * 2 - 1));
-  var real = ((pIdx % pTotal) + pTotal) % pTotal;
-  pTrack.style.transition = 'transform 0.5s cubic-bezier(0.25,0.1,0.25,1)';
-  pTrack.style.transform = 'translateX(-'+(pIdx*pStep)+'px)';
-  for(var j=0;j<pTotal;j++){
-    var d=document.getElementById('pdot_'+j);
-    if(d) d.className = 'w-1.5 h-1.5 rounded-full transition-all '+(j===real?'bg-accent w-5':'bg-accent/20');
-  }
-}
-
-pTrack.addEventListener('transitionend', function(){
-  if(pIdx >= pTotal * 2){ pIdx -= pTotal; goPicksSilent(pIdx); }
-  if(pIdx < 0){ pIdx += pTotal; goPicksSilent(pIdx); }
-});
-function goPicksSilent(i){
-  pTrack.style.transition = 'none';
-  pTrack.style.transform = 'translateX(-'+(i*pStep)+'px)';
-  var real = ((i % pTotal) + pTotal) % pTotal;
-  for(var j=0;j<pTotal;j++){
-    var d=document.getElementById('pdot_'+j);
-    if(d) d.className = 'w-1.5 h-1.5 rounded-full transition-all '+(j===real?'bg-accent w-5':'bg-accent/20');
-  }
-}
-
-// Auto-scroll picks every 4s
-setInterval(function(){
-  pIdx++;
-  goPicks(pIdx);
-  if(pIdx >= pTotal * 2 - 1){
-    setTimeout(function(){
-      pIdx = pIdx % pTotal;
-      goPicksSilent(pIdx);
-    }, 550);
-  }
-}, 4000);
-
-// Touch
-var psX=0,psP=0;
-pTrack.addEventListener('touchstart',function(e){psX=e.touches[0].clientX;psP=pIdx*pStep;pTrack.style.transition='none';});
-pTrack.addEventListener('touchmove',function(e){pTrack.style.transform='translateX(-'+(psP+psX-e.touches[0].clientX)+'px)';});
-pTrack.addEventListener('touchend',function(e){var d=psX-(e.changedTouches[0]||{}).clientX||0;if(Math.abs(d)>30)pIdx=Math.round((psP+d)/pStep);goPicks(pIdx);});
-
-// Wheel
-document.getElementById('picksViewport').addEventListener('wheel',function(e){e.preventDefault();if(e.deltaX>10||e.deltaY>10)goPicks(pIdx+1);else if(e.deltaX<-10||e.deltaY<-10)goPicks(pIdx-1);},{passive:false});
-</script>
-
 <?php require __DIR__ . '/../includes/footer.php'; ?>
