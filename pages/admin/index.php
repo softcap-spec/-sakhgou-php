@@ -148,15 +148,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 
   // Banner: add
   if ($_POST['action'] === 'add_banner') {
-    $pdo->prepare("INSERT INTO banners (title, type, content, link, placement, sort_order, is_active) VALUES (?, ?, ?, ?, ?, ?, ?)")
-      ->execute([$_POST['title'], $_POST['type'], $_POST['content'], $_POST['link'] ?: null, $_POST['placement'], (int)$_POST['sort_order'], isset($_POST['is_active']) ? 1 : 0]);
+    $pdo->prepare("INSERT INTO banners (title, type, content, link, placement, sort_order, is_active, is_ad, advertiser, erid) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
+      ->execute([$_POST['title'], $_POST['type'], $_POST['content'], $_POST['link'] ?: null, $_POST['placement'], (int)$_POST['sort_order'], isset($_POST['is_active']) ? 1 : 0, isset($_POST['is_ad']) ? 1 : 0, $_POST['advertiser'] ?: null, $_POST['erid'] ?: null]);
     header('Location: /admin?tab=banners&ok=1');
     exit;
   }
   // Banner: edit
   if ($_POST['action'] === 'edit_banner') {
-    $pdo->prepare("UPDATE banners SET title=?, type=?, content=?, link=?, placement=?, sort_order=?, is_active=? WHERE id=?")
-      ->execute([$_POST['title'], $_POST['type'], $_POST['content'], $_POST['link'] ?: null, $_POST['placement'], (int)$_POST['sort_order'], isset($_POST['is_active']) ? 1 : 0, (int)$_POST['id']]);
+    $pdo->prepare("UPDATE banners SET title=?, type=?, content=?, link=?, placement=?, sort_order=?, is_active=?, is_ad=?, advertiser=?, erid=? WHERE id=?")
+      ->execute([$_POST['title'], $_POST['type'], $_POST['content'], $_POST['link'] ?: null, $_POST['placement'], (int)$_POST['sort_order'], isset($_POST['is_active']) ? 1 : 0, isset($_POST['is_ad']) ? 1 : 0, $_POST['advertiser'] ?: null, $_POST['erid'] ?: null, (int)$_POST['id']]);
     header('Location: /admin?tab=banners&ok=1');
     exit;
   }
@@ -675,7 +675,7 @@ elseif ($tab === 'banners'):
           <div>
             <label class="block text-sm font-medium mb-1">Размещение</label>
             <select name="placement" class="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-accent">
-              <?php $pls = ['home_hero_bottom'=>'Главная: под Hero','home_picks_bottom'=>'Главная: под подборками','home_listings_top'=>'Главная: над объявлениями','home_listings_bottom'=>'Главная: под объявлениями','catalog_top'=>'Каталог: сверху','catalog_sidebar'=>'Каталог: сбоку','listing_sidebar'=>'Объявление: сбоку'];
+              <?php $pls = ['home_hero_bottom'=>'Главная: под Hero','home_picks_bottom'=>'Главная: под подборками','home_listings_top'=>'Главная: над объявлениями','home_listings_inline'=>'Главная: в сетке объявлений','home_listings_bottom'=>'Главная: под объявлениями','catalog_top'=>'Каталог: сверху','catalog_sidebar'=>'Каталог: сбоку','listing_sidebar'=>'Объявление: сбоку'];
               foreach ($pls as $pv=>$pl): ?>
               <option value="<?=$pv?>" <?= ($edit_banner && $edit_banner['placement']===$pv) ? 'selected' : '' ?>><?=$pl?></option>
               <?php endforeach; ?>

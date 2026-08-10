@@ -318,6 +318,23 @@ function render_banners(string $placement): void {
     $banners = $stmt->fetchAll();
     
     foreach ($banners as $b) {
+      // Avito-style: inline ad card inside listing grid
+      if ($b['placement'] === 'home_listings_inline') {
+        if ($b['type'] === 'image') {
+          $wrap = !empty($b['link']) ? '<a href="' . h($b['link']) . '" class="listing-card hover:-translate-y-0.5 hover:shadow-[0_8px_24px_-8px_rgba(0,0,0,0.12)] relative">' : '<div class="listing-card relative">';
+          $close = !empty($b['link']) ? '</a>' : '</div>';
+          echo $wrap;
+          echo '<div class="listing-img"><img src="' . h($b['content']) . '" alt="' . h($b['title']) . '" loading="lazy"></div>';
+          echo '<span class="absolute top-2 left-2 bg-amber-500 text-white text-[10px] px-1.5 py-0.5 rounded font-medium z-10">Реклама</span>';
+          echo '<div class="listing-body"><div class="listing-title">' . h($b['title']) . '</div>';
+          if (!empty($b['advertiser'])) echo '<div class="text-[10px] text-[#7A8A9A] mt-1">' . h($b['advertiser']) . '</div>';
+          echo '</div>' . $close;
+        } else {
+          echo '<div class="listing-card">' . $b['content'] . '</div>';
+        }
+        continue;
+      }
+
       $html = '';
       if ($b['type'] === 'image') {
         $img = '<img src="' . h($b['content']) . '" alt="' . h($b['title']) . '" class="h-[90px] object-cover rounded-lg mx-auto block" loading="lazy" style="width:100%;max-width:600px">';
@@ -335,7 +352,7 @@ function render_banners(string $placement): void {
         $adText = 'Реклама';
         if (!empty($b['advertiser'])) $adText .= '. ' . h($b['advertiser']);
         if (!empty($b['erid'])) $adText .= '. erid: ' . h($b['erid']);
-        echo '<div class="text-[10px] text-[#7A8A9A] mt-1">' . $adText . '</div>';
+        echo '<div class="text-[10px] text-[#7A8A9A] mt-1 text-center">' . $adText . '</div>';
       }
       echo '</div>';
     }
