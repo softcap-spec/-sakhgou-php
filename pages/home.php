@@ -64,6 +64,7 @@ require __DIR__ . '/../includes/header.php';
 
 <!-- ═══ Quick Picks Carousel ═══ -->
 <!-- DEBUG: before picks -->
+<?php echo '<!-- QP_START: '.count($cat_counts).' -->'; ?>
 <section class="pb-16">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
     <span class="text-xs uppercase tracking-[0.12em] text-accent font-medium mb-1 inline-block">Быстрые подборки</span>
