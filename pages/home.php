@@ -1,12 +1,12 @@
 <?php
 // home.php — сахгоу.рф v4
 $cu = auth_user();
+$_db = db();
 // Считаем inline-баннеры — вычитаем из лимита, чтобы сетка не расползалась
 $inline_ads = (int)($_db->query("SELECT COUNT(*) FROM banners WHERE placement='home_listings_inline' AND is_active=1")->fetchColumn());
 $limit = max(1, 24 - $inline_ads);
 $recent = get_recent_listings($limit);
 $cat_counts = []; $cat_images = [];
-$_db = db();
 foreach (['property','tour','fishing','rental_gear','car_rental'] as $slug) {
   $r = get_listings($slug, '', 1);
   $cat_counts[$slug] = $r['total'];
