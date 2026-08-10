@@ -60,6 +60,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
   header('Location: /dashboard?sub=profile&ok=1'); exit;
 }
 
+// POST: change password
+$pw_error = '';
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
+  csrf_check();
+  $result = auth_change_password($user['id'], $_POST['current_password'] ?? '', $_POST['new_password'] ?? '');
+  if ($result['ok']) {
+    header('Location: /dashboard?sub=profile&pwok=1'); exit;
+  }
+  $pw_error = $result['error'];
+}
+
 // POST: delete listing
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete'])) {
   csrf_check();
@@ -287,6 +298,31 @@ require __DIR__ . '/../includes/header.php';
         <button type="submit" name="update_profile" value="1" class="cta-btn" style="width:100%;gap:0.375rem;padding:0.625rem 1.25rem">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
           Сохранить
+        </button>
+      </form>
+
+      <!-- Change Password -->
+      <form method="post" style="background:#fff;border:1px solid #EEF2F6;border-radius:12px;padding:2rem;box-shadow:0 4px 12px rgba(15,23,32,0.06);margin-top:1.5rem">
+        <?= csrf_field() ?>
+        <input type="hidden" name="change_password" value="1">
+        <h3 style="font-family:Manrope,sans-serif;font-weight:700;font-size:1.0625rem;margin:0 0 0.25rem">Смена пароля</h3>
+        <p style="font-size:0.75rem;color:#7A8A9A;margin:0 0 1.25rem">Введите текущий и новый пароль</p>
+        <?php if (isset($_GET['pwok'])): ?>
+        <div class="flash success" style="margin-bottom:1rem">Пароль изменён</div>
+        <?php endif; ?>
+        <?php if ($pw_error): ?>
+        <div style="background:#FEF2F2;border:1px solid #FECACA;color:#DC2626;border-radius:8px;padding:0.75rem 1rem;font-size:0.8125rem;margin-bottom:1rem"><?=h($pw_error)?></div>
+        <?php endif; ?>
+        <div class="form-group">
+          <label>Текущий пароль</label>
+          <input type="password" name="current_password" required style="width:100%;box-sizing:border-box">
+        </div>
+        <div class="form-group">
+          <label>Новый пароль</label>
+          <input type="password" name="new_password" required minlength="6" style="width:100%;box-sizing:border-box">
+        </div>
+        <button type="submit" class="btn-outline" style="width:100%;gap:0.375rem;padding:0.625rem 1.25rem;margin-top:0.5rem">
+          Сменить пароль
         </button>
       </form>
     </div>

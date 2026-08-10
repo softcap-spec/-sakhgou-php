@@ -81,3 +81,17 @@ function admin_required(): array {
   if ($user['role'] !== 'admin') { header('Location: /'); exit; }
   return $user;
 }
+
+function auth_change_password(int $userId, string $current, string $new): array {
+  if (mb_strlen($new) < 6) return ['ok' => false, 'error' => 'Новый пароль должен быть не менее 6 символов'];
+  $pdo = db();
+  $stmt = $pdo->prepare('SELECT password_hash FROM users WHERE id = ?');
+  $stmt->execute([$userId]);
+  $user = $stmt->fetch();
+  if (!$user || !password_verify($current, $user['password_hash'])) {
+    return ['ok' => false, 'error' => 'Текущий пароль неверен'];
+  }
+  $hash = password_hash($new, PASSWORD_BCRYPT);
+  $pdo->prepare('UPDATE users SET password_hash = ? WHERE id = ?')->execute([$hash, $userId]);
+  return ['ok' => true];
+}
