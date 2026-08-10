@@ -45,4 +45,5 @@
     </div>
   </div>
 </footer>
+<?php require_once __DIR__ . '/chat_fab.php'; ?>
 </div></body></html>
