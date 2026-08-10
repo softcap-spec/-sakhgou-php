@@ -320,7 +320,7 @@ function render_banners(string $placement): void {
     foreach ($banners as $b) {
       $html = '';
       if ($b['type'] === 'image') {
-        $img = '<img src="' . h($b['content']) . '" alt="' . h($b['title']) . '" class="w-full h-[90px] object-cover rounded-lg" loading="lazy" style="max-width:600px">';
+        $img = '<img src="' . h($b['content']) . '" alt="' . h($b['title']) . '" class="h-[90px] object-cover rounded-lg mx-auto block" loading="lazy" style="width:100%;max-width:600px">';
         if (!empty($b['link'])) {
           $html = '<a href="' . h($b['link']) . '" class="block max-w-3xl mx-auto">' . $img . '</a>';
         } else {
