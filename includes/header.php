@@ -3,6 +3,8 @@ $page_title = $page_title ?? 'СахGO — жильё, туры, рыбалка 
 $page_description = $page_description ?? 'Маркетплейс туруслуг, жилья и рыбалки для Сахалинской области и Курильских островов.';
 $cu = auth_user();
 $my_count = $cu ? ($cu['unread_notifications'] ?? '') : '';
+// Чистый canonical без query-параметров
+$canonical_path = strtok($_SERVER['REQUEST_URI'] ?? '/', '?');
 ?>
 <!DOCTYPE html>
 <html lang="ru">
@@ -13,8 +15,8 @@ $my_count = $cu ? ($cu['unread_notifications'] ?? '') : '';
 <title><?= h($page_title) ?></title>
 <meta name="description" content="<?= h($page_description) ?>">
 <meta name="robots" content="index, follow">
-<link rel="canonical" href="https://сахгоу.рф<?= h($_SERVER['REQUEST_URI'] ?? '/') ?>">
-<meta property="og:title" content="СахGO">
+<link rel="canonical" href="https://сахгоу.рф<?= h($canonical_path) ?>">
+<meta property="og:title" content="<?= h($page_title) ?>">
 <meta property="og:description" content="Маркетплейс туруслуг, жилья и рыбалки для Сахалина и Курил.">
 <meta property="og:url" content="https://сахгоу.рф">
 <meta property="og:site_name" content="СахGO">
@@ -31,6 +33,31 @@ $my_count = $cu ? ($cu['unread_notifications'] ?? '') : '';
 <script src="https://cdn.tailwindcss.com"></script>
 <script>tailwind.config={theme:{extend:{fontFamily:{sans:['Manrope','Arial','sans-serif'],display:['Manrope','Arial','sans-serif']},colors:{background:'#F7F9FB',foreground:'#121E2B',card:'#FFFFFF','card-foreground':'#121E2B',popover:'#FFFFFF','popover-foreground':'#121E2B',primary:'#121E2B','primary-foreground':'#F7F9FB',secondary:'#EEF2F6','secondary-foreground':'#121E2B',muted:'#8BA0B5','muted-foreground':'#7A8A9A',accent:'#1B6B8A','accent-fg':'#FFFFFF',destructive:'#DC2626',success:'#16A34A',warn:'#EAB308',border:'#DFE4EA',input:'#FFFFFF',ring:'#1B6B8A'},borderRadius:{sm:'0.375rem',DEFAULT:'0.5rem',md:'0.5rem',lg:'0.75rem',xl:'0.75rem'}}}}</script>
 <link rel="stylesheet" href="/includes/style.css?v=10">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "СахGO",
+  "alternateName": "сахгоу.рф",
+  "url": "https://сахгоу.рф",
+  "description": "Маркетплейс туруслуг, жилья и рыбалки для Сахалина и Курил",
+  "potentialAction": {
+    "@type": "SearchAction",
+    "target": "https://сахгоу.рф/search?q={search_term_string}",
+    "query-input": "required name=search_term_string"
+  }
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "СахGO",
+  "url": "https://сахгоу.рф",
+  "logo": "https://сахгоу.рф/logo.png",
+  "sameAs": []
+}
+</script>
 <style>
   *,::before,::after{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-scroll-snap-strictness:proximity;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgb(59 130 246 / 0.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000}*,::before,::after{box-sizing:border-box;border-width:0;border-style:solid;border-color:#DFE4EA}html{line-height:1.5;-webkit-text-size-adjust:100%;tab-size:4;font-family:Manrope,Arial,sans-serif;overflow-y:scroll}body{margin:0;line-height:inherit;background-color:#F7F9FB;color:#121E2B;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}h1,h2,h3{letter-spacing:-0.02em}.font-display{font-family:Manrope,Arial,sans-serif;font-weight:700}
 </style>
