@@ -19,7 +19,8 @@ require __DIR__ . '/../includes/header.php';
 <!-- ═══ Hero ═══ -->
 <section class="py-24 sm:py-32">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="max-w-2xl">
+    <div class="flex items-start gap-8 lg:gap-16">
+    <div class="max-w-2xl flex-1">
       <span class="inline-flex items-center gap-2 text-xs uppercase tracking-[0.16em] text-accent font-semibold mb-5">
         <span class="w-8 h-px bg-accent/30"></span>Маркетплейс Сахалина
       </span>
@@ -30,6 +31,10 @@ require __DIR__ . '/../includes/header.php';
       <p class="text-base sm:text-lg text-[#7A8A9A] max-w-lg leading-relaxed">
         Жильё, джип-туры, морские выходы, рыбалка и снаряжение — напрямую от местных организаторов.
       </p>
+    </div>
+    <div class="hidden lg:block shrink-0">
+      <img src="/hero-bear.png" alt="" class="h-52 w-auto opacity-90">
+    </div>
     </div>
 
     <!-- Search -->
