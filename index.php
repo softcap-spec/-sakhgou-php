@@ -106,9 +106,17 @@ switch ($page) {
         $stmt = $pdo->prepare('SELECT user_id, title FROM listings WHERE id=?');
         $stmt->execute([$lid]);
         $listing = $stmt->fetch();
-        if ($listing && $listing['user_id'] != $cu['id']) {
-          $pdo->prepare('INSERT INTO messages (listing_id,sender_id,receiver_id,text,is_read,created_at) VALUES (?,?,?,?,0,NOW())')->execute([$lid,$cu['id'],$listing['user_id'],$text]);
-          $pdo->prepare('INSERT INTO notifications (user_id,type,text,link,is_read,created_at) VALUES (?,?,?,?,0,NOW())')->execute([$listing['user_id'],'message','Новое сообщение по объявлению «'.$listing['title'].'»','/dashboard']);
+        if ($listing) {
+          // Determine receiver: if sender is owner, receiver is the other user (passed via POST)
+          if ($listing['user_id'] == $cu['id']) {
+            $other = (int)($_POST['uid'] ?? 0);
+            if ($other <= 0 || $other == $cu['id']) { echo json_encode(['error'=>'invalid']); exit; }
+            $receiver = $other;
+          } else {
+            $receiver = $listing['user_id'];
+          }
+          $pdo->prepare('INSERT INTO messages (listing_id,sender_id,receiver_id,text,is_read,created_at) VALUES (?,?,?,?,0,NOW())')->execute([$lid,$cu['id'],$receiver,$text]);
+          $pdo->prepare('INSERT INTO notifications (user_id,type,text,link,is_read,created_at) VALUES (?,?,?,?,0,NOW())')->execute([$receiver,'message','Новое сообщение по объявлению «'.$listing['title'].'»','/dashboard']);
           echo json_encode(['ok'=>true]);
           exit;
         }

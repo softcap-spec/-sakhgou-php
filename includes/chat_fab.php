@@ -318,7 +318,7 @@ function sendMessage() {
   fetch('/api/send', {
     method: 'POST',
     headers: {'Content-Type':'application/x-www-form-urlencoded'},
-    body: 'lid=' + currentLid + '&text=' + encodeURIComponent(text)
+    body: 'lid=' + currentLid + '&uid=' + currentUid + '&text=' + encodeURIComponent(text)
   })
   .then(function(r){return r.json()})
   .then(function(data){
