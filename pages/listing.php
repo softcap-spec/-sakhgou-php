@@ -280,6 +280,39 @@ require __DIR__ . '/../includes/header.php';
           <?php endif; ?>
         </div>
 
+        <!-- Complete your trip -->
+        <?php
+        $cross = ['property'=>['car_rental','tour','fishing','rental_gear'],'tour'=>['car_rental','property','fishing','rental_gear'],'fishing'=>['car_rental','tour','rental_gear','property'],'rental_gear'=>['car_rental','tour','fishing','property'],'car_rental'=>['tour','fishing','rental_gear','property']];
+        $ct = $cross[$lt] ?? ['tour','property','fishing','rental_gear'];
+        $ct_placeholders = implode(',', array_fill(0, count($ct), '?'));
+        $ct_items = $pdo->prepare("SELECT l.id, l.title, l.price, l.listing_type, (SELECT filename FROM listing_images WHERE listing_id=l.id ORDER BY sort_order LIMIT 1) AS img, c.name AS cat_name, c.slug AS cat_slug FROM listings l JOIN categories c ON l.category_id=c.id WHERE l.status='active' AND l.id!=? AND c.slug IN ($ct_placeholders) ORDER BY RAND() LIMIT 4");
+        $ct_items->execute(array_merge([$lid], $ct));
+        $crossItems = $ct_items->fetchAll();
+        ?>
+        <?php if (!empty($crossItems)): ?>
+        <div class="bg-white border border-[#EBEEF2] rounded-xl p-4">
+          <h3 class="font-display text-sm mb-3">Для вашего путешествия</h3>
+          <div class="space-y-3">
+            <?php foreach ($crossItems as $ci): ?>
+            <a href="/listing/<?=$ci['id']?>" class="flex gap-3 group">
+              <div class="w-16 h-16 rounded-lg overflow-hidden bg-[#EEF2F6] shrink-0">
+                <?php if ($ci['img']): ?>
+                <img src="/uploads/<?=h($ci['img'])?>" alt="<?=h($ci['title'])?>" class="w-full h-full object-cover" loading="lazy">
+                <?php else: ?>
+                <div class="w-full h-full flex items-center justify-center text-[#C8D0DA]"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>
+                <?php endif; ?>
+              </div>
+              <div class="min-w-0 flex-1">
+                <div class="text-xs text-[#7A8A9A]"><?=h($ci['cat_name'])?></div>
+                <div class="text-sm font-medium text-[#3A4A5C] truncate group-hover:text-accent transition-colors leading-snug"><?=h($ci['title'])?></div>
+                <div class="text-sm font-semibold text-foreground mt-0.5"><?=number_format((float)$ci['price'],0,'.',' ')?> <span class="text-[0.625rem] font-normal text-[#9AAAB8]"><?=price_label($ci['listing_type'])?></span></div>
+              </div>
+            </a>
+            <?php endforeach; ?>
+          </div>
+        </div>
+        <?php endif; ?>
+
         <!-- Safety note -->
         <div class="bg-[#F7F9FB] border border-[#EBEEF2] rounded-xl p-4">
           <div class="flex gap-2.5">
