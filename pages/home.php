@@ -1,5 +1,5 @@
-﻿<?php
-// home.php тАФ ╤Б╨░╤Е╨│╨╛╤Г.╤А╤Д v4
+<?php
+// home.php — сахгоу.рф v4
 $cu = auth_user();
 $recent = get_recent_listings(24);
 $cat_counts = [];
@@ -7,26 +7,26 @@ foreach (['property','tour','fishing','rental_gear','car_rental'] as $slug) {
   $r = get_listings($slug, '', 1);
   $cat_counts[$slug] = $r['total'];
 }
-$page_title = '╨б╨░╤ЕGO тАФ ╨╢╨╕╨╗╤М╤С, ╤В╤Г╤А╤Л, ╤А╤Л╨▒╨░╨╗╨║╨░ ╨╕ ╤Б╨╜╨░╤А╤П╨╢╨╡╨╜╨╕╨╡. ╨б╨░╤Е╨░╨╗╨╕╨╜ ╨╕ ╨Ъ╤Г╤А╨╕╨╗╤Л';
+$page_title = 'СахGO — жильё, туры, рыбалка и снаряжение. Сахалин и Курилы';
 require __DIR__ . '/../includes/header.php';
 ?>
 
 <main>
 
-<!-- тХРтХРтХР Hero тХРтХРтХР -->
+<!-- ═══ Hero ═══ -->
 <section class="py-24 sm:py-32">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
     <div class="flex items-start gap-8 lg:gap-16">
     <div class="max-w-2xl flex-1">
       <span class="inline-flex items-center gap-2 text-xs uppercase tracking-[0.16em] text-accent font-semibold mb-5">
-        <span class="w-8 h-px bg-accent/30"></span>╨Ь╨░╤А╨║╨╡╤В╨┐╨╗╨╡╨╣╤Б ╨б╨░╤Е╨░╨╗╨╕╨╜╨░
+        <span class="w-8 h-px bg-accent/30"></span>Маркетплейс Сахалина
       </span>
       <h1 class="font-display text-[2.75rem] sm:text-5xl lg:text-[3.5rem] leading-[1.05] tracking-tight text-foreground mb-5">
-        ╨б╨░╤Е╨░╨╗╨╕╨╜ ╨╕ ╨Ъ╤Г╤А╨╕╨╗╤Л тАФ<br>
-        <span class="text-accent">╨▒╨╗╨╕╨╢╨╡, ╤З╨╡╨╝ ╨║╨░╨╢╨╡╤В╤Б╤П</span>
+        Сахалин и Курилы —<br>
+        <span class="text-accent">ближе, чем кажется</span>
       </h1>
       <p class="text-base sm:text-lg text-[#7A8A9A] max-w-lg leading-relaxed">
-        ╨Ц╨╕╨╗╤М╤С, ╨┤╨╢╨╕╨┐-╤В╤Г╤А╤Л, ╨╝╨╛╤А╤Б╨║╨╕╨╡ ╨▓╤Л╤Е╨╛╨┤╤Л, ╤А╤Л╨▒╨░╨╗╨║╨░ ╨╕ ╤Б╨╜╨░╤А╤П╨╢╨╡╨╜╨╕╨╡ тАФ ╨╜╨░╨┐╤А╤П╨╝╤Г╤О ╨╛╤В ╨╝╨╡╤Б╤В╨╜╤Л╤Е ╨╛╤А╨│╨░╨╜╨╕╨╖╨░╤В╨╛╤А╨╛╨▓.
+        Жильё, джип-туры, морские выходы, рыбалка и снаряжение — напрямую от местных организаторов.
       </p>
     </div>
     <div class="hidden lg:block shrink-0">
@@ -40,18 +40,18 @@ require __DIR__ . '/../includes/header.php';
         <div class="flex items-center bg-white border border-[#DFE4EA] rounded-xl shadow-sm focus-within:border-accent focus-within:ring-1 focus-within:ring-accent transition-colors">
           <div class="flex-1 flex items-center gap-2.5 px-4">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-[#9AAAB8] shrink-0"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
-            <input type="text" name="q" placeholder="╨Ъ╨▓╨░╤А╤В╨╕╤А╨░, ╨┤╨╢╨╕╨┐-╤В╤Г╤А, ╤Б╨╜╨╛╤Г╨▒╨╛╤А╨┤, ╤А╤Л╨▒╨░╨╗╨║╨░..." class="w-full h-14 bg-transparent border-0 text-base placeholder:text-[#9AAAB8] focus:outline-none">
+            <input type="text" name="q" placeholder="Квартира, джип-тур, сноуборд, рыбалка..." class="w-full h-14 bg-transparent border-0 text-base placeholder:text-[#9AAAB8] focus:outline-none">
           </div>
           <div class="p-1.5">
             <button type="submit" class="inline-flex items-center justify-center bg-accent text-white hover:bg-accent/90 h-11 px-6 rounded-lg text-sm font-semibold transition-colors">
-              ╨Э╨░╨╣╤В╨╕
+              Найти
             </button>
           </div>
         </div>
       </form>
       <div class="flex flex-wrap items-center gap-2 mt-3">
-        <span class="text-xs text-[#9AAAB8] mr-1">╨з╨░╤Б╤В╨╛ ╨╕╤Й╤Г╤В:</span>
-        <?php foreach (['╨Ь╨░╤П╨║ ╨Р╨╜╨╕╨▓╨░','╨Ф╨╢╨╕╨┐-╤В╤Г╤А','╨б╨╜╨╛╤Г╨▒╨╛╤А╨┤','╨Ъ╨▓╨░╤А╤В╨╕╤А╨░ ╨┐╨╛╤Б╤Г╤В╨╛╤З╨╜╨╛','╨а╤Л╨▒╨░╨╗╨║╨░'] as $tag): ?>
+        <span class="text-xs text-[#9AAAB8] mr-1">Часто ищут:</span>
+        <?php foreach (['Маяк Анива','Джип-тур','Сноуборд','Квартира посуточно','Рыбалка'] as $tag): ?>
         <a href="/search?q=<?=urlencode($tag)?>" class="px-2.5 py-1 text-xs rounded-md text-[#54677A] hover:text-foreground hover:bg-[#EEF2F6] transition-colors"><?=$tag?></a>
         <?php endforeach; ?>
       </div>
@@ -59,19 +59,19 @@ require __DIR__ . '/../includes/header.php';
   </div>
 </section>
 
-<!-- тХРтХРтХР Quick Picks тХРтХРтХР -->
+<!-- ═══ Quick Picks ═══ -->
 <section class="pb-16">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <span class="text-xs uppercase tracking-[0.12em] text-accent font-medium mb-1 inline-block">╨С╤Л╤Б╤В╤А╤Л╨╡ ╨┐╨╛╨┤╨▒╨╛╤А╨║╨╕</span>
-    <h2 class="font-display text-3xl sm:text-4xl mb-8">╨Ъ╤Г╨┤╨░ ╨┐╨╛╨╡╨┤╨╡╨╝?</h2>
+    <span class="text-xs uppercase tracking-[0.12em] text-accent font-medium mb-1 inline-block">Быстрые подборки</span>
+    <h2 class="font-display text-3xl sm:text-4xl mb-8">Куда поедем?</h2>
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
       <?php
       $picks = [
-        ['╨Ц╨╕╨╗╤М╤С','property','qp-zhilyo',"https://images.unsplash.com/photo-1560185893-a55cbc8c57e8?w=400&h=320&fit=crop","#4A90A4"],
-        ['╨в╤Г╤А╤Л','tour','qp-morskie',"https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=320&fit=crop","#3E7A8E"],
-        ['╨а╤Л╨▒╨░╨╗╨║╨░','fishing','qp-rybalka',"https://images.unsplash.com/photo-1545259003-0262736c4985?w=400&h=320&fit=crop","#5E948B"],
-        ['╨б╨╜╨░╤А╤П╨╢╨╡╨╜╨╕╨╡','rental_gear','qp-dzhip',"https://images.unsplash.com/photo-1505051507923-00c6c8f97767?w=400&h=320&fit=crop","#8B7E6A"],
-        ['╨Я╤А╨╛╨║╨░╤В','car_rental','qp-prokat',"https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?w=400&h=300&fit=crop","#7B6FA8"],
+        ['Жильё','property','qp-zhilyo',"https://images.unsplash.com/photo-1560185893-a55cbc8c57e8?w=400&h=320&fit=crop","#4A90A4"],
+        ['Туры','tour','qp-morskie',"https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=320&fit=crop","#3E7A8E"],
+        ['Рыбалка','fishing','qp-rybalka',"https://images.unsplash.com/photo-1545259003-0262736c4985?w=400&h=320&fit=crop","#5E948B"],
+        ['Снаряжение','rental_gear','qp-dzhip',"https://images.unsplash.com/photo-1505051507923-00c6c8f97767?w=400&h=320&fit=crop","#8B7E6A"],
+        ['Прокат','car_rental','qp-prokat',"https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?w=400&h=300&fit=crop","#7B6FA8"],
       ];
       foreach ($picks as $pi => $p):
       ?>
@@ -79,7 +79,7 @@ require __DIR__ . '/../includes/header.php';
         <img src="<?=$p[3]?>" alt="" class="absolute inset-0 w-full h-full object-cover opacity-40 mix-blend-overlay" referrerpolicy="no-referrer" loading="lazy">
         <div class="absolute inset-0" style="background:linear-gradient(to top, rgba(0,0,0,0.55) 0%, transparent 60%)"></div>
         <div class="relative p-5 w-full">
-          <span class="text-white/70 text-xs"><?=$cat_counts[$p[1]]?> ╨▓╨░╤А╨╕╨░╨╜╤В╨╛╨▓</span>
+          <span class="text-white/70 text-xs"><?=$cat_counts[$p[1]]?> вариантов</span>
           <h3 class="font-display text-xl leading-tight text-white mt-0.5"><?=$p[0]?></h3>
         </div>
       </a>
@@ -88,17 +88,17 @@ require __DIR__ . '/../includes/header.php';
   </div>
 </section>
 
-<!-- тХРтХРтХР Popular Listings тХРтХРтХР -->
+<!-- ═══ Popular Listings ═══ -->
 <section class="py-16 bg-white border-t border-[#EBEEF2]">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
     <div class="flex flex-wrap items-end justify-between gap-4 mb-10">
       <div>
-        <span class="text-xs uppercase tracking-[0.12em] text-accent font-medium">╨Я╨╛╨┐╤Г╨╗╤П╤А╨╜╨╛╨╡ ╤Б╨╡╨╣╤З╨░╤Б</span>
-        <h2 class="font-display text-3xl sm:text-4xl tracking-tight mt-1">╨Т╤Л╨▒╨╛╤А ╨┐╤Г╤В╨╡╤И╨╡╤Б╤В╨▓╨╡╨╜╨╜╨╕╨║╨╛╨▓</h2>
+        <span class="text-xs uppercase tracking-[0.12em] text-accent font-medium">Популярное сейчас</span>
+        <h2 class="font-display text-3xl sm:text-4xl tracking-tight mt-1">Выбор путешественников</h2>
       </div>
       <div class="flex gap-1 flex-wrap">
         <?php
-        $cats_filter = ['all'=>'╨Т╤Б╤С','property'=>'╨Ц╨╕╨╗╤М╤С','tour'=>'╨в╤Г╤А╤Л','fishing'=>'╨а╤Л╨▒╨░╨╗╨║╨░','rental_gear'=>'╨б╨╜╨░╤А╤П╨╢╨╡╨╜╨╕╨╡','car_rental'=>'╨Я╤А╨╛╨║╨░╤В ╨░╨▓╤В╨╛'];
+        $cats_filter = ['all'=>'Всё','property'=>'Жильё','tour'=>'Туры','fishing'=>'Рыбалка','rental_gear'=>'Снаряжение','car_rental'=>'Прокат авто'];
         $active_cat = $_GET['cat'] ?? 'all';
         foreach ($cats_filter as $k=>$v):
         ?>
@@ -112,9 +112,9 @@ require __DIR__ . '/../includes/header.php';
         <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[#EEF2F6] mb-4">
           <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#9AAAB8" stroke-width="1.5"><rect x="2" y="2" width="20" height="20" rx="2"/><path d="M12 8v8M8 12h8"/></svg>
         </div>
-        <p class="text-lg font-medium text-[#3A4A5C]">╨Э╨╕╤З╨╡╨│╨╛ ╨╜╨╡ ╨╜╨░╨╣╨┤╨╡╨╜╨╛</p>
-        <p class="text-sm text-[#7A8A9A] mt-1 mb-4">╨б╤В╨░╨╜╤М╤В╨╡ ╨┐╨╡╤А╨▓╤Л╨╝ ╨╛╤А╨│╨░╨╜╨╕╨╖╨░╤В╨╛╤А╨╛╨╝ ╨╜╨░ ╨б╨░╤Е╨░╨╗╨╕╨╜╨╡</p>
-        <a href="/create" class="cta-btn">╨Я╨╛╨┤╨░╤В╤М ╨╛╨▒╤К╤П╨▓╨╗╨╡╨╜╨╕╨╡</a>
+        <p class="text-lg font-medium text-[#3A4A5C]">Ничего не найдено</p>
+        <p class="text-sm text-[#7A8A9A] mt-1 mb-4">Станьте первым организатором на Сахалине</p>
+        <a href="/create" class="cta-btn">Подать объявление</a>
       </div>
     <?php else: ?>
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -126,14 +126,14 @@ require __DIR__ . '/../includes/header.php';
             <?php endif; ?>
           </div>
           <?php if (!empty($item['promo_type'])): ?>
-          <span class="promo-badge absolute top-2.5 left-2.5 <?=$item['promo_type']==='top'?'bg-red-600':($item['promo_type']==='highlight'?'bg-amber-500':'bg-red-500')?>"><?=$item['promo_type']==='top'?'TOP':($item['promo_type']==='highlight'?'PROMO':'╨б╤А╨╛╤З╨╜╨╛')?></span>
+          <span class="promo-badge absolute top-2.5 left-2.5 <?=$item['promo_type']==='top'?'bg-red-600':($item['promo_type']==='highlight'?'bg-amber-500':'bg-red-500')?>"><?=$item['promo_type']==='top'?'TOP':($item['promo_type']==='highlight'?'PROMO':'Срочно')?></span>
           <?php endif; ?>
           <div class="listing-body">
             <div class="listing-price"><?=number_format((float)$item['price'],0,'.',' ')?> <span class="text-xs font-normal text-[#9AAAB8]"><?=price_label($item['listing_type'])?></span></div>
             <div class="listing-title"><?=h($item['title'])?></div>
             <div class="listing-meta">
               <span><?=h($item['category_name'])?></span>
-              <span>┬╖</span>
+              <span>·</span>
               <span><?=time_ago($item['created_at'])?></span>
             </div>
           </div>
@@ -144,7 +144,7 @@ require __DIR__ . '/../includes/header.php';
       <?php if (count($recent) >= 24): ?>
       <div class="text-center mt-10">
         <a href="/catalog" class="inline-flex items-center justify-center border border-[#DFE4EA] hover:border-accent hover:text-accent rounded-lg h-10 px-6 text-sm font-medium transition-colors">
-          ╨Т╤Б╨╡ ╨╛╨▒╤К╤П╨▓╨╗╨╡╨╜╨╕╤П
+          Все объявления
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" class="ml-1.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
         </a>
       </div>
@@ -153,15 +153,15 @@ require __DIR__ . '/../includes/header.php';
   </div>
 </section>
 
-<!-- тХРтХРтХР CTA тХРтХРтХР -->
+<!-- ═══ CTA ═══ -->
 <section class="py-20 bg-foreground text-white">
   <div class="max-w-3xl mx-auto px-4 text-center">
-    <h2 class="font-display text-3xl sm:text-4xl leading-[1.1] mb-4">╨а╨░╨╖╨╝╨╡╤Б╤В╨╕╤В╨╡ ╤Б╨▓╨╛╤С ╨╛╨▒╤К╤П╨▓╨╗╨╡╨╜╨╕╨╡</h2>
+    <h2 class="font-display text-3xl sm:text-4xl leading-[1.1] mb-4">Разместите своё объявление</h2>
     <p class="text-white/60 text-base max-w-xl mx-auto mb-8 leading-relaxed">
-      ╨б╨┤╨░╨▓╨░╨╣╤В╨╡ ╨╢╨╕╨╗╤М╤С, ╨┐╤А╨╡╨┤╨╗╨░╨│╨░╨╣╤В╨╡ ╤В╤Г╤А╤Л ╨╕ ╤А╤Л╨▒╨░╨╗╨║╤Г ╨╕╨╗╨╕ ╤Б╨┤╨░╨▓╨░╨╣╤В╨╡ ╤Б╨╜╨░╤А╤П╨╢╨╡╨╜╨╕╨╡. ╨Э╨░╨╣╨┤╨╕╤В╨╡ ╨│╨╛╤Б╤В╨╡╨╣ ╤Б╨╛ ╨▓╤Б╨╡╨╣ ╨а╨╛╤Б╤Б╨╕╨╕.
+      Сдавайте жильё, предлагайте туры и рыбалку или сдавайте снаряжение. Найдите гостей со всей России.
     </p>
     <a href="/create" class="inline-flex items-center justify-center bg-white text-foreground hover:bg-white/90 h-11 px-8 rounded-lg text-sm font-semibold transition-colors">
-      ╨Я╨╛╨┤╨░╤В╤М ╨╛╨▒╤К╤П╨▓╨╗╨╡╨╜╨╕╨╡
+      Подать объявление
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="ml-1.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
     </a>
   </div>
