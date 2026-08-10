@@ -332,10 +332,10 @@ function render_banners(string $placement): void {
       
       echo '<div class="my-4 max-w-7xl mx-auto relative">' . $html;
       if (!empty($b['is_ad'])) {
-        $adInfo = 'Реклама';
-        if (!empty($b['advertiser'])) $adInfo .= '. ' . h($b['advertiser']);
-        if (!empty($b['erid'])) $adInfo .= '. erid: ' . h($b['erid']);
-        echo '<span class="absolute top-1 right-2 bg-black/60 text-white text-[10px] px-1.5 py-0.5 rounded" title="' . h($adInfo) . '">Реклама</span>';
+        $adText = 'Реклама';
+        if (!empty($b['advertiser'])) $adText .= '. ' . h($b['advertiser']);
+        if (!empty($b['erid'])) $adText .= '. erid: ' . h($b['erid']);
+        echo '<div class="text-[10px] text-[#7A8A9A] mt-1">' . $adText . '</div>';
       }
       echo '</div>';
     }
