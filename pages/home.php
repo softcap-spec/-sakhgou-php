@@ -1,7 +1,10 @@
 <?php
 // home.php — сахгоу.рф v4
 $cu = auth_user();
-$recent = get_recent_listings(24);
+// Считаем inline-баннеры — вычитаем из лимита, чтобы сетка не расползалась
+$inline_ads = (int)($_db->query("SELECT COUNT(*) FROM banners WHERE placement='home_listings_inline' AND is_active=1")->fetchColumn());
+$limit = max(1, 24 - $inline_ads);
+$recent = get_recent_listings($limit);
 $cat_counts = []; $cat_images = [];
 $_db = db();
 foreach (['property','tour','fishing','rental_gear','car_rental'] as $slug) {
@@ -154,7 +157,7 @@ require __DIR__ . '/../includes/header.php';
       </div>
 
       <?php render_banners('home_listings_bottom'); ?>
-      <?php if (count($recent) >= 24): ?>
+      <?php if (count($recent) >= $limit): ?>
       <div class="text-center mt-10">
         <a href="/catalog" class="inline-flex items-center justify-center border border-[#DFE4EA] hover:border-accent hover:text-accent rounded-lg h-10 px-6 text-sm font-medium transition-colors">
           Все объявления
