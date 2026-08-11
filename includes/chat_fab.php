@@ -260,8 +260,8 @@ function loadMessages(){
    var time=d.toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'});
    var statusHtml='';
    if(mine){
-    if(m.is_read=='1')statusHtml='<svg width="12" height="12" viewBox="0 0 24 24" fill="#4ADE80"><path d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z"/><path d="M17 16.2L12.8 12l-1.4 1.4L17 19l1.4-1.4z"/></svg>';
-    else statusHtml='<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.5)" stroke-width="2"><path d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z"/></svg>';
+    if(m.is_read=='1')statusHtml='<span style="color:#4ADE80;font-size:10px;line-height:1">✓✓</span>';
+    else statusHtml='<span style="color:rgba(255,255,255,.5);font-size:10px;line-height:1">✓</span>';
    }
    html+='<div class="chat-msg-group '+(mine?'mine':'theirs')+'">';
    if(!mine){html+='<div class="chat-msg-avatar">'+(otherAvatar?'<img src="'+escapeHtml(otherAvatar)+'" alt="">':escapeHtml(otherName.substring(0,2)))+'</div>'}
