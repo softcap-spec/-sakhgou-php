@@ -356,9 +356,24 @@ require __DIR__ . '/../includes/header.php';
 
 <!-- Chat Modal -->
 <?php if ($cu && !$isOwner): ?>
+<style>
+#chatModal .cm-msgs{flex:1;overflow-y:auto;padding:.625rem .875rem;display:flex;flex-direction:column;gap:.25rem;background:#fff}
+#chatModal .cm-row{display:flex;max-width:80%;flex-direction:column}
+#chatModal .cm-row.out{align-self:flex-end;align-items:flex-end}
+#chatModal .cm-row.in{align-self:flex-start;align-items:flex-start}
+#chatModal .cm-bubble{padding:.5rem .75rem;border-radius:14px;font-size:.875rem;line-height:1.35;word-wrap:break-word}
+#chatModal .cm-row.out .cm-bubble{background:#E8F4FB;color:#121E2B;border-bottom-right-radius:4px}
+#chatModal .cm-row.in .cm-bubble{background:#EEF2F6;color:#121E2B;border-bottom-left-radius:4px}
+#chatModal .cm-meta{display:flex;align-items:center;gap:.25rem;margin-top:.125rem;font-size:.6875rem;color:#9AAAB8;padding:0 .25rem}
+#chatModal .cm-row.out .cm-meta{justify-content:flex-end}
+#chatModal .cm-tick{display:inline-block;font-size:14px;font-weight:700;line-height:1;margin-left:2px}
+#chatModal .cm-tick.read{color:#39B54A}
+#chatModal .cm-tick.unread{color:#BFC8D4}
+#chatModal .cm-date{text-align:center;font-size:.6875rem;color:#9AAAB8;margin:.5rem 0;padding:.25rem .5rem;background:#F7F9FB;border-radius:8px;align-self:center}
+</style>
 <div id="chatModal" class="fixed inset-0 z-[100] hidden" style="background:rgba(15,23,32,0.4)">
   <div class="absolute inset-0" onclick="closeChatModal()"></div>
-  <div class="absolute bottom-0 right-0 sm:bottom-6 sm:right-6 w-full sm:w-96 h-[70vh] sm:h-[32rem] bg-white sm:rounded-xl flex flex-col overflow-hidden shadow-2xl">
+  <div class="absolute bottom-0 right-0 sm:bottom-6 sm:right-6 w-full sm:w-96 h-[70vh] sm:h-[34rem] bg-white sm:rounded-2xl flex flex-col overflow-hidden shadow-2xl">
     <!-- Header -->
     <div class="flex items-center justify-between px-4 py-3 border-b border-[#EBEEF2]">
       <div class="flex items-center gap-2.5 min-w-0">
@@ -373,14 +388,16 @@ require __DIR__ . '/../includes/header.php';
       </button>
     </div>
     <!-- Messages -->
-    <div id="cmMessages" class="flex-1 overflow-y-auto p-4 flex flex-col gap-2">
-      <div class="text-center text-xs text-[#9AAAB8] py-4">Загрузка...</div>
+    <div id="cmMessages" class="cm-msgs">
+      <div style="text-align:center;color:#9AAAB8;font-size:.875rem;padding:2rem 0">Загрузка...</div>
     </div>
     <!-- Input -->
-    <div class="border-t border-[#EBEEF2] p-3 flex gap-2">
-      <input type="text" id="cmInput" placeholder="Сообщение..." class="flex-1 border border-[#DFE4EA] rounded-lg px-3 py-2 text-sm outline-none focus:border-accent" onkeydown="if(event.key==='Enter')cmSend()">
-      <button onclick="cmSend()" class="w-9 h-9 rounded-lg bg-accent text-white flex items-center justify-center hover:bg-accent/90 transition-colors">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+    <div style="border-top:1px solid #EBEEF2;padding:.5rem .75rem;display:flex;gap:.375rem;align-items:center;background:#fff">
+      <div style="flex:1;position:relative">
+        <input type="text" id="cmInput" placeholder="Сообщение..." style="width:100%;border:1px solid #DFE4EA;border-radius:22px;padding:.5rem 1rem;font-size:.875rem;outline:none;background:#F7F9FB" onkeydown="if(event.key==='Enter')cmSend()" oninput="cmTyping()">
+      </div>
+      <button onclick="cmSend()" style="width:2.5rem;height:2.5rem;border:0;border-radius:50%;background:#1B6B8A;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
       </button>
     </div>
   </div>
@@ -390,6 +407,7 @@ var cmLid = <?=$lid?>;
 var cmUid = <?=json_encode($cu['id'])?>;
 var cmHost = <?=json_encode((int)$item['user_id'])?>;
 var cmPoll = null;
+var cmTypingTimer = null;
 
 function openChatModal() {
   document.getElementById('chatModal').classList.remove('hidden');
@@ -404,31 +422,41 @@ function closeChatModal() {
   if (cmPoll) { clearInterval(cmPoll); cmPoll = null; }
 }
 function cmLoad() {
-  fetch('/api/messages?lid=' + cmLid + '&uid=' + cmHost)
+  fetch('/api/messages?lid=' + cmLid + '&uid=' + cmHost + '&_=' + Date.now())
     .then(function(r){return r.json()})
     .then(function(data){
       var box = document.getElementById('cmMessages');
       if (!data.messages || data.messages.length === 0) {
-        box.innerHTML = '<div class="text-center text-xs text-[#9AAAB8] py-4">Напишите первое сообщение</div>';
+        box.innerHTML = '<div style="text-align:center;color:#9AAAB8;font-size:.875rem;padding:2rem 0">Напишите первое сообщение</div>';
         return;
       }
-      var html = '';
+      var html = '', lastDate = '';
       for (var i=0; i<data.messages.length; i++) {
         var m = data.messages[i];
-        var mine = m.sender_id == cmUid;
-        var cls = mine ? 'bg-accent text-white self-end' : 'bg-[#EEF2F6] text-foreground self-start';
-        var time = new Date(m.created_at.replace(/-/g,'/')).toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'});
-        var ticks = '';
+        var d = new Date(m.created_at.replace(/-/g,'/'));
+        var dateStr = d.toLocaleDateString('ru-RU',{day:'numeric',month:'long'});
+        if (dateStr !== lastDate) { html += '<div class="cm-date">'+dateStr+'</div>'; lastDate = dateStr; }
+        var mine = (parseInt(m.sender_id) === cmUid);
+        var time = d.toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'});
+        var tick = '';
         if (mine) {
-          if (m.is_read == 1) ticks = '<span style="color:#4ADE80;font-size:10px">✓✓</span>';
-          else ticks = '<span style="color:rgba(255,255,255,.5);font-size:10px">✓</span>';
+          var read = (m.is_read==1||m.is_read==='1'||m.is_read===true||parseInt(m.is_read)===1);
+          tick = '<span class="cm-tick '+(read?'read':'unread')+'">'+(read?'\u2713\u2713':'\u2713')+'</span>';
         }
-        html += '<div class="'+cls+' rounded-lg px-3 py-1.5 text-sm max-w-[80%]" style="word-wrap:break-word">'+escapeHtml(m.text)+'<div class="text-[0.625rem] '+(mine?'text-white/60':'text-[#9AAAB8]')+' mt-0.5">'+time+' '+ticks+'</div></div>';
+        html += '<div class="cm-row '+(mine?'out':'in')+'">';
+        html += '<div class="cm-bubble">'+escapeHtml(m.text)+'</div>';
+        html += '<div class="cm-meta"><span>'+time+'</span>'+tick+'</div>';
+        html += '</div>';
       }
       box.innerHTML = html;
       box.scrollTop = box.scrollHeight;
     })
     .catch(function(){});
+}
+function cmTyping() {
+  if (cmTypingTimer) clearTimeout(cmTypingTimer);
+  cmTypingTimer = setTimeout(function(){}, 500);
+  fetch('/api/typing?_='+Date.now(), {method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'lid='+cmLid}).catch(function(){});
 }
 function cmSend() {
   var input = document.getElementById('cmInput');
@@ -436,7 +464,7 @@ function cmSend() {
   if (!text) return;
   input.value = '';
   input.disabled = true;
-  fetch('/api/send', {
+  fetch('/api/send?_='+Date.now(), {
     method: 'POST',
     headers: {'Content-Type':'application/x-www-form-urlencoded'},
     body: 'lid=' + cmLid + '&text=' + encodeURIComponent(text)

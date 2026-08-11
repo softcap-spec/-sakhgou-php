@@ -1,5 +1,5 @@
 <?php
-// chat_fab.php — Avito-style chat v5: avatars, typing, read receipts, status
+// chat_fab.php — Avito-style chat v6
 $cu = auth_user();
 if (!$cu) return;
 $pdo = db();
@@ -50,71 +50,78 @@ $myId = (int)$cu['id'];
 .chat-fab-bell{background:#fff;color:#121E2B;border:1px solid #DFE4EA}
 .chat-fab-badge{position:absolute;top:-4px;right:-4px;background:#DC2626;color:#fff;font-size:.625rem;font-weight:700;min-width:1.125rem;height:1.125rem;border-radius:9999px;display:flex;align-items:center;justify-content:center;border:2px solid #fff;padding:0 .25rem}
 
-.chat-widget{position:fixed;bottom:4.5rem;right:1.25rem;z-index:91;width:24rem;height:32rem;max-height:calc(100vh - 6rem);background:#fff;border-radius:12px;box-shadow:0 20px 50px -10px rgba(15,23,32,0.2);display:none;flex-direction:column;overflow:hidden;border:1px solid #EBEEF2}
+.chat-widget{position:fixed;bottom:4.5rem;right:1.25rem;z-index:91;width:24rem;height:34rem;max-height:calc(100vh - 6rem);background:#fff;border-radius:16px;box-shadow:0 24px 60px -12px rgba(15,23,32,0.25);display:none;flex-direction:column;overflow:hidden}
 .chat-widget.open{display:flex}
-.chat-widget-header{padding:.875rem 1rem;border-bottom:1px solid #EBEEF2;display:flex;align-items:center;justify-content:space-between;background:#fff;flex-shrink:0}
-.chat-widget-title{font-size:.875rem;font-weight:600;color:#121E2B}
-.chat-widget-close{width:1.75rem;height:1.75rem;border:0;background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;border-radius:6px;color:#7A8A9A;transition:all .15s}
-.chat-widget-close:hover{background:#F7F9FB;color:#121E2B}
-.chat-widget-body{flex:1;overflow-y:auto}
-.chat-widget-empty{padding:2rem 1rem;text-align:center;color:#9AAAB8;font-size:.8125rem}
 
-.chat-list-item{padding:.75rem 1rem;border-bottom:1px solid #F0F3F7;cursor:pointer;transition:background .15s;display:flex;gap:.625rem;align-items:center}
+/* Header */
+.chat-w-header{padding:.75rem 1rem;display:flex;align-items:center;justify-content:space-between;background:#fff;border-bottom:1px solid #EBEEF2;flex-shrink:0}
+.chat-w-title{font-size:1rem;font-weight:700;color:#121E2B}
+.chat-w-close{width:2rem;height:2rem;border:0;background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;border-radius:8px;color:#7A8A9A;transition:all .15s}
+.chat-w-close:hover{background:#F0F3F7;color:#121E2B}
+.chat-w-body{flex:1;overflow-y:auto}
+
+/* Chat list */
+.chat-list-item{padding:.75rem 1rem;border-bottom:1px solid #F0F3F7;cursor:pointer;transition:background .12s;display:flex;gap:.625rem;align-items:center}
 .chat-list-item:hover{background:#F7F9FB}
-.chat-list-avatar{width:2.5rem;height:2.5rem;border-radius:50%;background:#EEF2F6;display:flex;align-items:center;justify-content:center;font-weight:700;color:#7A8A9A;font-size:.75rem;overflow:hidden;flex-shrink:0}
-.chat-list-avatar img{width:100%;height:100%;object-fit:cover}
-.chat-list-name{font-size:.8125rem;font-weight:600;color:#121E2B;line-height:1.2}
-.chat-list-preview{font-size:.75rem;color:#7A8A9A;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:.125rem}
-.chat-list-meta{font-size:.625rem;color:#9AAAB8;margin-top:.25rem}
-.chat-list-time{font-size:.625rem;color:#9AAAB8}
-.chat-list-unread{background:#DC2626;color:#fff;font-size:.5625rem;font-weight:700;min-width:1rem;height:1rem;border-radius:9999px;display:flex;align-items:center;justify-content:center;padding:0 .25rem;flex-shrink:0;margin-left:auto}
+.chat-avatar{border-radius:50%;background:#EEF2F6;display:flex;align-items:center;justify-content:center;font-weight:600;color:#7A8A9A;overflow:hidden;flex-shrink:0}
+.chat-avatar.lg{width:2.75rem;height:2.75rem;font-size:.75rem}
+.chat-avatar.md{width:2.25rem;height:2.25rem;font-size:.625rem}
+.chat-avatar.sm{width:1.75rem;height:1.75rem;font-size:.5rem}
+.chat-avatar img{width:100%;height:100%;object-fit:cover}
+.chat-list-name{font-size:.875rem;font-weight:600;color:#121E2B;line-height:1.2}
+.chat-list-preview{font-size:.75rem;color:#7A8A9A;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:.125rem;max-width:14rem}
+.chat-list-time{font-size:.6875rem;color:#9AAAB8;white-space:nowrap}
+.chat-list-unread{background:#DC2626;color:#fff;font-size:.625rem;font-weight:700;min-width:1.125rem;height:1.125rem;border-radius:9999px;display:flex;align-items:center;justify-content:center;padding:0 .25rem;flex-shrink:0;margin-left:auto}
+.chat-list-meta{font-size:.6875rem;color:#9AAAB8;margin-top:.125rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
+/* Thread */
 .chat-thread{display:none;flex-direction:column;height:100%}
 .chat-thread.active{display:flex}
-.chat-thread-back{display:flex;align-items:center;gap:.5rem;padding:.625rem .875rem;border-bottom:1px solid #EBEEF2;cursor:pointer;background:#fff;flex-shrink:0}
-.chat-thread-back:hover{background:#F7F9FB}
-.chat-thread-avatar{width:2.25rem;height:2.25rem;border-radius:50%;background:#EEF2F6;display:flex;align-items:center;justify-content:center;font-weight:700;color:#7A8A9A;font-size:.625rem;overflow:hidden;flex-shrink:0}
-.chat-thread-avatar img{width:100%;height:100%;object-fit:cover}
-.chat-thread-name{font-weight:600;color:#121E2B;font-size:.8125rem;line-height:1.2}
+.chat-thread-hdr{display:flex;align-items:center;gap:.5rem;padding:.625rem .875rem;border-bottom:1px solid #EBEEF2;background:#fff;flex-shrink:0}
+.chat-thread-hdr:hover{background:#F7F9FB}
+.chat-thread-name{font-weight:700;color:#121E2B;font-size:.875rem;line-height:1.2}
 .chat-thread-status{font-size:.6875rem;color:#9AAAB8}
 .chat-thread-status.online{color:#16A34A}
-.chat-thread-listing{font-size:.6875rem;color:#9AAAB8;margin-top:.125rem}
-.chat-thread-back-arrow{color:#7A8A9A;flex-shrink:0}
+.chat-thread-back{color:#7A8A9A;flex-shrink:0;cursor:pointer;background:none;border:0;padding:.25rem}
 
-.chat-messages{flex:1;overflow-y:auto;padding:.75rem;display:flex;flex-direction:column;gap:.375rem;background:#F7F9FB}
-.chat-date-sep{text-align:center;font-size:.625rem;color:#9AAAB8;margin:.5rem 0}
-.chat-msg-row{display:flex;width:100%}
-.chat-msg-row.out{justify-content:flex-end}
-.chat-msg-row.in{justify-content:flex-start}
-.chat-msg-avatar-sm{width:1.5rem;height:1.5rem;border-radius:50%;background:#EEF2F6;display:flex;align-items:center;justify-content:center;font-weight:700;color:#7A8A9A;font-size:.5rem;overflow:hidden;flex-shrink:0;margin-right:.375rem;align-self:flex-end;margin-bottom:1.25rem}
-.chat-msg-avatar-sm img{width:100%;height:100%;object-fit:cover}
-.chat-msg-content{max-width:75%}
-.chat-msg-bubble{padding:.5rem .75rem;border-radius:12px;font-size:.8125rem;line-height:1.4;word-wrap:break-word}
-.chat-msg-row.out .chat-msg-bubble{background:#1B6B8A;color:#fff;border-bottom-right-radius:4px}
-.chat-msg-row.in .chat-msg-bubble{background:#fff;color:#121E2B;border-bottom-left-radius:4px;box-shadow:0 1px 2px rgba(0,0,0,0.04)}
-.chat-msg-info{display:flex;align-items:center;gap:.25rem;margin-top:.125rem;font-size:.625rem}
-.chat-msg-row.out .chat-msg-info{justify-content:flex-end;color:rgba(255,255,255,.6)}
-.chat-msg-row.in .chat-msg-info{justify-content:flex-start;color:#9AAAB8}
-.chat-msg-tick{font-size:13px;font-weight:bold;line-height:1}
-.chat-msg-tick.read{color:#4ADE80}
-.chat-msg-tick.unread{color:rgba(255,255,255,.5)}
+/* Messages — Avito style */
+.chat-msgs{flex:1;overflow-y:auto;padding:.625rem .875rem;display:flex;flex-direction:column;gap:.25rem;background:#fff}
+.chat-date-sep{text-align:center;font-size:.6875rem;color:#9AAAB8;margin:.5rem 0;padding:.25rem .5rem;background:#F7F9FB;border-radius:8px;align-self:center}
+.chat-msg-row{display:flex;max-width:80%;flex-direction:column}
+.chat-msg-row.out{align-self:flex-end;align-items:flex-end}
+.chat-msg-row.in{align-self:flex-start;align-items:flex-start}
+.chat-msg-bubble{padding:.5rem .75rem;border-radius:14px;font-size:.875rem;line-height:1.35;word-wrap:break-word;position:relative}
+.chat-msg-row.out .chat-msg-bubble{background:#E8F4FB;color:#121E2B;border-bottom-right-radius:4px}
+.chat-msg-row.in .chat-msg-bubble{background:#EEF2F6;color:#121E2B;border-bottom-left-radius:4px}
+.chat-msg-meta{display:flex;align-items:center;gap:.25rem;margin-top:.125rem;font-size:.6875rem;color:#9AAAB8;padding:0 .25rem}
+.chat-msg-row.out .chat-msg-meta{justify-content:flex-end}
+/* Avito-style ticks: inside meta, after time */
+.chat-tick{display:inline-block;font-size:14px;font-weight:700;line-height:1;margin-left:2px}
+.chat-tick.read{color:#39B54A}
+.chat-tick.unread{color:#BFC8D4}
 
-.chat-typing{padding:.25rem .75rem;font-size:.6875rem;color:#7A8A9A;display:none;font-style:italic}
+/* Typing */
+.chat-typing{padding:.25rem .875rem;font-size:.75rem;color:#7A8A9A;display:none;font-style:italic;flex-shrink:0}
 .chat-typing.active{display:block}
 
-.chat-input-area{border-top:1px solid #EBEEF2;padding:.625rem;display:flex;gap:.5rem;background:#fff;flex-shrink:0}
-.chat-input{flex:1;border:1px solid #DFE4EA;border-radius:20px;padding:.5rem .875rem;font-size:.8125rem;outline:none;transition:border-color .15s;background:#F7F9FB}
+/* Input — Avito style */
+.chat-input-row{border-top:1px solid #EBEEF2;padding:.5rem .75rem;display:flex;gap:.375rem;align-items:center;background:#fff;flex-shrink:0}
+.chat-input-wrap{flex:1;position:relative}
+.chat-input{width:100%;border:1px solid #DFE4EA;border-radius:22px;padding:.5rem 1rem;font-size:.875rem;outline:none;transition:border-color .15s;background:#F7F9FB}
 .chat-input:focus{border-color:#1B6B8A;background:#fff}
-.chat-send-btn{width:2.25rem;height:2.25rem;border:0;border-radius:50%;background:#1B6B8A;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s;flex-shrink:0}
-.chat-send-btn:hover{background:#155A75}
-.chat-send-btn:disabled{background:#C8D0DA;cursor:not-allowed}
+.chat-send{width:2.5rem;height:2.5rem;border:0;border-radius:50%;background:#1B6B8A;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0}
+.chat-send:hover{background:#155A75;transform:scale(1.05)}
+.chat-send:disabled{background:#C8D0DA;cursor:not-allowed;transform:none}
 
-.notif-panel{position:fixed;bottom:4.5rem;right:1.25rem;z-index:91;width:20rem;max-height:24rem;background:#fff;border-radius:12px;box-shadow:0 20px 50px -10px rgba(15,23,32,0.2);display:none;flex-direction:column;overflow:hidden;border:1px solid #EBEEF2}
+/* Notifications */
+.notif-panel{position:fixed;bottom:4.5rem;right:1.25rem;z-index:91;width:20rem;max-height:24rem;background:#fff;border-radius:16px;box-shadow:0 24px 60px -12px rgba(15,23,32,0.25);display:none;flex-direction:column;overflow:hidden}
 .notif-panel.open{display:flex}
-.notif-item{padding:.75rem 1rem;border-bottom:1px solid #F0F3F7;cursor:pointer;transition:background .15s}
+.notif-item{padding:.75rem 1rem;border-bottom:1px solid #F0F3F7;cursor:pointer;transition:background .12s}
 .notif-item:hover{background:#F7F9FB}
 .notif-text{font-size:.8125rem;color:#121E2B}
 .notif-time{font-size:.6875rem;color:#9AAAB8;margin-top:.25rem}
+
+.chat-empty{padding:2rem 1rem;text-align:center;color:#9AAAB8;font-size:.875rem}
 </style>
 
 <div class="chat-fab-container">
@@ -129,12 +136,12 @@ $myId = (int)$cu['id'];
 </div>
 
 <div id="notifPanel" class="notif-panel">
-  <div class="chat-widget-header">
-    <span class="chat-widget-title">Уведомления</span>
-    <button class="chat-widget-close" onclick="toggleNotif()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+  <div class="chat-w-header">
+    <span class="chat-w-title">Уведомления</span>
+    <button class="chat-w-close" onclick="toggleNotif()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
   </div>
-  <div class="chat-widget-body">
-    <?php if (empty($notifs)): ?><div class="chat-widget-empty">Нет уведомлений</div>
+  <div class="chat-w-body">
+    <?php if (empty($notifs)): ?><div class="chat-empty">Нет уведомлений</div>
     <?php else: foreach($notifs as $n): ?>
       <div class="notif-item"<?=$n['link']?' onclick="window.location.href=\''.h($n['link']).'\'"':''?>><div class="notif-text"><?=h($n['text'])?></div><div class="notif-time"><?=time_ago($n['created_at'])?></div></div>
     <?php endforeach; endif; ?>
@@ -142,14 +149,15 @@ $myId = (int)$cu['id'];
 </div>
 
 <div id="chatWidget" class="chat-widget">
+  <!-- List view -->
   <div id="chatListView" class="chat-thread active">
-    <div class="chat-widget-header">
-      <span class="chat-widget-title">Сообщения</span>
-      <button class="chat-widget-close" onclick="toggleChat()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+    <div class="chat-w-header">
+      <span class="chat-w-title">Сообщения</span>
+      <button class="chat-w-close" onclick="toggleChat()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
     </div>
-    <div class="chat-widget-body">
+    <div class="chat-w-body">
       <?php if (empty($chats)): ?>
-        <div class="chat-widget-empty">Нет сообщений<br><br><a href="/catalog" class="text-accent font-medium hover:underline">Найти объявления</a></div>
+        <div class="chat-empty">Нет сообщений<br><br><a href="/catalog" style="color:#1B6B8A;font-weight:600">Найти объявления →</a></div>
       <?php else: foreach($chats as $ch):
         $other = ($ch['sender_id'] == $cu['id']) ? $ch['receiver_id'] : $ch['sender_id'];
         $key = $ch['lid'].'_'.$other; $unr = $unreadByChat[$key] ?? 0;
@@ -157,9 +165,9 @@ $myId = (int)$cu['id'];
         $preview = ($isMine ? 'Вы: ' : '') . mb_substr($ch['text'], 0, 50);
       ?>
         <div class="chat-list-item" onclick="openThread(<?=$ch['lid']?>,<?=$other?>,'<?=h(addslashes($ch['other_name']))?>','<?=h(addslashes($ch['listing_title']))?>','<?=h(addslashes($ch['other_avatar']??''))?>')">
-          <div class="chat-list-avatar"><?php if($ch['other_avatar']):?><img src="<?=h($ch['other_avatar'])?>" alt=""><?php else:?><?=mb_substr($ch['other_name'],0,2)?><?php endif;?></div>
-          <div class="flex-1 min-w-0">
-            <div class="flex items-center gap-2">
+          <div class="chat-avatar lg"><?php if($ch['other_avatar']):?><img src="<?=h($ch['other_avatar'])?>" alt=""><?php else:?><?=mb_substr($ch['other_name'],0,2)?><?php endif;?></div>
+          <div style="flex:1;min-width:0">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:.5rem">
               <span class="chat-list-name"><?=h($ch['other_name'])?></span>
               <span class="chat-list-time"><?=time_ago($ch['created_at'])?></span>
             </div>
@@ -172,21 +180,26 @@ $myId = (int)$cu['id'];
     </div>
   </div>
 
+  <!-- Thread view -->
   <div id="chatThreadView" class="chat-thread">
-    <div class="chat-thread-back" onclick="backToList()">
-      <svg class="chat-thread-back-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-      <div class="chat-thread-avatar" id="threadAvatar"></div>
+    <div class="chat-thread-hdr">
+      <button class="chat-thread-back" onclick="backToList()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      </button>
+      <div class="chat-avatar md" id="threadAvatar"></div>
       <div style="flex:1;min-width:0">
         <div class="chat-thread-name" id="threadName"></div>
         <div class="chat-thread-status" id="threadStatus"></div>
       </div>
     </div>
-    <div class="chat-messages" id="chatMessages"></div>
+    <div class="chat-msgs" id="chatMessages"></div>
     <div class="chat-typing" id="chatTyping">печатает...</div>
-    <div class="chat-input-area">
-      <input type="text" class="chat-input" id="chatInput" placeholder="Сообщение..." onkeydown="if(event.key==='Enter')sendMessage()" oninput="onTyping()">
-      <button class="chat-send-btn" id="chatSendBtn" onclick="sendMessage()">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+    <div class="chat-input-row">
+      <div class="chat-input-wrap">
+        <input type="text" class="chat-input" id="chatInput" placeholder="Сообщение..." onkeydown="if(event.key==='Enter')sendMessage()" oninput="onTyping()">
+      </div>
+      <button class="chat-send" id="chatSendBtn" onclick="sendMessage()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
       </button>
     </div>
   </div>
@@ -207,7 +220,7 @@ function openThread(lid,uid,name,listing,avatar){
  if(avatar){av.innerHTML='<img src="'+escapeHtml(avatar)+'" alt="">'}else{av.innerHTML=name.substring(0,2)}
  document.getElementById('chatListView').classList.remove('active');
  document.getElementById('chatThreadView').classList.add('active');
- document.getElementById('chatMessages').innerHTML='<div class="chat-widget-empty">Загрузка...</div>';
+ document.getElementById('chatMessages').innerHTML='<div class="chat-empty">Загрузка...</div>';
  loadMessages();
  if(pollTimer)clearInterval(pollTimer);
  pollTimer=setInterval(loadMessages,4000);
@@ -230,15 +243,15 @@ function loadMessages(){
   if(data.other&&data.other.last_seen){
    var ls=new Date(data.other.last_seen.replace(/-/g,'/'));
    var diff=Math.floor((new Date()-ls)/1000);
-   if(diff<120)st.className='chat-thread-status online';
-   else st.className='chat-thread-status';
-   if(diff<60)st.textContent='в сети';
-   else if(diff<3600)st.textContent='был(а) '+Math.floor(diff/60)+' мин. назад';
-   else if(diff<86400)st.textContent='был(а) '+Math.floor(diff/3600)+' ч. назад';
-   else st.textContent='был(а) '+ls.toLocaleDateString('ru-RU');
+   if(diff<120){st.className='chat-thread-status online';st.textContent='в сети'}
+   else{st.className='chat-thread-status';
+     if(diff<3600)st.textContent='был(а) '+Math.floor(diff/60)+' мин. назад';
+     else if(diff<86400)st.textContent='был(а) '+Math.floor(diff/3600)+' ч. назад';
+     else st.textContent='был(а) '+ls.toLocaleDateString('ru-RU');
+   }
   }
   document.getElementById('chatTyping').className='chat-typing'+(data.typing?' active':'');
-  if(!data.messages||data.messages.length===0){box.innerHTML='<div class="chat-widget-empty">Нет сообщений</div>';return}
+  if(!data.messages||data.messages.length===0){box.innerHTML='<div class="chat-empty">Напишите первое сообщение</div>';return}
   var html='',lastDate='';
   for(var i=0;i<data.messages.length;i++){
    var m=data.messages[i];
@@ -247,19 +260,16 @@ function loadMessages(){
    if(dateStr!==lastDate){html+='<div class="chat-date-sep">'+dateStr+'</div>';lastDate=dateStr}
    var mine=(parseInt(m.sender_id)===myUid);
    var time=d.toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'});
+   /* Avito-style: tick inside meta, after time */
    var tick='';
    if(mine){
      var read=(m.is_read==1||m.is_read==='1'||m.is_read===true||parseInt(m.is_read)===1);
-     tick='<span class="chat-msg-tick '+(read?'read':'unread')+'">'+(read?'\u2713\u2713':'\u2713')+'</span>';
+     tick='<span class="chat-tick '+(read?'read':'unread')+'">'+(read?'\u2713\u2713':'\u2713')+'</span>';
    }
    html+='<div class="chat-msg-row '+(mine?'out':'in')+'">';
-   if(!mine){
-     html+='<div class="chat-msg-avatar-sm">'+(otherAvatar?'<img src="'+escapeHtml(otherAvatar)+'" alt="">':escapeHtml(otherName.substring(0,2)))+'</div>';
-   }
-   html+='<div class="chat-msg-content">';
    html+='<div class="chat-msg-bubble">'+escapeHtml(m.text)+'</div>';
-   html+='<div class="chat-msg-info"><span>'+time+'</span>'+tick+'</div>';
-   html+='</div></div>';
+   html+='<div class="chat-msg-meta"><span>'+time+'</span>'+tick+'</div>';
+   html+='</div>';
   }
   box.innerHTML=html;
   box.scrollTop=box.scrollHeight;
