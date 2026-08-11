@@ -54,6 +54,41 @@ require __DIR__ . '/../includes/header.php';
 
   <p style="font-size:0.875rem;color:#7A8A9A;margin:0 0 1.5rem">Объявление: <strong style="color:#121E2B"><?=h($listing['title'])?></strong></p>
 
+  <!-- How it works -->
+  <div style="background:linear-gradient(135deg,#F0F7FA,#F7F9FB);border:1px solid #DDE8F0;border-radius:12px;padding:1.5rem;margin-bottom:2rem">
+    <h2 style="font-family:Manrope,sans-serif;font-weight:700;font-size:1.125rem;margin:0 0 0.75rem">Как работает продвижение</h2>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1rem">
+      <div style="display:flex;gap:0.625rem;align-items:flex-start">
+        <div style="width:1.75rem;height:1.75rem;border-radius:50%;background:#1B6B8A;color:#fff;display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:700;flex-shrink:0">1</div>
+        <div><div style="font-size:0.8125rem;font-weight:600;color:#121E2B">Выберите тариф</div><div style="font-size:0.75rem;color:#7A8A9A;margin-top:0.125rem">Top, Highlight или Срочно — в зависимости от целей</div></div>
+      </div>
+      <div style="display:flex;gap:0.625rem;align-items:flex-start">
+        <div style="width:1.75rem;height:1.75rem;border-radius:50%;background:#1B6B8A;color:#fff;display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:700;flex-shrink:0">2</div>
+        <div><div style="font-size:0.8125rem;font-weight:600;color:#121E2B">Отправьте заявку</div><div style="font-size:0.75rem;color:#7A8A9A;margin-top:0.125rem">Администратор подтвердит и активирует продвижение</div></div>
+      </div>
+      <div style="display:flex;gap:0.625rem;align-items:flex-start">
+        <div style="width:1.75rem;height:1.75rem;border-radius:50%;background:#1B6B8A;color:#fff;display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:700;flex-shrink:0">3</div>
+        <div><div style="font-size:0.8125rem;font-weight:600;color:#121E2B">Получите результат</div><div style="font-size:0.75rem;color:#7A8A9A;margin-top:0.125rem">Объявление попадёт в топ выдачи и привлечёт больше покупателей</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tiers explained -->
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:0.75rem;margin-bottom:2rem">
+    <div style="background:#FFF7E6;border:1px solid #FDE68A;border-left:4px solid #F59E0B;border-radius:10px;padding:1rem">
+      <div style="font-family:Manrope,sans-serif;font-weight:700;font-size:1rem;color:#92400E">⭐ Top</div>
+      <div style="font-size:0.75rem;color:#92400E;line-height:1.5;margin-top:0.375rem">Объявление закрепляется в самом верху каталога. Золотая рамка и приоритет над всеми остальными — максимум просмотров.</div>
+    </div>
+    <div style="background:#F5F0FF;border:1px solid #DDD6FE;border-left:4px solid #8B5CF6;border-radius:10px;padding:1rem">
+      <div style="font-family:Manrope,sans-serif;font-weight:700;font-size:1rem;color:#5B21B6">💎 Highlight</div>
+      <div style="font-size:0.75rem;color:#5B21B6;line-height:1.5;margin-top:0.375rem">Объявление получает фиолетовую рамку в выдаче. Выделяется среди обычных — привлекает внимание и поднимает конверсию.</div>
+    </div>
+    <div style="background:#FEF0F0;border:1px solid #FECACA;border-left:4px solid #EF4444;border-radius:10px;padding:1rem">
+      <div style="font-family:Manrope,sans-serif;font-weight:700;font-size:1rem;color:#991B1B">🔥 Срочно</div>
+      <div style="font-size:0.75rem;color:#991B1B;line-height:1.5;margin-top:0.375rem">Красная метка «Срочно» на объявлении. Покупатели видят, что продавец заинтересован в быстрой сделке — это ускоряет продажу.</div>
+    </div>
+  </div>
+
   <?php if ($activePromo): ?>
     <div style="text-align:center;background:#F0FDF4;border:1px solid #BBF7D0;border-radius:12px;padding:2rem;margin-bottom:1.5rem">
       <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="1.5" style="margin-bottom:0.75rem">
