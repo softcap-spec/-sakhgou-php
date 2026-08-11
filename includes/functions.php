@@ -110,7 +110,7 @@ function get_listings(string $category = '', string $search = '', int $page = 1,
     JOIN users u ON l.user_id = u.id
     LEFT JOIN promotions promo ON l.id = promo.listing_id AND promo.status = 'active' AND promo.expires_at > NOW()
     WHERE $whereSQL
-    ORDER BY CASE WHEN promo.id IS NOT NULL THEN 0 ELSE 1 END, l.created_at DESC
+    ORDER BY CASE promo.promo_type WHEN 'top' THEN 0 WHEN 'highlight' THEN 1 WHEN 'urgent' THEN 2 ELSE 3 END, l.created_at DESC
     LIMIT " . ITEMS_PER_PAGE . " OFFSET $offset
   ");
   $stmt->execute($params);
@@ -251,7 +251,7 @@ function get_recent_listings(int $limit = 6): array {
     JOIN categories c ON l.category_id = c.id
     LEFT JOIN promotions promo ON l.id = promo.listing_id AND promo.status = 'active' AND promo.expires_at > NOW()
     WHERE l.status = 'active'
-    ORDER BY CASE WHEN promo.id IS NOT NULL THEN 0 ELSE 1 END, l.created_at DESC
+    ORDER BY CASE promo.promo_type WHEN 'top' THEN 0 WHEN 'highlight' THEN 1 WHEN 'urgent' THEN 2 ELSE 3 END, l.created_at DESC
     LIMIT ?
   ");
   $stmt->bindValue(1, $limit, PDO::PARAM_INT);
