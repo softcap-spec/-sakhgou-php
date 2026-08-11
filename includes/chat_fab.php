@@ -258,14 +258,17 @@ function loadMessages(){
    if(dateStr!==lastDate){html+='<div class="chat-date-sep">'+dateStr+'</div>';lastDate=dateStr}
    var mine=m.sender_id==myUid;
    var time=d.toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'});
-   var statusHtml='';
-   if(mine){
-    if(m.is_read=='1')statusHtml='<span style="color:#4ADE80;font-size:10px;line-height:1">✓✓</span>';
-    else statusHtml='<span style="color:rgba(255,255,255,.5);font-size:10px;line-height:1">✓</span>';
-   }
-   html+='<div class="chat-msg-group '+(mine?'mine':'theirs')+'">';
-   if(!mine){html+='<div class="chat-msg-avatar">'+(otherAvatar?'<img src="'+escapeHtml(otherAvatar)+'" alt="">':escapeHtml(otherName.substring(0,2)))+'</div>'}
-   html+='<div><div class="chat-msg-bubble">'+escapeHtml(m.text)+'</div><div class="chat-msg-meta"><span class="chat-msg-time">'+time+'</span><span class="chat-msg-status">'+statusHtml+'</span></div></div>';
+  var statusHtml='';
+  if(mine){
+    if(m.is_read==1||m.is_read=='1'){
+      statusHtml=' <b style="color:#4ADE80;font-size:12px">✓✓</b>';
+    } else {
+      statusHtml=' <b style="color:rgba(255,255,255,.7);font-size:12px">✓</b>';
+    }
+  }
+  html+='<div class="chat-msg-group '+(mine?'mine':'theirs')+'">';
+  if(!mine){html+='<div class="chat-msg-avatar">'+(otherAvatar?'<img src="'+escapeHtml(otherAvatar)+'" alt="">':escapeHtml(otherName.substring(0,2)))+'</div>'}
+   html+='<div><div class="chat-msg-bubble">'+escapeHtml(m.text)+'</div><div class="chat-msg-meta"><span class="chat-msg-time">'+time+statusHtml+'</span></div></div>';
    html+='</div>';
   }
   box.innerHTML=html;
