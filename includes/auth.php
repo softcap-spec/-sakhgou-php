@@ -4,8 +4,9 @@
  */
 require_once __DIR__ . '/db.php';
 
-function auth_register(string $email, string $password, string $name, string $phone = ''): array {
+function auth_register(string $email, string $password, string $name, string $phone): array {
   $pdo = db();
+  if (empty($phone)) return ['ok' => false, 'error' => 'Укажите номер телефона'];
   // Проверка существующего email
   $stmt = $pdo->prepare('SELECT id FROM users WHERE email = ?');
   $stmt->execute([$email]);
