@@ -17,6 +17,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       $token = bin2hex(random_bytes(16));
       $stmt = $pdo->prepare('UPDATE users SET reset_token = ?, reset_token_expires = DATE_ADD(NOW(), INTERVAL 1 HOUR) WHERE id = ?');
       $stmt->execute([$token, $user['id']]);
+
+      // Send reset email
+      $resetUrl = SITE_URL . '/reset-password?token=' . urlencode($token) . '&step=2';
+      $subject = 'Сброс пароля — СахGO';
+      $body = "Здравствуйте!\n\nДля сброса пароля перейдите по ссылке (действует 1 час):\n{$resetUrl}\n\nЕсли вы не запрашивали сброс — проигнорируйте это письмо.";
+      $headers = "From: noreply@сахгоу.рф\r\nContent-Type: text/plain; charset=UTF-8";
+      @mail($email, $subject, $body, $headers);
     }
     $success = true;
   }
