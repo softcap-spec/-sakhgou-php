@@ -107,7 +107,7 @@ require __DIR__ . '/../includes/header.php';
       <label style="display:block;font-size:0.8125rem;font-weight:500;color:#3A4A5C;margin-bottom:0.5rem">Срок продвижения</label>
       <div style="display:flex;gap:0.5rem">
         <?php foreach ([7=>'7 дней',14=>'14 дней',30=>'30 дней'] as $d => $lbl): ?>
-        <label style="flex:1;text-align:center;padding:0.625rem 0.5rem;border-radius:8px;border:1px solid #DFE4EA;font-size:0.8125rem;font-weight:500;cursor:pointer;transition:all 0.15s ease;<?=$d===7?'background:rgba(27,107,138,0.04);border-color:#1B6B8A;color:#1B6B8A':''?>" data-duration="<?=$d?>" onclick="selectDuration(<?=$d?>,this)">
+        <label style="flex:1;text-align:center;padding:0.625rem 0.5rem;border-radius:8px;border:1px solid #DFE4EA;font-size:0.8125rem;font-weight:500;cursor:pointer;transition:all 0.15s ease;<?=$d===7?'background:rgba(27,107,138,0.04);border-color:#1B6B8A;color:#1B6B8A':''?>" data-duration="<?=$d?>">
           <input type="radio" name="duration" value="<?=$d?>" <?=$d===7?'checked':''?> hidden>
           <?=$lbl?>
         </label>
@@ -186,17 +186,22 @@ var prices = <?=json_encode($prices)?>;
 var typeNames = {top:'Top', highlight:'Highlight', urgent:'Срочно'};
 
 function selectPlan(input) {
+  input.checked = true;
+  // Reset all card styles
   var cards = document.querySelectorAll('.promo-card-v3');
   cards.forEach(function(c){c.style.borderColor='#DFE4EA';c.style.background=''});
+  // Reset all icon colors
+  document.querySelectorAll('.promo-card-v3 svg').forEach(function(s){s.parentElement.style.color='#7A8A9A'});
   var card = input.closest('label').querySelector('.promo-card-v3');
   card.style.borderColor = '#1B6B8A';
   card.style.background = 'rgba(27,107,138,0.03)';
-  // Update icon color
   card.querySelector('svg').parentElement.style.color = '#1B6B8A';
   updatePrice();
 }
 
 function selectDuration(days, el) {
+  var radio = document.querySelector('input[name="duration"][value="' + days + '"]');
+  if (radio) radio.checked = true;
   var labels = el.parentElement.querySelectorAll('label');
   labels.forEach(function(l){l.style.cssText='flex:1;text-align:center;padding:0.625rem 0.5rem;border-radius:8px;border:1px solid #DFE4EA;font-size:0.8125rem;font-weight:500;cursor:pointer;transition:all 0.15s ease'});
   el.style.borderColor = '#1B6B8A';
