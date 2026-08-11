@@ -138,7 +138,12 @@ $myId = (int)$cu['id'];
 <div id="notifPanel" class="notif-panel">
   <div class="chat-w-header">
     <span class="chat-w-title">Уведомления</span>
-    <button class="chat-w-close" onclick="toggleNotif()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+    <div style="display:flex;align-items:center;gap:0.5rem">
+      <?php if (!empty($notifs)): ?>
+      <button onclick="markNotifsRead()" style="background:none;border:0;cursor:pointer;font-size:0.75rem;color:#1B6B8A;font-weight:600">Прочитать все</button>
+      <?php endif; ?>
+      <button class="chat-w-close" onclick="toggleNotif()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+    </div>
   </div>
   <div class="chat-w-body">
     <?php if (empty($notifs)): ?><div class="chat-empty">Нет уведомлений</div>
@@ -211,6 +216,7 @@ var otherAvatar='',otherName='';
 
 function toggleChat(){var w=document.getElementById('chatWidget'),n=document.getElementById('notifPanel');n.classList.remove('open');w.classList.toggle('open');if(!w.classList.contains('open')){backToList();if(pollTimer){clearInterval(pollTimer);pollTimer=null}}}
 function toggleNotif(){var n=document.getElementById('notifPanel'),w=document.getElementById('chatWidget');w.classList.remove('open');n.classList.toggle('open')}
+function markNotifsRead(){var csrf=document.querySelector('input[name="csrf_token"]');var b='action=mark_notifs_read';if(csrf)b+='&csrf_token='+encodeURIComponent(csrf.value);fetch('/',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:b}).then(function(r){return r.json()}).then(function(d){if(d.ok){var badges=document.querySelectorAll('.chat-fab-badge');badges.forEach(function(b){if(b.parentElement&&b.parentElement.classList.contains('chat-fab-bell'))b.remove()});document.getElementById('notifPanel').querySelector('.chat-w-body').innerHTML='<div class="chat-empty">Нет уведомлений</div>';document.querySelector('.notif-panel .chat-w-header button[onclick]').style.display='none'}}).catch(function(){location.reload()})}
 
 function openThread(lid,uid,name,listing,avatar){
  currentLid=lid;currentUid=uid;otherName=name;otherAvatar=avatar;

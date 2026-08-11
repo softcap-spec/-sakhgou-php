@@ -33,6 +33,17 @@ if ($page !== 'admin' && $page !== 'login' && $page !== 'register' && $page !== 
   }
 }
 
+// POST handlers
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'mark_notifs_read') {
+  header('Content-Type: application/json');
+  $user = auth_user();
+  if (!$user) { echo json_encode(['ok'=>false,'error'=>'auth']); exit; }
+  csrf_check();
+  db()->prepare('UPDATE notifications SET is_read = 1 WHERE user_id = ?')->execute([$user['id']]);
+  echo json_encode(['ok'=>true]);
+  exit;
+}
+
 switch ($page) {
   case '':
   case 'home':
