@@ -1,6 +1,6 @@
 <?php
-$page_title = $page_title ?? 'СахGO — жильё, туры, рыбалка и снаряжение. Сахалин и Курилы';
-$page_description = $page_description ?? 'Маркетплейс туруслуг, жилья и рыбалки для Сахалинской области и Курильских островов.';
+$page_title = $page_title ?? 'СахGO — маркетплейс Сахалина: туры, жильё, рыбалка, прокат авто и снаряжения на Курилах';
+$page_description = $page_description ?? 'Туристический маркетплейс Сахалина и Курил. Поиск и бронирование туров, жилья, рыбалки, снаряжения и проката авто. Отдых на Сахалине без посредников.';
 $cu = auth_user();
 $my_count = $cu ? ($cu['unread_notifications'] ?? '') : '';
 // Чистый canonical без query-параметров
@@ -14,10 +14,10 @@ $canonical_path = strtok($_SERVER['REQUEST_URI'] ?? '/', '?');
 <meta name="theme-color" content="#1B6B8A">
 <title><?= h($page_title) ?></title>
 <meta name="description" content="<?= h($page_description) ?>">
-<meta name="robots" content="index, follow">
+<meta name="keywords" content="туры Сахалин, отдых на Сахалине, рыбалка Сахалин, жильё Сахалин, Курилы, прокат авто Сахалин, снаряжение, маркетплейс Сахалин, туроператор Сахалин, экскурсии Сахалин, базы отдыха Сахалин">
 <link rel="canonical" href="https://сахгоу.рф<?= h($canonical_path) ?>">
 <meta property="og:title" content="<?= h($page_title) ?>">
-<meta property="og:description" content="Маркетплейс туруслуг, жилья и рыбалки для Сахалина и Курил.">
+<meta property="og:description" content="Туристический маркетплейс Сахалина и Курил. Поиск и бронирование туров, жилья, рыбалки, снаряжения и проката авто.">
 <meta property="og:url" content="https://сахгоу.рф">
 <meta property="og:site_name" content="СахGO">
 <meta property="og:locale" content="ru_RU">
@@ -56,6 +56,30 @@ $canonical_path = strtok($_SERVER['REQUEST_URI'] ?? '/', '?');
   "url": "https://сахгоу.рф",
   "logo": "https://сахгоу.рф/logo.png",
   "sameAs": []
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "LocalBusiness",
+  "@id": "https://сахгоу.рф/#business",
+  "name": "СахGO — маркетплейс Сахалина",
+  "description": "Туристический маркетплейс: туры, жильё, рыбалка, прокат авто и снаряжения на Сахалине и Курилах",
+  "url": "https://сахгоу.рф",
+  "areaServed": {
+    "@type": "State",
+    "name": "Сахалинская область"
+  },
+  "hasOfferCatalog": {
+    "@type": "OfferCatalog",
+    "name": "Туристические услуги Сахалина",
+    "itemListElement": [
+      {"@type": "Offer", "itemOffered": {"@type": "Service", "name": "Туры по Сахалину и Курилам"}},
+      {"@type": "Offer", "itemOffered": {"@type": "Service", "name": "Жильё и базы отдыха"}},
+      {"@type": "Offer", "itemOffered": {"@type": "Service", "name": "Рыбалка и охота"}},
+      {"@type": "Offer", "itemOffered": {"@type": "Service", "name": "Прокат авто и снаряжения"}}
+    ]
+  }
 }
 </script>
 <style>

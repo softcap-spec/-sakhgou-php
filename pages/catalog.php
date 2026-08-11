@@ -12,7 +12,16 @@ $listings = $result['items'];
 $total = $result['total'];
 $total_pages = $result['pages'];
 
-$page_title = ($category ? $category['name'] : 'Все объявления') . ' — СахGO';
+$cat_seo = [
+  'property' => ['title' => 'Жильё на Сахалине и Курилах — аренда, базы отдыха, гостиницы', 'h1' => 'Жильё на Сахалине и Курилах'],
+  'tour' => ['title' => 'Туры по Сахалину и Курилам — экскурсии, походы, рыболовные туры', 'h1' => 'Туры по Сахалину и Курилам'],
+  'fishing' => ['title' => 'Рыбалка на Сахалине — морская и речная, туры на Курилы', 'h1' => 'Рыбалка на Сахалине и Курилах'],
+  'rental_gear' => ['title' => 'Снаряжение для отдыха на Сахалине — аренда и прокат', 'h1' => 'Снаряжение для отдыха'],
+  'car_rental' => ['title' => 'Прокат авто на Сахалине — внедорожники, минивэны, джипы', 'h1' => 'Прокат авто на Сахалине'],
+];
+$seo = $cat_seo[$cat_slug] ?? null;
+$page_title = $seo ? $seo['title'] . ' — СахGO' : ($category ? $category['name'] . ' — СахGO' : 'Все объявления — Туристический маркетплейс Сахалина — СахGO');
+$cat_h1 = $seo ? $seo['h1'] : ($category ? $category['name'] : 'Все объявления');
 require __DIR__ . '/../includes/header.php';
 ?>
 
@@ -27,7 +36,7 @@ require __DIR__ . '/../includes/header.php';
     <div class="flex flex-wrap items-end justify-between gap-4 mb-10">
       <div>
         <span class="text-xs uppercase tracking-[0.12em] text-accent font-medium">Каталог</span>
-        <h1 class="font-display text-4xl mt-1"><?= $category ? h($category['name']) : 'Все объявления' ?></h1>
+        <h1 class="font-display text-4xl mt-1"><?= $cat_h1 ?></h1>
       </div>
       <div class="flex gap-2 flex-wrap">
         <a href="/catalog" class="inline-flex items-center h-7 px-2.5 rounded-full text-sm font-medium transition-all <?=!$cat_slug?'bg-accent text-white':'text-muted-foreground hover:text-foreground hover:bg-muted'?>">Всё</a>
