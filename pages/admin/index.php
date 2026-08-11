@@ -151,6 +151,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     }
     header('Location: /admin?tab=payments&ok=rejected'); exit;
   }
+  if ($_POST['action'] === 'cancel_promo') {
+    $pid = (int)$_POST['id'];
+    $promo = $pdo->prepare("SELECT p.*, l.title AS listing_title FROM promotions p JOIN listings l ON p.listing_id = l.id WHERE p.id = ?");
+    $promo->execute([$pid]);
+    $p = $promo->fetch();
+    if ($p) {
+      $pdo->prepare("UPDATE promotions SET status = 'cancelled', payment_status = 'refunded' WHERE id = ?")->execute([$pid]);
+      $pdo->prepare("INSERT INTO notifications (user_id, type, text, link, is_read, created_at) VALUES (?,?,?,?,0,NOW())")->execute([$p['host_id'], 'promo', "Продвижение «{$p['listing_title']}» отменено администратором.", '/dashboard']);
+    }
+    header('Location: /admin?tab=payments&ok=cancelled'); exit;
+  }
 
   // Maintenance toggle
   if ($_POST['action'] === 'toggle_maintenance') {
@@ -553,6 +564,13 @@ elseif ($tab === 'payments'):
                     </form>
                     <button class="text-xs bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600" onclick="rejectPromo(<?=$pm['id']?>)">Отклонить</button>
                   </div>
+                <?php elseif ($pm['payment_status'] === 'paid'): ?>
+                  <form method="post" class="inline" onsubmit="return confirm('Отменить оплаченное продвижение?')">
+                    <?= csrf_field() ?>
+                    <input type="hidden" name="action" value="cancel_promo">
+                    <input type="hidden" name="id" value="<?=$pm['id']?>">
+                    <button class="text-xs bg-orange-500 text-white px-2 py-1 rounded hover:bg-orange-600">Отменить</button>
+                  </form>
                 <?php else: ?>
                   <span class="text-xs text-muted-foreground">—</span>
                 <?php endif; ?>
