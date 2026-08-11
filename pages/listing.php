@@ -418,7 +418,12 @@ function cmLoad() {
         var mine = m.sender_id == cmUid;
         var cls = mine ? 'bg-accent text-white self-end' : 'bg-[#EEF2F6] text-foreground self-start';
         var time = new Date(m.created_at.replace(/-/g,'/')).toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'});
-        html += '<div class="'+cls+' rounded-lg px-3 py-1.5 text-sm max-w-[80%]" style="word-wrap:break-word">'+escapeHtml(m.text)+'<div class="text-[0.625rem] '+(mine?'text-white/60':'text-[#9AAAB8]')+' mt-0.5">'+time+'</div></div>';
+        var ticks = '';
+        if (mine) {
+          if (m.is_read == 1) ticks = '<span style="color:#4ADE80;font-size:10px">✓✓</span>';
+          else ticks = '<span style="color:rgba(255,255,255,.5);font-size:10px">✓</span>';
+        }
+        html += '<div class="'+cls+' rounded-lg px-3 py-1.5 text-sm max-w-[80%]" style="word-wrap:break-word">'+escapeHtml(m.text)+'<div class="text-[0.625rem] '+(mine?'text-white/60':'text-[#9AAAB8]')+' mt-0.5">'+time+' '+ticks+'</div></div>';
       }
       box.innerHTML = html;
       box.scrollTop = box.scrollHeight;
