@@ -136,6 +136,7 @@ $myId = (int)$cu['id'];
 </div>
 
 <div id="notifPanel" class="notif-panel">
+  <?= csrf_field() ?>
   <div class="chat-w-header">
     <span class="chat-w-title">Уведомления</span>
     <div style="display:flex;align-items:center;gap:0.5rem">
@@ -148,7 +149,7 @@ $myId = (int)$cu['id'];
   <div class="chat-w-body">
     <?php if (empty($notifs)): ?><div class="chat-empty">Нет уведомлений</div>
     <?php else: foreach($notifs as $n): ?>
-      <div class="notif-item"<?=$n['link']?' onclick="window.location.href=\''.h($n['link']).'\'"':''?>><div class="notif-text"><?=h($n['text'])?></div><div class="notif-time"><?=time_ago($n['created_at'])?></div></div>
+      <?php if ($n['link']): ?><a href="<?=h($n['link'])?>" class="notif-item" style="display:block;text-decoration:none;color:inherit"><?php else: ?><div class="notif-item"><?php endif; ?><div class="notif-text"><?=h($n['text'])?></div><div class="notif-time"><?=time_ago($n['created_at'])?></div><?php if ($n['link']): ?></a><?php else: ?></div><?php endif; ?>
     <?php endforeach; endif; ?>
   </div>
 </div>
@@ -216,7 +217,7 @@ var otherAvatar='',otherName='';
 
 function toggleChat(){var w=document.getElementById('chatWidget'),n=document.getElementById('notifPanel');n.classList.remove('open');w.classList.toggle('open');if(!w.classList.contains('open')){backToList();if(pollTimer){clearInterval(pollTimer);pollTimer=null}}}
 function toggleNotif(){var n=document.getElementById('notifPanel'),w=document.getElementById('chatWidget');w.classList.remove('open');n.classList.toggle('open')}
-function markNotifsRead(){var csrf=document.querySelector('input[name="csrf_token"]');var b='action=mark_notifs_read';if(csrf)b+='&csrf_token='+encodeURIComponent(csrf.value);fetch('/',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:b}).then(function(r){return r.json()}).then(function(d){if(d.ok){var badges=document.querySelectorAll('.chat-fab-badge');badges.forEach(function(b){if(b.parentElement&&b.parentElement.classList.contains('chat-fab-bell'))b.remove()});document.getElementById('notifPanel').querySelector('.chat-w-body').innerHTML='<div class="chat-empty">Нет уведомлений</div>';document.querySelector('.notif-panel .chat-w-header button[onclick]').style.display='none'}}).catch(function(){location.reload()})}
+function markNotifsRead(){var csrf=document.querySelector('#notifPanel input[name="_csrf"]');var b='action=mark_notifs_read';if(csrf)b+='&_csrf='+encodeURIComponent(csrf.value);fetch('/',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:b}).then(function(r){return r.json()}).then(function(d){if(d.ok){var badges=document.querySelectorAll('.chat-fab-badge');badges.forEach(function(b){if(b.parentElement&&b.parentElement.classList.contains('chat-fab-bell'))b.remove()});document.getElementById('notifPanel').querySelector('.chat-w-body').innerHTML='<div class="chat-empty">Нет уведомлений</div>';var btn=document.querySelector('.notif-panel .chat-w-header button[onclick*="markNotifsRead"]');if(btn)btn.style.display='none'}}).catch(function(){location.reload()})}
 
 function openThread(lid,uid,name,listing,avatar){
  currentLid=lid;currentUid=uid;otherName=name;otherAvatar=avatar;
