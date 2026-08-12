@@ -13,6 +13,8 @@ $canonical_path = strtok($_SERVER['REQUEST_URI'] ?? '/', '?');
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#1B6B8A">
 <title><?= h($page_title) ?></title>
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  <link rel="icon" type="image/png" sizes="256x256" href="/favicon.png">
 <meta name="description" content="<?= h($page_description) ?>">
 <meta name="keywords" content="туры Сахалин, отдых на Сахалине, рыбалка Сахалин, жильё Сахалин, Курилы, прокат авто Сахалин, снаряжение, маркетплейс Сахалин, туроператор Сахалин, экскурсии Сахалин, базы отдыха Сахалин">
 <link rel="canonical" href="https://сахгоу.рф<?= h($canonical_path) ?>">
