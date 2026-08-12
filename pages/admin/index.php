@@ -257,7 +257,6 @@ require_once __DIR__ . '/../../includes/header.php';
         ?>
           <a href="?tab=<?= $k ?>" class="px-2.5 py-2 text-xs font-medium whitespace-nowrap border-b-2 transition-colors <?= $active ? 'border-accent text-accent' : 'border-transparent text-muted-foreground hover:text-foreground' ?>"><?= $v ?><?= $k === 'moderation' && $pending_listings ? ' <span class="bg-red-500 text-white text-[10px] px-1 py-0 rounded-full">'.$pending_listings.'</span>' : '' ?><?= $k === 'notifications' && $unread_notifs ? ' <span class="bg-red-500 text-white text-[10px] px-1 py-0 rounded-full">'.$unread_notifs.'</span>' : '' ?></a>
         <?php endforeach; ?>
-        <?php endforeach; ?>
       </nav>
     </div>
 
