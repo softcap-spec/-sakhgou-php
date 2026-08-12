@@ -18,6 +18,7 @@ $myListings = $st->fetchAll();
 // Tabs
 $tabs = [
   'listings'   => 'Мои объявления',
+  'messages'   => 'Сообщения',
   'favorites'  => 'Избранное',
   'bookings'   => 'Бронирования',
   'host_bookings' => 'Ко мне',
@@ -178,6 +179,74 @@ require __DIR__ . '/../includes/header.php';
         </div>
         <?php endforeach; ?>
       </div>
+    <?php endif; ?>
+
+  <?php elseif ($sub === 'messages'): ?>
+    <?php
+    // Thread list — like Avito inbox
+    $tid = $user['id'];
+    $threadStmt = $pdo->prepare("
+      SELECT t.lid, t.other_id, u.name AS other_name, u.avatar_url AS other_avatar,
+        l.title AS listing_title, t.last_text, t.last_at,
+        (SELECT COUNT(*) FROM messages m2 WHERE m2.listing_id = t.lid AND m2.sender_id = t.other_id AND m2.receiver_id = ? AND m2.is_read = 0) AS unread
+      FROM (
+        SELECT m.listing_id AS lid,
+          IF(m.sender_id = ?, m.receiver_id, m.sender_id) AS other_id,
+          (SELECT m1.text FROM messages m1 WHERE m1.listing_id = m.listing_id AND IF(m.sender_id = ?, m1.receiver_id, m1.sender_id) = IF(m.sender_id = ?, m.receiver_id, m.sender_id) ORDER BY m1.created_at DESC LIMIT 1) AS last_text,
+          MAX(m.created_at) AS last_at
+        FROM messages m
+        WHERE m.sender_id = ? OR m.receiver_id = ?
+        GROUP BY m.listing_id, IF(m.sender_id = ?, m.receiver_id, m.sender_id)
+        ORDER BY last_at DESC
+      ) t
+      JOIN users u ON t.other_id = u.id
+      JOIN listings l ON t.lid = l.id
+    ");
+    $threadStmt->execute([$tid, $tid, $tid, $tid, $tid, $tid, $tid]);
+    $threads = $threadStmt->fetchAll();
+    ?>
+    <?php if (empty($threads)): ?>
+      <div style="text-align:center;padding:5rem 1rem">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#C8D0DA" stroke-width="1.5" style="margin-bottom:1.25rem">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+        </svg>
+        <p style="font-size:1rem;font-weight:600;color:#121E2B;margin:0 0 0.25rem">Нет сообщений</p>
+        <p style="font-size:0.8125rem;color:#7A8A9A;margin:0 0 1.5rem">Здесь появятся ваши переписки по объявлениям</p>
+        <a href="/catalog" class="btn-outline">Смотреть объявления</a>
+      </div>
+    <?php else: ?>
+      <div style="max-width:640px;margin:0 auto">
+        <?php foreach ($threads as $th):
+          $lid = $th['lid']; $oid = $th['other_id'];
+          $oname = h($th['other_name']); $oav = $th['other_avatar'];
+          $lname = h($th['listing_title']);
+          $ltext = h(mb_strlen($th['last_text']) > 80 ? mb_substr($th['last_text'], 0, 80) . '…' : ($th['last_text'] ?? ''));
+          $unread = (int)$th['unread'];
+          $avhtml = $oav ? '<img src="' . h($oav) . '" style="width:48px;height:48px;border-radius:50%;object-fit:cover;flex-shrink:0">' : '<div style="width:48px;height:48px;border-radius:50%;background:#DFE4EA;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1.125rem;color:#7A8A9A;flex-shrink:0">' . mb_substr($oname, 0, 1) . '</div>';
+          $clickJS = 'openThread(' . intval($lid) . ', ' . intval($oid) . ', ' . json_encode($th['other_name'], JSON_HEX_APOS|JSON_HEX_QUOT) . ', ' . json_encode($th['listing_title'], JSON_HEX_APOS|JSON_HEX_QUOT) . ', ' . json_encode($th['other_avatar'] ?? '', JSON_HEX_APOS|JSON_HEX_QUOT) . ')';
+        ?>
+        <div onclick="<?=$clickJS?>" style="display:flex;align-items:center;gap:0.875rem;padding:1rem;background:#fff;border:1px solid #EEF2F6;border-radius:12px;cursor:pointer;transition:all 0.12s ease;box-shadow:0 2px 8px rgba(15,23,32,0.04);margin-bottom:0.5rem" onmouseover="this.style.borderColor='#1B6B8A';this.style.boxShadow='0 4px 16px rgba(27,107,138,0.12)'" onmouseout="this.style.borderColor='#EEF2F6';this.style.boxShadow='0 2px 8px rgba(15,23,32,0.04)'">
+          <?=$avhtml?>
+          <div style="flex:1;min-width:0">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:0.5rem">
+              <span style="font-weight:600;font-size:0.9375rem;color:#121E2B"><?=$oname?></span>
+              <span style="font-size:0.6875rem;color:#9AAAB8;white-space:nowrap;flex-shrink:0"><?=time_ago($th['last_at'])?></span>
+            </div>
+            <div style="font-size:0.75rem;color:#7A8A9A;margin-top:2px"><?=$lname?></div>
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:0.5rem;margin-top:4px">
+              <span style="font-size:0.8125rem;color:#3A4A5C;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:420px"><?=$ltext?></span>
+              <?php if ($unread > 0): ?>
+              <span style="background:#F59E0B;color:#fff;font-size:0.6875rem;font-weight:700;border-radius:999px;min-width:20px;height:20px;display:inline-flex;align-items:center;justify-content:center;padding:0 6px;flex-shrink:0"><?=$unread?></span>
+              <?php endif; ?>
+            </div>
+          </div>
+        </div>
+        <?php endforeach; ?>
+      </div>
+      <script>
+      // Pass myUid from PHP to JS so openThread works from dashboard
+      if (typeof myUid === 'undefined') var myUid = <?=$user['id']?>;
+      </script>
     <?php endif; ?>
 
   <?php elseif ($sub === 'favorites'): ?>
