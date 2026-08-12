@@ -238,24 +238,25 @@ require_once __DIR__ . '/../../includes/header.php';
 
     <!-- Tabs -->
     <div class="border-b mb-6">
-      <nav class="flex gap-1 flex-wrap -mb-px">
+      <nav class="flex gap-0.5 flex-nowrap -mb-px">
         <?php
         $tabs = [
-          'dashboard' => '📊 Дашборд',
-          'listings' => '📋 Объявления',
-          'moderation' => '⚠️ Модерация',
-          'reviews' => '⭐ Отзывы',
-          'users' => '👥 Пользователи',
-          'payments' => '💰 Платежи',
-          'maintenance' => '🔧 Техработы',
-          'categories' => '📂 Категории',
-          'banners' => '🪧 Баннеры',
-          'notifications' => '🔔 Уведомления',
+          'dashboard' => 'Дашборд',
+          'listings' => 'Объявления',
+          'moderation' => 'Модерация',
+          'reviews' => 'Отзывы',
+          'users' => 'Пользователи',
+          'payments' => 'Платежи',
+          'maintenance' => 'Техработы',
+          'categories' => 'Категории',
+          'banners' => 'Баннеры',
+          'notifications' => 'Уведомления',
         ];
         foreach ($tabs as $k => $v):
           $active = $tab === $k;
         ?>
-          <a href="?tab=<?= $k ?>" class="px-4 py-2.5 text-sm font-medium whitespace-nowrap border-b-2 transition-colors <?= $active ? 'border-accent text-accent' : 'border-transparent text-muted-foreground hover:text-foreground' ?>"><?= $v ?><?= $k === 'moderation' && $pending_listings ? ' <span class="bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full">'.$pending_listings.'</span>' : '' ?><?= $k === 'notifications' && $unread_notifs ? ' <span class="bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full">'.$unread_notifs.'</span>' : '' ?></a>
+          <a href="?tab=<?= $k ?>" class="px-2.5 py-2 text-xs font-medium whitespace-nowrap border-b-2 transition-colors <?= $active ? 'border-accent text-accent' : 'border-transparent text-muted-foreground hover:text-foreground' ?>"><?= $v ?><?= $k === 'moderation' && $pending_listings ? ' <span class="bg-red-500 text-white text-[10px] px-1 py-0 rounded-full">'.$pending_listings.'</span>' : '' ?><?= $k === 'notifications' && $unread_notifs ? ' <span class="bg-red-500 text-white text-[10px] px-1 py-0 rounded-full">'.$unread_notifs.'</span>' : '' ?></a>
+        <?php endforeach; ?>
         <?php endforeach; ?>
       </nav>
     </div>
