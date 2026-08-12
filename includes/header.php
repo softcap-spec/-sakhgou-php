@@ -32,7 +32,7 @@ $canonical_path = strtok($_SERVER['REQUEST_URI'] ?? '/', '?');
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.tailwindcss.com"></script>
 <script>tailwind.config={theme:{extend:{fontFamily:{sans:['Manrope','Arial','sans-serif'],display:['Manrope','Arial','sans-serif']},colors:{background:'#F7F9FB',foreground:'#121E2B',card:'#FFFFFF','card-foreground':'#121E2B',popover:'#FFFFFF','popover-foreground':'#121E2B',primary:'#121E2B','primary-foreground':'#F7F9FB',secondary:'#EEF2F6','secondary-foreground':'#121E2B',muted:'#8BA0B5','muted-foreground':'#7A8A9A',accent:'#1B6B8A','accent-fg':'#FFFFFF',destructive:'#DC2626',success:'#16A34A',warn:'#EAB308',border:'#DFE4EA',input:'#FFFFFF',ring:'#1B6B8A'},borderRadius:{sm:'0.375rem',DEFAULT:'0.5rem',md:'0.5rem',lg:'0.75rem',xl:'0.75rem'}}}}</script>
-<link rel="stylesheet" href="/includes/style.css?v=11">
+<link rel="stylesheet" href="/includes/style.css?v=12">
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",

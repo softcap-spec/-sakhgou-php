@@ -149,6 +149,8 @@ switch ($page) {
           }
           $pdo->prepare('INSERT INTO messages (listing_id,sender_id,receiver_id,text,is_read,created_at) VALUES (?,?,?,?,0,NOW())')->execute([$lid,$cu['id'],$receiver,$text]);
           $pdo->prepare('INSERT INTO notifications (user_id,type,text,link,is_read,created_at) VALUES (?,?,?,?,0,NOW())')->execute([$receiver,'message','Новое сообщение по объявлению «'.$listing['title'].'»','/listing/'.$lid]);
+          // Email notification (throttled: one per conversation per hour)
+          notify_new_message($cu['id'], $receiver, $lid, $listing['title']);
           echo json_encode(['ok'=>true]);
           exit;
         }

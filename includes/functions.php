@@ -180,6 +180,48 @@ function delete_listing(int $id, int $userId): bool {
   return $stmt->rowCount() > 0;
 }
 
+/**
+ * Simple math CAPTCHA: generate question, store answer in session
+ */
+function captcha_generate(): string {
+  $a = random_int(1, 10);
+  $b = random_int(1, 10);
+  $_SESSION['captcha_answer'] = $a + $b;
+  return "Сколько будет $a + $b?";
+}
+
+function captcha_validate(string $answer): bool {
+  if (empty($_SESSION['captcha_answer'])) return false;
+  $valid = ((int)$answer === $_SESSION['captcha_answer']);
+  unset($_SESSION['captcha_answer']); // one-time use
+  return $valid;
+}
+
+/**
+ * Send email notification for new message (throttled: one per conversation per hour)
+ */
+function notify_new_message(int $sender_id, int $receiver_id, int $listing_id, string $listing_title): void {
+  $pdo = db();
+  // Get receiver info
+  $stmt = $pdo->prepare('SELECT email, name FROM users WHERE id = ?');
+  $stmt->execute([$receiver_id]);
+  $user = $stmt->fetch();
+  if (!$user || empty($user['email'])) return;
+
+  // Throttle: don't send if we sent one for this sender+listing in the last hour
+  $stmt = $pdo->prepare("SELECT id FROM messages WHERE sender_id = ? AND receiver_id = ? AND listing_id = ? AND created_at > DATE_SUB(NOW(), INTERVAL 1 HOUR) ORDER BY created_at DESC LIMIT 1,1");
+  $stmt->execute([$sender_id, $receiver_id, $listing_id]);
+  if ($stmt->fetch()) return; // more than 1 message in last hour — not the first one
+
+  $subject = 'Новое сообщение на СахGO';
+  $body = "Здравствуйте, {$user['name']}!\n\n";
+  $body .= "У вас новое сообщение по объявлению «{$listing_title}».\n\n";
+  $body .= "Перейти к сообщению: https://сахгоу.рф/listing/{$listing_id}\n\n";
+  $body .= "С уважением, команда СахGO\n";
+  $headers = "From: noreply@sakhgo.ru\r\nContent-Type: text/plain; charset=UTF-8";
+  @mail($user['email'], $subject, $body, $headers);
+}
+
 function add_notification(int $user_id, string $type, string $text, string $link = ''): void {
   $pdo = db();
   $stmt = $pdo->prepare('INSERT INTO notifications (user_id, type, text, link, is_read, created_at) VALUES (?, ?, ?, ?, 0, NOW())');
