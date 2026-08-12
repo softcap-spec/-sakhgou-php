@@ -238,7 +238,7 @@ require_once __DIR__ . '/../../includes/header.php';
 
     <!-- Tabs -->
     <div class="border-b mb-6">
-      <nav class="flex gap-1 overflow-x-auto -mb-px">
+      <nav class="flex gap-1 flex-wrap -mb-px">
         <?php
         $tabs = [
           'dashboard' => '📊 Дашборд',
