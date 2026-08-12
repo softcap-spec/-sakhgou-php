@@ -19,6 +19,7 @@ define('DB_PASS', 'your_db_password');
 define('DB_CHARSET', 'utf8mb4');
 define('APP_VERSION', '1.2.0');
 define('ITEMS_PER_PAGE', 12);
+define('MAX_UPLOAD_SIZE', 2 * 1024 * 1024); // 2MB
 define('UPLOAD_DIR', __DIR__ . '/uploads');
 define('CATEGORIES', json_encode([
   ['slug' => 'property',    'name' => 'Жильё',       'icon' => '🏠'],

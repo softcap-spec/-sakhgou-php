@@ -36,7 +36,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $step === 5 && !empty($_FILES['imag
   $tmpDir = UPLOAD_DIR . '/.tmp';
   if (!is_dir($tmpDir)) mkdir($tmpDir, 0755, true);
   foreach ($_FILES['images']['tmp_name'] as $i => $tmp) {
+    if ($_FILES['images']['error'][$i] === UPLOAD_ERR_INI_SIZE || $_FILES['images']['error'][$i] === UPLOAD_ERR_FORM_SIZE) {
+      $errors[] = 'Файл «' . h($_FILES['images']['name'][$i]) . '» превышает максимальный размер (2 МБ)';
+      continue;
+    }
     if ($_FILES['images']['error'][$i] !== UPLOAD_ERR_OK) continue;
+    if ($_FILES['images']['size'][$i] > MAX_UPLOAD_SIZE) {
+      $errors[] = 'Файл «' . h($_FILES['images']['name'][$i]) . '» слишком большой (макс. 2 МБ)';
+      continue;
+    }
     $allowed = ['image/jpeg', 'image/png', 'image/webp'];
     $finfo = new finfo(FILEINFO_MIME_TYPE);
     $mime = @$finfo->file($tmp);
@@ -59,11 +67,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['finish'])) {
   $loc = $_POST['location'] ?? '';
   $guests = (int)($_POST['max_guests'] ?? 0);
 
-  if (empty($title)) $errors[] = 'Введите название';
-  if ($price <= 0) $errors[] = 'Укажите цену';
-  if (empty($desc)) $errors[] = 'Добавьте описание';
-  if (empty($loc)) $errors[] = 'Укажите локацию';
-  if (empty($lt) || !isset($LISTING_LABELS[$lt])) $errors[] = 'Выберите тип';
+  if (empty($title)) $errors[] = ['field'=>'title', 'text'=>'Введите название'];
+  if ($price <= 0) $errors[] = ['field'=>'price', 'text'=>'Укажите цену'];
+  if (empty($desc)) $errors[] = ['field'=>'description', 'text'=>'Добавьте описание'];
+  if (empty($loc)) $errors[] = ['field'=>'location', 'text'=>'Укажите локацию'];
+  if (empty($lt) || !isset($LISTING_LABELS[$lt])) $errors[] = ['field'=>'listing_type', 'text'=>'Выберите тип объявления'];
 
   if (empty($errors)) {
     try {
@@ -190,7 +198,9 @@ require __DIR__ . '/../includes/header.php';
 
   <?php if (!empty($errors)): ?>
     <div style="background:#FEF2F2;border:1px solid #FECACA;color:#991B1B;border-radius:8px;padding:0.875rem 1rem;margin-bottom:1.5rem;font-size:0.8125rem">
-      <?php foreach($errors as $e): ?><div style="padding:0.125rem 0"><?=h($e)?></div><?php endforeach; ?>
+      <?php foreach($errors as $e): $txt = is_array($e) ? $e['text'] : $e; ?>
+      <div style="padding:0.125rem 0"><?=h($txt)?></div>
+      <?php endforeach; ?>
     </div>
   <?php endif; ?>
 
@@ -234,12 +244,12 @@ require __DIR__ . '/../includes/header.php';
       <h2 style="font-family:Manrope,sans-serif;font-weight:700;font-size:1.25rem;margin:0 0 1.5rem">Основная информация</h2>
       <input type="hidden" name="listing_type" value="<?=h($_POST['listing_type']??'')?>">
       <input type="hidden" name="category" value="<?=h($_POST['category']??'')?>">
-      <div class="form-group"><label>Название объявления</label><input type="text" name="title" value="<?=h($_POST['title']??'')?>" style="width:100%;box-sizing:border-box" placeholder="Напр. &laquo;Уютная квартира с видом на море&raquo;" required></div>
-      <div class="form-group"><label>Описание</label><textarea name="description" rows="5" style="width:100%;box-sizing:border-box" placeholder="Опишите ваше предложение подробно..."><?=h($_POST['description']??'')?></textarea></div>
+      <div class="form-group"><label>Название объявления <span style="color:#DC2626">*</span></label><input type="text" name="title" value="<?=h($_POST['title']??'')?>" style="width:100%;box-sizing:border-box" placeholder="Напр. «Уютная квартира с видом на море»" required></div>
+      <div class="form-group"><label>Описание <span style="color:#DC2626">*</span></label><textarea name="description" rows="5" style="width:100%;box-sizing:border-box" placeholder="Опишите ваше предложение подробно..." required><?=h($_POST['description']??'')?></textarea></div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
-        <div class="form-group"><label>Цена (<?=price_label($_POST['listing_type']??'')?>)</label><input type="number" name="price" value="<?=h($_POST['price']??'')?>" style="width:100%;box-sizing:border-box" min="0" step="1" required></div>
-        <div class="form-group"><label>Локация</label>
-          <select name="location" style="width:100%;box-sizing:border-box"><option value="">Выберите...</option>
+        <div class="form-group"><label>Цена (<?=price_label($_POST['listing_type']??'')?>) <span style="color:#DC2626">*</span></label><input type="number" name="price" value="<?=h($_POST['price']??'')?>" style="width:100%;box-sizing:border-box" min="1" step="1" required></div>
+        <div class="form-group"><label>Локация <span style="color:#DC2626">*</span></label>
+          <select name="location" required style="width:100%;box-sizing:border-box"><option value="">Выберите...</option>
             <?php foreach($LOCATIONS as $l): ?><option value="<?=$l?>" <?=($_POST['location']??'')===$l?'selected':''?>><?=$l?></option><?php endforeach; ?>
           </select>
         </div>
@@ -338,19 +348,34 @@ require __DIR__ . '/../includes/header.php';
           <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>
         </svg>
         <p style="font-size:0.875rem;color:#7A8A9A;margin:0">Нажмите, чтобы выбрать фото</p>
-        <p style="font-size:0.75rem;color:#7A8A9A;margin:0.25rem 0 0">До 10 файлов, JPG/PNG</p>
-        <input type="file" id="imgInput" name="images[]" multiple accept="image/*" hidden onchange="previewImages(event)">
+        <p style="font-size:0.75rem;color:#7A8A9A;margin:0.25rem 0 0">До 10 файлов, JPG/PNG/WebP, до 2 МБ каждый</p>
+        <p id="imgError" style="font-size:0.75rem;color:#DC2626;margin:0.25rem 0 0;display:none"></p>
+        <input type="file" id="imgInput" name="images[]" multiple accept="image/jpeg,image/png,image/webp" hidden onchange="previewImages(event)">
       </div>
       <div id="imgPreview" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:0.75rem;margin-top:1rem"></div>
       <p id="imgCount" style="font-size:0.75rem;color:#7A8A9A;margin:0.5rem 0 0;display:none"></p>
 
 <script>
 function previewImages(e) {
+  var MAX = 2 * 1024 * 1024; // 2MB
   var files = Array.from(e.target.files).slice(0,10);
   var grid = document.getElementById('imgPreview');
   var count = document.getElementById('imgCount');
+  var err = document.getElementById('imgError');
+  err.style.display = 'none';
+  // Check sizes
+  var oversized = files.filter(function(f){return f.size > MAX});
+  if (oversized.length) {
+    err.textContent = oversized.length + ' файл(ов) превышают 2 МБ: ' + oversized.map(function(f){return f.name}).join(', ');
+    err.style.display = 'block';
+    // Remove oversized from DataTransfer too
+    var dt = new DataTransfer();
+    Array.from(files).forEach(function(f){ if(f.size <= MAX) dt.items.add(f); });
+    e.target.files = dt.files;
+    files = Array.from(e.target.files).slice(0,10);
+  }
   grid.innerHTML = '';
-  if (files.length === 0) { count.style.display = 'none'; return; }
+  if (files.length === 0) { count.style.display = 'none'; if(!oversized.length) err.style.display='none'; return; }
   count.style.display = 'block';
   count.textContent = files.length + ' фото выбрано';
   files.forEach(function(f,i) {
