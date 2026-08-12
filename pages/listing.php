@@ -359,8 +359,8 @@ require __DIR__ . '/../includes/header.php';
 <style>
 #chatModal .cm-msgs{flex:1;overflow-y:auto;padding:.625rem .875rem;display:flex;flex-direction:column;gap:.25rem;background:#fff}
 #chatModal .cm-row{display:flex;max-width:80%;flex-direction:column}
-#chatModal .cm-row.out{align-self:flex-end;align-items:flex-end}
-#chatModal .cm-row.in{align-self:flex-start;align-items:flex-start}
+#chatModal .cm-row.out{align-self:flex-end;align-items:flex-end;position:relative}
+#chatModal .cm-row.in{align-self:flex-start;align-items:flex-start;position:relative}
 #chatModal .cm-bubble{padding:.5rem .75rem;border-radius:14px;font-size:.875rem;line-height:1.35;word-wrap:break-word}
 #chatModal .cm-row.out .cm-bubble{background:#E8F4FB;color:#121E2B;border-bottom-right-radius:4px}
 #chatModal .cm-row.in .cm-bubble{background:#EEF2F6;color:#121E2B;border-bottom-left-radius:4px}
@@ -369,6 +369,10 @@ require __DIR__ . '/../includes/header.php';
 #chatModal .cm-tick{display:inline-block;font-size:14px;font-weight:700;line-height:1;margin-left:2px}
 #chatModal .cm-tick.read{color:#39B54A}
 #chatModal .cm-tick.unread{color:#BFC8D4}
+#chatModal .cm-actions{display:none;position:absolute;top:-8px;right:-8px;z-index:2}
+#chatModal .cm-row.out:hover .cm-actions{display:block}
+#chatModal .cm-del{width:20px;height:20px;border:0;border-radius:50%;background:#DC2626;color:#fff;font-size:14px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(0,0,0,0.15);transition:all .15s}
+#chatModal .cm-del:hover{background:#B91C1C;transform:scale(1.1)}
 #chatModal .cm-date{text-align:center;font-size:.6875rem;color:#9AAAB8;margin:.5rem 0;padding:.25rem .5rem;background:#F7F9FB;border-radius:8px;align-self:center}
 </style>
 <div id="chatModal" class="fixed inset-0 z-[100] hidden" style="background:rgba(15,23,32,0.4)">
@@ -444,6 +448,7 @@ function cmLoad() {
           tick = '<span class="cm-tick '+(read?'read':'unread')+'">'+(read?'\u2713\u2713':'\u2713')+'</span>';
         }
         html += '<div class="cm-row '+(mine?'out':'in')+'">';
+        if (mine) html += '<div class="cm-actions"><button class="cm-del" onclick="cmDelete('+m.id+')" title="Удалить">&times;</button></div>';
         html += '<div class="cm-bubble">'+escapeHtml(m.text)+'</div>';
         html += '<div class="cm-meta"><span>'+time+'</span>'+tick+'</div>';
         html += '</div>';
@@ -479,6 +484,11 @@ function cmSend() {
   .catch(function(){ input.disabled = false; });
 }
 function escapeHtml(s){var d=document.createElement('div');d.textContent=s;return d.innerHTML;}
+
+function cmDelete(mid){
+  if(!confirm('Удалить сообщение?'))return;
+  fetch('/api/delete',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'mid='+mid}).then(function(r){return r.json()}).then(function(d){if(d.ok)cmLoad()});
+}
 </script>
 <?php endif; ?>
 

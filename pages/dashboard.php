@@ -225,6 +225,10 @@ require __DIR__ . '/../includes/header.php';
     .dm-thread-badge{background:#F59E0B;color:#fff;font-size:.625rem;font-weight:700;border-radius:999px;min-width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center;padding:0 5px;flex-shrink:0}
     .dm-chat{flex:1;display:flex;flex-direction:column;min-width:0}
     .dm-chat-empty{flex:1;display:flex;align-items:center;justify-content:center;color:#9AAAB8;font-size:.875rem;text-align:center;padding:2rem}
+    .dm-msg-actions{display:none;position:absolute;top:-8px;right:-8px;z-index:2}
+    .dm-msg-row.out:hover .dm-msg-actions{display:block}
+    .dm-msg-del{width:20px;height:20px;border:0;border-radius:50%;background:#DC2626;color:#fff;font-size:14px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(0,0,0,0.15);transition:all .15s}
+    .dm-msg-del:hover{background:#B91C1C;transform:scale(1.1)}
     .dm-chat-hd{display:flex;align-items:center;gap:.625rem;padding:.75rem 1rem;border-bottom:1px solid #EEF2F6;background:#fff;flex-shrink:0}
     .dm-chat-hd-av{width:36px;height:36px;border-radius:50%;overflow:hidden;flex-shrink:0;background:#DFE4EA;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.875rem;color:#7A8A9A}
     .dm-chat-hd-av img{width:100%;height:100%;object-fit:cover}
@@ -235,8 +239,8 @@ require __DIR__ . '/../includes/header.php';
     .dm-chat-hd-on.show{display:block}
     .dm-chat-msgs{flex:1;overflow-y:auto;padding:.625rem .875rem;display:flex;flex-direction:column;gap:.25rem;background:#fff}
     .dm-msg-row{display:flex;max-width:75%;flex-direction:column}
-    .dm-msg-row.out{align-self:flex-end;align-items:flex-end}
-    .dm-msg-row.in{align-self:flex-start;align-items:flex-start}
+    .dm-msg-row.out{position:relative;align-self:flex-end;align-items:flex-end}
+    .dm-msg-row.in{position:relative;align-self:flex-start;align-items:flex-start}
     .dm-msg-bubble{padding:.5rem .75rem;border-radius:14px;font-size:.875rem;line-height:1.35;word-wrap:break-word}
     .dm-msg-row.out .dm-msg-bubble{background:#E8F4FB;color:#121E2B;border-bottom-right-radius:4px}
     .dm-msg-row.in .dm-msg-bubble{background:#EEF2F6;color:#121E2B;border-bottom-left-radius:4px}
@@ -359,6 +363,7 @@ require __DIR__ . '/../includes/header.php';
           var dt=m.created_at.split(' ')[0];
           if(dt!=prevDate){h+='<div class="dm-date-sep">'+dt+'</div>';prevDate=dt}
           h+='<div class="dm-msg-row '+(mine?'out':'in')+'">';
+          if(mine) h+='<div class="dm-msg-actions"><button class="dm-msg-del" onclick="dmDelete('+m.id+')" title="Удалить">&times;</button></div>';
           h+='<div class="dm-msg-bubble">'+dmEsc(m.text)+'</div>';
           h+='<div class="dm-msg-meta">';
           h+='<span>'+m.created_at.split(' ')[1].substring(0,5)+'</span>';
@@ -391,6 +396,11 @@ require __DIR__ . '/../includes/header.php';
     }
 
     function dmSendKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();dmSend()}}
+
+    function dmDelete(mid){
+      if(!confirm('Удалить сообщение?'))return;
+      fetch('/api/delete',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'mid='+mid}).then(function(r){return r.json()}).then(function(d){if(d.ok)dmLoadMsgs()});
+    }
 
     function dmType(){
       if(!dmCurLid)return;

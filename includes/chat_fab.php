@@ -88,8 +88,8 @@ $myId = (int)$cu['id'];
 .chat-msgs{flex:1;overflow-y:auto;padding:.625rem .875rem;display:flex;flex-direction:column;gap:.25rem;background:#fff}
 .chat-date-sep{text-align:center;font-size:.6875rem;color:#9AAAB8;margin:.5rem 0;padding:.25rem .5rem;background:#F7F9FB;border-radius:8px;align-self:center}
 .chat-msg-row{display:flex;max-width:80%;flex-direction:column}
-.chat-msg-row.out{align-self:flex-end;align-items:flex-end}
-.chat-msg-row.in{align-self:flex-start;align-items:flex-start}
+.chat-msg-row.out{position:relative;align-self:flex-end;align-items:flex-end}
+.chat-msg-row.in{position:relative;align-self:flex-start;align-items:flex-start}
 .chat-msg-bubble{padding:.5rem .75rem;border-radius:14px;font-size:.875rem;line-height:1.35;word-wrap:break-word;position:relative}
 .chat-msg-row.out .chat-msg-bubble{background:#E8F4FB;color:#121E2B;border-bottom-right-radius:4px}
 .chat-msg-row.in .chat-msg-bubble{background:#EEF2F6;color:#121E2B;border-bottom-left-radius:4px}
@@ -120,6 +120,12 @@ $myId = (int)$cu['id'];
 .notif-item:hover{background:#F7F9FB}
 .notif-text{font-size:.8125rem;color:#121E2B}
 .notif-time{font-size:.6875rem;color:#9AAAB8;margin-top:.25rem}
+
+/* Delete button on own messages */
+.chat-msg-actions{display:none;position:absolute;top:-8px;right:-8px;z-index:2}
+.chat-msg-row.out:hover .chat-msg-actions{display:block}
+.chat-msg-del{width:20px;height:20px;border:0;border-radius:50%;background:#DC2626;color:#fff;font-size:14px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(0,0,0,0.15);transition:all .15s}
+.chat-msg-del:hover{background:#B91C1C;transform:scale(1.1)}
 
 .chat-empty{padding:2rem 1rem;text-align:center;color:#9AAAB8;font-size:.875rem}
 </style>
@@ -274,6 +280,7 @@ function loadMessages(){
      tick='<span class="chat-tick '+(read?'read':'unread')+'">'+(read?'\u2713\u2713':'\u2713')+'</span>';
    }
    html+='<div class="chat-msg-row '+(mine?'out':'in')+'">';
+   if(mine) html+='<div class="chat-msg-actions"><button class="chat-msg-del" onclick="deleteMessage('+m.id+')" title="Удалить">&times;</button></div>';
    html+='<div class="chat-msg-bubble">'+escapeHtml(m.text)+'</div>';
    html+='<div class="chat-msg-meta"><span>'+time+'</span>'+tick+'</div>';
    html+='</div>';
@@ -301,6 +308,14 @@ function sendMessage(){
 }
 
 function escapeHtml(s){var d=document.createElement('div');d.textContent=s;return d.innerHTML}
+
+function deleteMessage(mid){
+ if(!confirm('Удалить сообщение?'))return;
+ fetch('/api/delete?_='+Date.now(),{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'mid='+mid})
+ .then(function(r){return r.json()})
+ .then(function(d){if(d.ok)loadMessages()})
+ .catch(function(){});
+}
 
 document.addEventListener('click',function(e){
  if(!e.target.closest('.chat-fab-container')&&!e.target.closest('.chat-widget')&&!e.target.closest('.notif-panel')){

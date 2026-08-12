@@ -101,7 +101,7 @@ switch ($page) {
       // Get messages + other user info
       $lid = (int)($_GET['lid'] ?? 0);
       $other = (int)($_GET['uid'] ?? 0);
-      $stmt = $pdo->prepare('SELECT * FROM messages WHERE listing_id=? AND ((sender_id=? AND receiver_id=?) OR (sender_id=? AND receiver_id=?)) ORDER BY created_at ASC');
+      $stmt = $pdo->prepare('SELECT * FROM messages WHERE listing_id=? AND is_deleted=0 AND ((sender_id=? AND receiver_id=?) OR (sender_id=? AND receiver_id=?)) ORDER BY created_at ASC');
       $stmt->execute([$lid,$cu['id'],$other,$other,$cu['id']]);
       $msgs = $stmt->fetchAll();
       // Mark as read
@@ -156,6 +156,17 @@ switch ($page) {
         }
       }
       echo json_encode(['error'=>'invalid']);
+      exit;
+    }
+    if ($action === 'delete' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+      $mid = (int)($_POST['mid'] ?? 0);
+      if ($mid > 0) {
+        $stmt = $pdo->prepare('UPDATE messages SET is_deleted=1 WHERE id=? AND sender_id=?');
+        $stmt->execute([$mid, $cu['id']]);
+        echo json_encode(['ok' => $stmt->rowCount() > 0]);
+        exit;
+      }
+      echo json_encode(['ok'=>false, 'error'=>'invalid']);
       exit;
     }
     echo json_encode(['error'=>'unknown']);
