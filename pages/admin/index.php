@@ -242,6 +242,7 @@ require_once __DIR__ . '/../../includes/header.php';
         <?php
         $tabs = [
           'dashboard' => '📊 Дашборд',
+          'listings' => '📋 Объявления',
           'moderation' => '⚠️ Модерация',
           'reviews' => '⭐ Отзывы',
           'users' => '👥 Пользователи',
@@ -290,6 +291,57 @@ if ($tab === 'dashboard'):
         </tbody>
       </table>
     </div>
+
+<?php
+// ── LISTINGS ──
+elseif ($tab === 'listings'):
+  $page = max(1, (int)($_GET['p'] ?? 1));
+  $per = 25;
+  $offset = ($page - 1) * $per;
+  $filter = $_GET['filter'] ?? 'all';
+  $where = $filter === 'active' ? "WHERE l.status = 'active'" : ($filter === 'pending' ? "WHERE l.status = 'pending'" : ($filter === 'blocked' ? "WHERE l.status = 'blocked'" : ''));
+  $countStmt = $pdo->query("SELECT COUNT(*) FROM listings l $where");
+  $total = (int)$countStmt->fetchColumn();
+  $pages = ceil($total / $per);
+  $stmt = $pdo->query("SELECT l.*, u.name AS host_name, c.name AS cat_name FROM listings l JOIN users u ON l.user_id = u.id JOIN categories c ON l.category_id = c.id $where ORDER BY l.created_at DESC LIMIT $per OFFSET $offset");
+  $allListings = $stmt->fetchAll();
+  $filters = ['all'=>'Все','active'=>'Активные','pending'=>'На модерации','blocked'=>'Заблокированные'];
+?>
+  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem;margin-bottom:1rem">
+    <h3 class="font-display text-lg" style="margin:0">Все объявления (<?=$total?>)</h3>
+    <div style="display:flex;gap:0.25rem">
+      <?php foreach($filters as $fk=>$fv): ?>
+        <a href="?tab=listings&filter=<?=$fk?>" style="padding:0.375rem 0.75rem;font-size:0.75rem;border-radius:999px;text-decoration:none;border:1px solid <?=$filter===$fk?'#1B6B8A':'#DFE4EA'?>;color:<?=$filter===$fk?'#fff':'#3A4A5C'?>;background:<?=$filter===$fk?'#1B6B8A':'#fff'?>"><?=$fv?></a>
+      <?php endforeach; ?>
+    </div>
+  </div>
+  <div class="bg-white border rounded-xl overflow-hidden">
+    <table class="w-full text-sm">
+      <thead><tr class="border-b bg-muted/30"><th class="text-left px-4 py-3 font-medium text-muted-foreground">ID</th><th class="text-left px-4 py-3 font-medium text-muted-foreground">Название</th><th class="text-left px-4 py-3 font-medium text-muted-foreground hidden sm:table-cell">Категория</th><th class="text-left px-4 py-3 font-medium text-muted-foreground hidden sm:table-cell">Автор</th><th class="text-left px-4 py-3 font-medium text-muted-foreground hidden sm:table-cell">Статус</th><th class="text-right px-4 py-3 font-medium text-muted-foreground hidden sm:table-cell">Дата</th></tr></thead>
+      <tbody>
+        <?php foreach($allListings as $l): ?>
+          <tr class="border-b hover:bg-muted/20">
+            <td class="px-4 py-3">#<?=$l['id']?></td>
+            <td class="px-4 py-3 font-medium"><a href="/listing/<?=$l['id']?>" class="hover:text-accent"><?=h($l['title'])?></a></td>
+            <td class="px-4 py-3 hidden sm:table-cell text-muted-foreground"><?=h($l['cat_name'])?></td>
+            <td class="px-4 py-3 hidden sm:table-cell"><?=h($l['host_name'])?></td>
+            <td class="px-4 py-3 hidden sm:table-cell"><span style="font-size:0.6875rem;padding:0.125rem 0.5rem;border-radius:999px;<?=$l['status']==='active'?'color:#166534;background:#DCFCE7':($l['status']==='pending'?'color:#92400E;background:#FEF3C7':'color:#991B1B;background:#FEE2E2')?>"><?=$l['status']==='active'?'Активно':$l['status']?></span></td>
+            <td class="px-4 py-3 hidden sm:table-cell text-right text-muted-foreground"><?=date('d.m.Y',strtotime($l['created_at']))?></td>
+          </tr>
+        <?php endforeach; ?>
+        <?php if(empty($allListings)): ?>
+          <tr><td colspan="6" class="px-4 py-8 text-center text-muted-foreground">Нет объявлений</td></tr>
+        <?php endif; ?>
+      </tbody>
+    </table>
+  </div>
+  <?php if($pages > 1): ?>
+  <div style="display:flex;justify-content:center;gap:0.25rem;margin-top:1rem;flex-wrap:wrap">
+    <?php for($i=1;$i<=$pages;$i++): ?>
+      <a href="?tab=listings&filter=<?=$filter?>&p=<?=$i?>" style="padding:0.375rem 0.75rem;font-size:0.8125rem;border-radius:8px;text-decoration:none;<?=$i===$page?'background:#121E2B;color:#fff':'border:1px solid #DFE4EA;color:#3A4A5C'?>"><?=$i?></a>
+    <?php endfor; ?>
+  </div>
+  <?php endif; ?>
 
 <?php
 // ── MODERATION ──
