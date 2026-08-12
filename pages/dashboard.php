@@ -183,7 +183,6 @@ require __DIR__ . '/../includes/header.php';
 
   <?php elseif ($sub === 'messages'): ?>
     <?php
-    // Thread list — like Avito inbox
     $tid = $user['id'];
     $threadStmt = $pdo->prepare("
       SELECT t.lid, t.other_id, u.name AS other_name, u.avatar_url AS other_avatar,
@@ -204,7 +203,63 @@ require __DIR__ . '/../includes/header.php';
     ");
     $threadStmt->execute([$tid, $tid, $tid, $tid, $tid, $tid, $tid]);
     $threads = $threadStmt->fetchAll();
+    $myId = $tid;
     ?>
+    <style>
+    .dm-layout{display:flex;gap:0;border:1px solid #EEF2F6;border-radius:12px;overflow:hidden;background:#fff;box-shadow:0 4px 16px rgba(15,23,32,0.06);min-height:28rem}
+    .dm-threads{width:340px;flex-shrink:0;border-right:1px solid #EEF2F6;display:flex;flex-direction:column;overflow:hidden;background:#F7F9FB}
+    .dm-threads-hd{padding:.75rem 1rem;font-weight:700;font-size:.9375rem;color:#121E2B;border-bottom:1px solid #EEF2F6}
+    .dm-threads-list{flex:1;overflow-y:auto}
+    .dm-thread{padding:.75rem 1rem;display:flex;align-items:center;gap:.625rem;cursor:pointer;border-bottom:1px solid #EEF2F6;transition:background .1s}
+    .dm-thread:hover{background:#fff}
+    .dm-thread.sel{background:#E8F4FB;border-left:3px solid #1B6B8A}
+    .dm-thread-av{width:42px;height:42px;border-radius:50%;overflow:hidden;flex-shrink:0;background:#DFE4EA;display:flex;align-items:center;justify-content:center;font-weight:700;color:#7A8A9A}
+    .dm-thread-av img{width:100%;height:100%;object-fit:cover}
+    .dm-thread-info{flex:1;min-width:0}
+    .dm-thread-top{display:flex;justify-content:space-between;align-items:center;gap:.375rem}
+    .dm-thread-name{font-weight:600;font-size:.8125rem;color:#121E2B;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .dm-thread-time{font-size:.6875rem;color:#9AAAB8;white-space:nowrap}
+    .dm-thread-listing{font-size:.6875rem;color:#7A8A9A;margin-top:1px}
+    .dm-thread-preview{display:flex;justify-content:space-between;align-items:center;gap:.375rem;margin-top:2px}
+    .dm-thread-txt{font-size:.75rem;color:#3A4A5C;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1}
+    .dm-thread-badge{background:#F59E0B;color:#fff;font-size:.625rem;font-weight:700;border-radius:999px;min-width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center;padding:0 5px;flex-shrink:0}
+    .dm-chat{flex:1;display:flex;flex-direction:column;min-width:0}
+    .dm-chat-empty{flex:1;display:flex;align-items:center;justify-content:center;color:#9AAAB8;font-size:.875rem;text-align:center;padding:2rem}
+    .dm-chat-hd{display:flex;align-items:center;gap:.625rem;padding:.75rem 1rem;border-bottom:1px solid #EEF2F6;background:#fff;flex-shrink:0}
+    .dm-chat-hd-av{width:36px;height:36px;border-radius:50%;overflow:hidden;flex-shrink:0;background:#DFE4EA;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.875rem;color:#7A8A9A}
+    .dm-chat-hd-av img{width:100%;height:100%;object-fit:cover}
+    .dm-chat-hd-info{flex:1;min-width:0}
+    .dm-chat-hd-name{font-weight:600;font-size:.875rem;color:#121E2B}
+    .dm-chat-hd-listing{font-size:.6875rem;color:#7A8A9A}
+    .dm-chat-hd-on{font-size:.6875rem;color:#16A34A;display:none}
+    .dm-chat-hd-on.show{display:block}
+    .dm-chat-msgs{flex:1;overflow-y:auto;padding:.625rem .875rem;display:flex;flex-direction:column;gap:.25rem;background:#fff}
+    .dm-msg-row{display:flex;max-width:75%;flex-direction:column}
+    .dm-msg-row.out{align-self:flex-end;align-items:flex-end}
+    .dm-msg-row.in{align-self:flex-start;align-items:flex-start}
+    .dm-msg-bubble{padding:.5rem .75rem;border-radius:14px;font-size:.875rem;line-height:1.35;word-wrap:break-word}
+    .dm-msg-row.out .dm-msg-bubble{background:#E8F4FB;color:#121E2B;border-bottom-right-radius:4px}
+    .dm-msg-row.in .dm-msg-bubble{background:#EEF2F6;color:#121E2B;border-bottom-left-radius:4px}
+    .dm-msg-meta{display:flex;align-items:center;gap:.25rem;margin-top:.125rem;font-size:.6875rem;color:#9AAAB8;padding:0 .25rem}
+    .dm-msg-row.out .dm-msg-meta{justify-content:flex-end}
+    .dm-date-sep{text-align:center;font-size:.6875rem;color:#9AAAB8;margin:.5rem 0;padding:.25rem .5rem;background:#F7F9FB;border-radius:8px;align-self:center}
+    .dm-tick{display:inline-block;font-size:14px;font-weight:700;line-height:1;margin-left:2px}
+    .dm-tick.read{color:#39B54A}
+    .dm-tick.unread{color:#BFC8D4}
+    .dm-typing{padding:.25rem .875rem;font-size:.75rem;color:#7A8A9A;display:none;font-style:italic;flex-shrink:0}
+    .dm-typing.show{display:block}
+    .dm-input-row{border-top:1px solid #EEF2F6;padding:.5rem .75rem;display:flex;gap:.375rem;align-items:center;background:#fff;flex-shrink:0}
+    .dm-input-wrap{flex:1}
+    .dm-input{width:100%;border:1px solid #DFE4EA;border-radius:22px;padding:.5rem 1rem;font-size:.875rem;outline:none;transition:border-color .15s;background:#F7F9FB;box-sizing:border-box}
+    .dm-input:focus{border-color:#1B6B8A;background:#fff}
+    .dm-send{width:2.5rem;height:2.5rem;border:0;border-radius:50%;background:#1B6B8A;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0}
+    .dm-send:hover{background:#14566E}
+    .dm-back{display:none;border:0;background:none;color:#7A8A9A;cursor:pointer;padding:.25rem;flex-shrink:0}
+    @media(max-width:700px){.dm-layout{flex-direction:column;min-height:auto}
+      .dm-threads{width:100%;border-right:0;max-height:50vh}.dm-back{display:block}
+      .dm-chat:not(.show){display:none}.dm-chat.show{display:flex;position:fixed;top:0;left:0;right:0;bottom:0;z-index:100;background:#fff}}
+    </style>
+
     <?php if (empty($threads)): ?>
       <div style="text-align:center;padding:5rem 1rem">
         <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#C8D0DA" stroke-width="1.5" style="margin-bottom:1.25rem">
@@ -215,38 +270,145 @@ require __DIR__ . '/../includes/header.php';
         <a href="/catalog" class="btn-outline">Смотреть объявления</a>
       </div>
     <?php else: ?>
-      <div style="max-width:640px;margin:0 auto">
-        <?php foreach ($threads as $th):
-          $lid = $th['lid']; $oid = $th['other_id'];
-          $oname = h($th['other_name']); $oav = $th['other_avatar'];
-          $lname = h($th['listing_title']);
-          $ltext = h(mb_strlen($th['last_text']) > 80 ? mb_substr($th['last_text'], 0, 80) . '…' : ($th['last_text'] ?? ''));
-          $unread = (int)$th['unread'];
-          $avhtml = $oav ? '<img src="' . h($oav) . '" style="width:48px;height:48px;border-radius:50%;object-fit:cover;flex-shrink:0">' : '<div style="width:48px;height:48px;border-radius:50%;background:#DFE4EA;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1.125rem;color:#7A8A9A;flex-shrink:0">' . mb_substr($oname, 0, 1) . '</div>';
-          $clickJS = 'openThread(' . intval($lid) . ', ' . intval($oid) . ', ' . json_encode($th['other_name'], JSON_HEX_APOS|JSON_HEX_QUOT) . ', ' . json_encode($th['listing_title'], JSON_HEX_APOS|JSON_HEX_QUOT) . ', ' . json_encode($th['other_avatar'] ?? '', JSON_HEX_APOS|JSON_HEX_QUOT) . ')';
-        ?>
-        <div onclick="<?=$clickJS?>" style="display:flex;align-items:center;gap:0.875rem;padding:1rem;background:#fff;border:1px solid #EEF2F6;border-radius:12px;cursor:pointer;transition:all 0.12s ease;box-shadow:0 2px 8px rgba(15,23,32,0.04);margin-bottom:0.5rem" onmouseover="this.style.borderColor='#1B6B8A';this.style.boxShadow='0 4px 16px rgba(27,107,138,0.12)'" onmouseout="this.style.borderColor='#EEF2F6';this.style.boxShadow='0 2px 8px rgba(15,23,32,0.04)'">
-          <?=$avhtml?>
-          <div style="flex:1;min-width:0">
-            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:0.5rem">
-              <span style="font-weight:600;font-size:0.9375rem;color:#121E2B"><?=$oname?></span>
-              <span style="font-size:0.6875rem;color:#9AAAB8;white-space:nowrap;flex-shrink:0"><?=time_ago($th['last_at'])?></span>
-            </div>
-            <div style="font-size:0.75rem;color:#7A8A9A;margin-top:2px"><?=$lname?></div>
-            <div style="display:flex;justify-content:space-between;align-items:center;gap:0.5rem;margin-top:4px">
-              <span style="font-size:0.8125rem;color:#3A4A5C;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:420px"><?=$ltext?></span>
-              <?php if ($unread > 0): ?>
-              <span style="background:#F59E0B;color:#fff;font-size:0.6875rem;font-weight:700;border-radius:999px;min-width:20px;height:20px;display:inline-flex;align-items:center;justify-content:center;padding:0 6px;flex-shrink:0"><?=$unread?></span>
-              <?php endif; ?>
+    <div class="dm-layout" id="dmLayout">
+      <!-- Thread list -->
+      <div class="dm-threads" id="dmThreads">
+        <div class="dm-threads-hd">Сообщения</div>
+        <div class="dm-threads-list">
+          <?php foreach ($threads as $th):
+            $lid = (int)$th['lid']; $oid = (int)$th['other_id'];
+            $oname = h($th['other_name']); $oav = $th['other_avatar'];
+            $lname = h($th['listing_title']);
+            $ltext = h(mb_strlen($th['last_text']??'') > 60 ? mb_substr($th['last_text']??'', 0, 60) . '…' : ($th['last_text'] ?? ''));
+            $unr = (int)$th['unread'];
+            $avhtml = $oav ? '<img src="'.h($oav).'" alt="">' : mb_substr($oname, 0, 1);
+          ?>
+          <div class="dm-thread" data-lid="<?=$lid?>" data-uid="<?=$oid?>" data-name="<?=h($th['other_name'])?>" data-avatar="<?=h($oav)?>" data-listing="<?=h($th['listing_title'])?>" onclick="dmOpen(this)">
+            <div class="dm-thread-av"><?=$avhtml?></div>
+            <div class="dm-thread-info">
+              <div class="dm-thread-top">
+                <span class="dm-thread-name"><?=$oname?></span>
+                <span class="dm-thread-time"><?=time_ago($th['last_at'])?></span>
+              </div>
+              <div class="dm-thread-listing"><?=$lname?></div>
+              <div class="dm-thread-preview">
+                <span class="dm-thread-txt"><?=$ltext?></span>
+                <?php if ($unr > 0): ?><span class="dm-thread-badge" id="dmBadge_<?=$lid?>_<?=$oid?>"><?=$unr?></span><?php endif; ?>
+              </div>
             </div>
           </div>
+          <?php endforeach; ?>
         </div>
-        <?php endforeach; ?>
       </div>
-      <script>
-      // Pass myUid from PHP to JS so openThread works from dashboard
-      if (typeof myUid === 'undefined') var myUid = <?=$user['id']?>;
-      </script>
+      <!-- Chat pane -->
+      <div class="dm-chat" id="dmChat">
+        <div class="dm-chat-empty">Выберите диалог</div>
+      </div>
+    </div>
+
+    <script>
+    var dmMyId=<?=$myId?>;
+    var dmCurLid=0,dmCurUid=0,dmPoll=null,dmTypingTimer=null;
+    var dmCurName='',dmCurAvatar='',dmCurListing='';
+
+    function dmOpen(el){
+      dmCurLid=parseInt(el.dataset.lid);
+      dmCurUid=parseInt(el.dataset.uid);
+      dmCurName=el.dataset.name;
+      dmCurAvatar=el.dataset.avatar;
+      dmCurListing=el.dataset.listing;
+      // Highlight thread
+      document.querySelectorAll('.dm-thread.sel').forEach(function(t){t.classList.remove('sel')});
+      el.classList.add('sel');
+      // Build chat pane
+      var av=dmCurAvatar?'<img src="'+dmCurAvatar+'" alt="">':dmCurName.charAt(0);
+      var h='<div class="dm-chat-hd">';
+      h+='<button class="dm-back" onclick="dmBack()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></button>';
+      h+='<div class="dm-chat-hd-av">'+av+'</div>';
+      h+='<div class="dm-chat-hd-info"><div class="dm-chat-hd-name">'+dmCurName+'</div><div class="dm-chat-hd-listing">'+dmCurListing+'</div></div>';
+      h+='<div class="dm-chat-hd-on" id="dmOnline">В сети</div>';
+      h+='</div><div class="dm-chat-msgs" id="dmMsgs"></div>';
+      h+='<div class="dm-typing" id="dmTyping">печатает...</div>';
+      h+='<div class="dm-input-row"><div class="dm-input-wrap"><input class="dm-input" id="dmInput" placeholder="Сообщение" onkeydown="dmSendKey(event)" oninput="dmType()"></div>';
+      h+='<button class="dm-send" onclick="dmSend()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg></button></div>';
+      document.getElementById('dmChat').innerHTML=h;
+      document.getElementById('dmChat').classList.add('show');
+      // Clear badge
+      var b=document.getElementById('dmBadge_'+dmCurLid+'_'+dmCurUid);if(b)b.remove();
+      // Load messages
+      dmLoadMsgs();
+      // Poll
+      if(dmPoll)clearInterval(dmPoll);
+      dmPoll=setInterval(dmPollMsgs,5000);
+    }
+
+    function dmBack(){
+      document.getElementById('dmChat').classList.remove('show');
+      document.querySelectorAll('.dm-thread.sel').forEach(function(t){t.classList.remove('sel')});
+      dmCurLid=0;dmCurUid=0;
+      if(dmPoll){clearInterval(dmPoll);dmPoll=null}
+    }
+
+    function dmLoadMsgs(){
+      if(!dmCurLid)return;
+      fetch('/api/messages?lid='+dmCurLid+'&uid='+dmCurUid).then(function(r){return r.json()}).then(function(d){
+        var c=document.getElementById('dmMsgs');
+        var h='';var prevDate='';
+        (d.messages||[]).forEach(function(m){
+          var mine=m.sender_id==dmMyId;
+          var dt=m.created_at.split(' ')[0];
+          if(dt!=prevDate){h+='<div class="dm-date-sep">'+dt+'</div>';prevDate=dt}
+          h+='<div class="dm-msg-row '+(mine?'out':'in')+'">';
+          h+='<div class="dm-msg-bubble">'+dmEsc(m.text)+'</div>';
+          h+='<div class="dm-msg-meta">';
+          h+='<span>'+m.created_at.split(' ')[1].substring(0,5)+'</span>';
+          if(mine){h+='<span class="dm-tick '+(m.is_read?'read':'unread')+'">'+(m.is_read?'✓✓':'✓')+'</span>'}
+          h+='</div></div>';
+        });
+        c.innerHTML=h||'<div class="dm-chat-empty">Нет сообщений</div>';
+        c.scrollTop=c.scrollHeight;
+        // Online status
+        if(d.other&&d.other.last_seen){
+          var ls=new Date(d.other.last_seen.replace(' ','T')+'Z');
+          var ago=(Date.now()-ls.getTime())/1000;
+          var on=document.getElementById('dmOnline');
+          if(on){on.textContent=ago<300?'В сети':'Был(а) '+dmTimeAgo(d.other.last_seen);on.classList.add('show')}
+        }
+        // Typing
+        var ty=document.getElementById('dmTyping');
+        if(d.typing){ty.textContent=dmCurName+' печатает...';ty.classList.add('show')}else{ty.classList.remove('show')}
+      });
+    }
+
+    function dmPollMsgs(){if(dmCurLid)dmLoadMsgs()}
+
+    function dmSend(){
+      var inp=document.getElementById('dmInput');
+      var txt=inp.value.trim();
+      if(!txt||!dmCurLid||!dmCurUid)return;
+      inp.value='';
+      fetch('/api/send',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'lid='+dmCurLid+'&uid='+dmCurUid+'&text='+encodeURIComponent(txt)}).then(function(r){return r.json()}).then(function(d){if(d.ok)dmLoadMsgs()});
+    }
+
+    function dmSendKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();dmSend()}}
+
+    function dmType(){
+      if(!dmCurLid)return;
+      if(dmTypingTimer)clearTimeout(dmTypingTimer);
+      fetch('/api/typing',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'lid='+dmCurLid});
+      dmTypingTimer=setTimeout(function(){},3000);
+    }
+
+    function dmEsc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+
+    function dmTimeAgo(ts){
+      var s=(Date.now()-new Date(ts.replace(' ','T')+'Z').getTime())/1000;
+      if(s<60)return 'только что';
+      if(s<3600)return Math.floor(s/60)+' мин назад';
+      if(s<86400)return Math.floor(s/3600)+' ч назад';
+      return Math.floor(s/86400)+' дн назад';
+    }
+    </script>
     <?php endif; ?>
 
   <?php elseif ($sub === 'favorites'): ?>
