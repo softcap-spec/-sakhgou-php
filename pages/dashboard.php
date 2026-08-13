@@ -381,7 +381,10 @@ require __DIR__ . '/../includes/header.php';
         (d.messages||[]).forEach(function(m){
           var mine=m.sender_id==dmMyId;
           var dt=m.created_at.split(' ')[0];
-          if(dt!=prevDate){h+='<div class="dm-date-sep">'+dt+'</div>';prevDate=dt;lastSender=0}
+          var dtParts=dt.split('-');
+          var dtDate=new Date(dtParts[0],dtParts[1]-1,dtParts[2]);
+          var dtStr=dtDate.toLocaleDateString('ru-RU',{weekday:'long',day:'numeric',month:'long'});
+          if(dt!=prevDate){h+='<div class="dm-date-sep">'+dtStr+'</div>';prevDate=dt;lastSender=0}
           var isDeleted=(m.is_deleted==1||m.is_deleted==='1'||parseInt(m.is_deleted)===1);
           var continues=(m.sender_id==lastSender && lastDir===(mine?'out':'in'));
           lastSender=m.sender_id;lastDir=mine?'out':'in';

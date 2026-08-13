@@ -315,7 +315,7 @@ function loadMessages(){
   for(var i=0;i<data.messages.length;i++){
    var m=data.messages[i];
    var d=new Date(m.created_at.replace(/-/g,'/'));
-   var dateStr=d.toLocaleDateString('ru-RU',{day:'numeric',month:'long'});
+   var dateStr=d.toLocaleDateString('ru-RU',{weekday:'long',day:'numeric',month:'long'});
    if(dateStr!==lastDate){html+='<div class="chat-date-sep">'+dateStr+'</div>';lastDate=dateStr;lastSender=0}
    var mine=(parseInt(m.sender_id)===myUid);
    var time=d.toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'});
