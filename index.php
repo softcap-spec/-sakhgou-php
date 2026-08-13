@@ -3,6 +3,7 @@
  * сахгоу.рф — Front Controller / Router
  */
 require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/includes/version.php';
 require_once __DIR__ . '/includes/functions.php';
 require_once __DIR__ . '/includes/auth.php';
 
