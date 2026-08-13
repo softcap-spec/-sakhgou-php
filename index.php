@@ -101,7 +101,7 @@ switch ($page) {
       // Get messages + other user info
       $lid = (int)($_GET['lid'] ?? 0);
       $other = (int)($_GET['uid'] ?? 0);
-      $stmt = $pdo->prepare('SELECT * FROM messages WHERE listing_id=? AND is_deleted=0 AND ((sender_id=? AND receiver_id=?) OR (sender_id=? AND receiver_id=?)) ORDER BY created_at ASC');
+      $stmt = $pdo->prepare('SELECT *, 0 AS deleted FROM messages WHERE listing_id=? AND is_deleted=0 AND ((sender_id=? AND receiver_id=?) OR (sender_id=? AND receiver_id=?)) ORDER BY created_at ASC');
       $stmt->execute([$lid,$cu['id'],$other,$other,$cu['id']]);
       $msgs = $stmt->fetchAll();
       // Mark as read
@@ -110,6 +110,10 @@ switch ($page) {
       $ou = $pdo->prepare('SELECT name, avatar_url, last_seen FROM users WHERE id=?');
       $ou->execute([$other]);
       $otherUser = $ou->fetch();
+      // Listing info
+      $ll = $pdo->prepare('SELECT title, price, listing_type FROM listings WHERE id=?');
+      $ll->execute([$lid]);
+      $listingInfo = $ll->fetch();
       // Typing status
       $typing = $pdo->prepare('SELECT typing_lid, typing_at FROM users WHERE id=?');
       $typing->execute([$other]);
@@ -118,6 +122,7 @@ switch ($page) {
       echo json_encode([
         'messages' => $msgs,
         'other' => $otherUser ? ['name'=>$otherUser['name'],'avatar'=>$otherUser['avatar_url'],'last_seen'=>$otherUser['last_seen']] : null,
+        'listing' => $listingInfo ? ['title'=>$listingInfo['title'],'price'=>(float)$listingInfo['price'],'type'=>$listingInfo['listing_type']] : null,
         'typing' => $isTyping
       ]);
       exit;

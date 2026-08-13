@@ -361,7 +361,7 @@ require __DIR__ . '/../includes/header.php';
 #chatModal .cm-row{display:flex;max-width:80%;flex-direction:column}
 #chatModal .cm-row.out{align-self:flex-end;align-items:flex-end;position:relative}
 #chatModal .cm-row.in{align-self:flex-start;align-items:flex-start;position:relative}
-#chatModal .cm-bubble{padding:.5rem .75rem;border-radius:14px;font-size:.875rem;line-height:1.35;word-wrap:break-word}
+#chatModal .cm-bubble{padding:.5rem .75rem .75rem;border-radius:14px;font-size:.875rem;line-height:1.35;word-wrap:break-word;position:relative;min-width:5rem}
 #chatModal .cm-row.out .cm-bubble{background:#E8F4FB;color:#121E2B;border-bottom-right-radius:4px}
 #chatModal .cm-row.in .cm-bubble{background:#EEF2F6;color:#121E2B;border-bottom-left-radius:4px}
 #chatModal .cm-meta{display:flex;align-items:center;gap:.25rem;margin-top:.125rem;font-size:.6875rem;color:#9AAAB8;padding:0 .25rem}
@@ -449,8 +449,11 @@ function cmLoad() {
         }
         html += '<div class="cm-row '+(mine?'out':'in')+'">';
         if (mine) html += '<div class="cm-actions"><button class="cm-del" onclick="cmDelete('+m.id+')" title="Удалить">&times;</button></div>';
-        html += '<div class="cm-bubble">'+escapeHtml(m.text)+'</div>';
-        html += '<div class="cm-meta"><span>'+time+'</span>'+tick+'</div>';
+        html += '<div class="cm-bubble">'+escapeHtml(m.text)+'<span style="position:absolute;bottom:.25rem;right:.5rem;font-size:.625rem;color:'+(mine?'#7AB0C4':'#9AAAB8')+'">'+time+'</span></div>';
+        if (mine) {
+          var read = (m.is_read==1||m.is_read==='1'||m.is_read===true||parseInt(m.is_read)===1);
+          html += '<div style="font-size:.625rem;color:'+(read?'#16A34A':'#9AAAB8')+';margin-top:.125rem;padding:0 .25rem">'+(read?'Прочитано':'Доставлено')+'</div>';
+        }
         html += '</div>';
       }
       box.innerHTML = html;

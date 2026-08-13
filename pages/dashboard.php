@@ -229,6 +229,8 @@ require __DIR__ . '/../includes/header.php';
     .dm-msg-row.out:hover .dm-msg-actions{display:block}
     .dm-msg-del{width:20px;height:20px;border:0;border-radius:50%;background:#DC2626;color:#fff;font-size:14px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(0,0,0,0.15);transition:all .15s}
     .dm-msg-del:hover{background:#B91C1C;transform:scale(1.1)}
+    .dm-msg-status{font-size:.625rem;color:#9AAAB8;margin-top:.125rem;padding:0 .25rem}
+    .dm-msg-status.read{color:#16A34A}
     .dm-chat-hd{display:flex;align-items:center;gap:.625rem;padding:.75rem 1rem;border-bottom:1px solid #EEF2F6;background:#fff;flex-shrink:0}
     .dm-chat-hd-av{width:36px;height:36px;border-radius:50%;overflow:hidden;flex-shrink:0;background:#DFE4EA;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.875rem;color:#7A8A9A}
     .dm-chat-hd-av img{width:100%;height:100%;object-fit:cover}
@@ -241,7 +243,7 @@ require __DIR__ . '/../includes/header.php';
     .dm-msg-row{display:flex;max-width:75%;flex-direction:column}
     .dm-msg-row.out{position:relative;align-self:flex-end;align-items:flex-end}
     .dm-msg-row.in{position:relative;align-self:flex-start;align-items:flex-start}
-    .dm-msg-bubble{padding:.5rem .75rem;border-radius:14px;font-size:.875rem;line-height:1.35;word-wrap:break-word}
+    .dm-msg-bubble{padding:.5rem .75rem .75rem;border-radius:14px;font-size:.875rem;line-height:1.35;word-wrap:break-word;position:relative;min-width:5rem}
     .dm-msg-row.out .dm-msg-bubble{background:#E8F4FB;color:#121E2B;border-bottom-right-radius:4px}
     .dm-msg-row.in .dm-msg-bubble{background:#EEF2F6;color:#121E2B;border-bottom-left-radius:4px}
     .dm-msg-meta{display:flex;align-items:center;gap:.25rem;margin-top:.125rem;font-size:.6875rem;color:#9AAAB8;padding:0 .25rem}
@@ -364,11 +366,9 @@ require __DIR__ . '/../includes/header.php';
           if(dt!=prevDate){h+='<div class="dm-date-sep">'+dt+'</div>';prevDate=dt}
           h+='<div class="dm-msg-row '+(mine?'out':'in')+'">';
           if(mine) h+='<div class="dm-msg-actions"><button class="dm-msg-del" onclick="dmDelete('+m.id+')" title="Удалить">&times;</button></div>';
-          h+='<div class="dm-msg-bubble">'+dmEsc(m.text)+'</div>';
-          h+='<div class="dm-msg-meta">';
-          h+='<span>'+m.created_at.split(' ')[1].substring(0,5)+'</span>';
-          if(mine){h+='<span class="dm-tick '+(m.is_read?'read':'unread')+'">'+(m.is_read?'✓✓':'✓')+'</span>'}
-          h+='</div></div>';
+          h+='<div class="dm-msg-bubble">'+dmEsc(m.text)+'<span style="position:absolute;bottom:.25rem;right:.5rem;font-size:.625rem;color:'+(mine?'#7AB0C4':'#9AAAB8')+'">'+m.created_at.split(' ')[1].substring(0,5)+'</span></div>';
+          if(mine){h+='<div class="dm-msg-status '+(m.is_read?'read':'')+'">'+(m.is_read?'Прочитано':'Доставлено')+'</div>'}
+          h+='</div>';
         });
         c.innerHTML=h||'<div class="dm-chat-empty">Нет сообщений</div>';
         c.scrollTop=c.scrollHeight;
