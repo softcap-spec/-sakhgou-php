@@ -84,39 +84,57 @@ $myId = (int)$cu['id'];
 .chat-thread-listing{font-size:.6875rem;color:#6B7B8D;margin-top:.125rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .chat-thread-listing .price{font-weight:600;color:#0A1A2A}
 
-/* Messages — Avito style v8: bubble + meta below + avatar */
-.chat-msgs{flex:1;overflow-y:auto;padding:.625rem .875rem;display:flex;flex-direction:column;gap:.375rem;background:#fff}
-.chat-date-sep{text-align:center;font-size:.6875rem;color:#6B7B8D;margin:.5rem 0;padding:.25rem .5rem;background:#F7F9FB;border-radius:8px;align-self:center}
+/* Messages — v9: polished Avito-style */
+.chat-msgs{flex:1;overflow-y:auto;padding:.75rem 1rem;display:flex;flex-direction:column;gap:.125rem;background:#fff}
+.chat-date-sep{text-align:center;font-size:.6875rem;color:#9AA5B1;margin:.75rem 0 .5rem;padding:.25rem .75rem;background:#F0F3F7;border-radius:100px;align-self:center;font-weight:500}
 
-/* Row: avatar (in only) + bubble + meta below */
-.chat-msg-row{display:flex;max-width:85%;position:relative;gap:.375rem}
+/* Row: avatar (in only) + content column */
+.chat-msg-row{display:flex;max-width:82%;position:relative;gap:.5rem;align-items:flex-end}
 .chat-msg-row.out{align-self:flex-end;flex-direction:row-reverse}
 .chat-msg-row.in{align-self:flex-start}
+/* Compact consecutive messages */
+.chat-msg-row.continues{margin-top:0}
 .chat-msg-col{display:flex;flex-direction:column;min-width:0}
 .chat-msg-row.out .chat-msg-col{align-items:flex-end}
 .chat-msg-row.in .chat-msg-col{align-items:flex-start}
-.chat-msg-bubble{padding:.5rem .75rem;border-radius:14px;font-size:.875rem;line-height:1.35;word-wrap:break-word;position:relative;max-width:100%}
-.chat-msg-row.out .chat-msg-bubble{background:#EAF6FF;color:#0A1A2A;border-bottom-right-radius:4px}
-.chat-msg-row.in .chat-msg-bubble{background:#F4F6F8;color:#0A1A2A;border-bottom-left-radius:4px}
-/* Meta below bubble: time + status */
-.chat-msg-meta{display:flex;align-items:center;gap:.25rem;margin-top:.125rem;font-size:.6875rem;color:#B8C2CC;padding:0 .25rem}
-.chat-msg-status{font-size:.625rem;color:#B8C2CC;line-height:1;white-space:nowrap}
-.chat-msg-status.read{color:#00B04C}
-/* Avatar for incoming messages */
-.chat-msg-avatar{width:1.75rem;height:1.75rem;border-radius:50%;background:#EEF2F6;display:flex;align-items:center;justify-content:center;font-size:.625rem;font-weight:600;color:#5A6B7D;overflow:hidden;flex-shrink:0;align-self:flex-end}
-.chat-msg-avatar img{width:100%;height:100%;object-fit:cover}
-/* Deleted message */
-.chat-msg-deleted{padding:.5rem .75rem;border-radius:14px;font-size:.8125rem;color:#6B7B8D;font-style:italic;background:#F4F6F8;max-width:60%}
 
-/* Action button on own messages (Avito: ⋯ menu) */
-.chat-msg-actions{display:none;position:absolute;top:-4px;right:-4px;z-index:2}
+/* Bubble */
+.chat-msg-bubble{padding:.5rem .875rem;border-radius:16px;font-size:.875rem;line-height:1.4;word-wrap:break-word;position:relative;max-width:100%;transition:box-shadow .15s}
+.chat-msg-row.out .chat-msg-bubble{background:#EAF6FF;color:#0A1A2A;border-bottom-right-radius:5px;box-shadow:0 1px 2px rgba(10,123,186,0.08)}
+.chat-msg-row.in .chat-msg-bubble{background:#F4F6F8;color:#0A1A2A;border-bottom-left-radius:5px;box-shadow:0 1px 2px rgba(10,26,42,0.04)}
+.chat-msg-row.continues.out .chat-msg-bubble{border-bottom-right-radius:16px}
+.chat-msg-row.continues.in .chat-msg-bubble{border-bottom-left-radius:16px}
+
+/* Meta line: time · status, under bubble */
+.chat-msg-meta{display:flex;align-items:center;gap:.3125rem;margin-top:.1875rem;font-size:.6875rem;color:#B8C2CC;padding:0 .25rem;white-space:nowrap}
+.chat-msg-meta-sep{color:#D1DAE3;font-size:.625rem}
+.chat-msg-status{font-size:.6875rem;color:#B8C2CC;line-height:1;white-space:nowrap;transition:color .2s}
+.chat-msg-status.read{color:#00B04C}
+
+/* Avatar: colored circle with initials or photo */
+.chat-msg-avatar{width:1.75rem;height:1.75rem;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.6875rem;font-weight:700;overflow:hidden;flex-shrink:0;align-self:flex-end;letter-spacing:-.02em}
+.chat-msg-avatar.c0{background:#E3F2FD;color:#1565C0}
+.chat-msg-avatar.c1{background:#F3E5F5;color:#7B1FA2}
+.chat-msg-avatar.c2{background:#E8F5E9;color:#2E7D32}
+.chat-msg-avatar.c3{background:#FFF3E0;color:#E65100}
+.chat-msg-avatar.c4{background:#E0F7FA;color:#00838F}
+.chat-msg-avatar.c5{background:#FCE4EC;color:#C62828}
+.chat-msg-avatar img{width:100%;height:100%;object-fit:cover}
+/* Hide avatar on continues */
+.chat-msg-row.continues .chat-msg-avatar{visibility:hidden}
+
+/* Deleted message */
+.chat-msg-deleted{padding:.5rem .875rem;border-radius:16px;font-size:.8125rem;color:#9AA5B1;font-style:italic;background:#F4F6F8;border-bottom-left-radius:5px;max-width:60%}
+
+/* Action button (⋯) */
+.chat-msg-actions{display:none;position:absolute;top:-2px;right:-2px;z-index:3}
 .chat-msg-col:hover .chat-msg-actions{display:flex}
-.chat-msg-act-btn{width:24px;height:24px;border:0;border-radius:50%;background:#fff;color:#5A6B7D;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(0,0,0,0.1);transition:all .15s;line-height:1;padding:0}
-.chat-msg-act-btn:hover{background:#EEF2F6;color:#0A1A2A}
-/* Action menu dropdown */
-.chat-act-menu{position:absolute;top:28px;right:-4px;background:#fff;border:1px solid #D1DAE3;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,0.1);z-index:10;display:none;min-width:140px;overflow:hidden}
+.chat-msg-act-btn{width:22px;height:22px;border:0;border-radius:50%;background:rgba(255,255,255,0.95);color:#5A6B7D;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 3px rgba(0,0,0,0.1);transition:all .15s;line-height:1;padding:0}
+.chat-msg-act-btn:hover{background:#fff;color:#0A1A2A;box-shadow:0 2px 6px rgba(0,0,0,0.15)}
+.chat-act-menu{position:absolute;top:26px;right:-2px;background:#fff;border:1px solid #E8ECF0;border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,0.08);z-index:10;display:none;min-width:140px;overflow:hidden;animation:menuIn .12s ease-out}
+@keyframes menuIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
 .chat-act-menu.open{display:block}
-.chat-act-item{display:block;width:100%;padding:.5rem .75rem;font-size:.8125rem;color:#DC2626;background:none;border:0;cursor:pointer;text-align:left}
+.chat-act-item{display:block;width:100%;padding:.5rem .875rem;font-size:.8125rem;color:#DC2626;background:none;border:0;cursor:pointer;text-align:left;transition:background .1s}
 .chat-act-item:hover{background:#FEF2F2}
 
 /* Typing */
@@ -293,24 +311,28 @@ function loadMessages(){
   }
   document.getElementById('chatTyping').className='chat-typing'+(data.typing?' active':'');
   if(!data.messages||data.messages.length===0){box.innerHTML='<div class="chat-empty">Напишите первое сообщение</div>';return}
-  var html='',lastDate='';
+  var html='',lastDate='',lastSender=0,lastDir='';
   for(var i=0;i<data.messages.length;i++){
    var m=data.messages[i];
    var d=new Date(m.created_at.replace(/-/g,'/'));
    var dateStr=d.toLocaleDateString('ru-RU',{day:'numeric',month:'long'});
-   if(dateStr!==lastDate){html+='<div class="chat-date-sep">'+dateStr+'</div>';lastDate=dateStr}
+   if(dateStr!==lastDate){html+='<div class="chat-date-sep">'+dateStr+'</div>';lastDate=dateStr;lastSender=0}
    var mine=(parseInt(m.sender_id)===myUid);
    var time=d.toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'});
    var isDeleted=(m.is_deleted==1||m.is_deleted==='1'||parseInt(m.is_deleted)===1);
-   html+='<div class="chat-msg-row '+(mine?'out':'in')+'">';
+   var continues=(parseInt(m.sender_id)===lastSender && lastDir===(mine?'out':'in'));
+   lastSender=parseInt(m.sender_id);lastDir=mine?'out':'in';
+   html+='<div class="chat-msg-row '+(mine?'out':'in')+(continues?' continues':'')+'">';
    if(isDeleted){
      html+='<div class="chat-msg-deleted">Сообщение удалено</div>';
      html+='</div>';
      continue;
    }
-   /* Avatar for incoming */
+   /* Avatar for incoming — colored by name hash */
    if(!mine){
-     html+='<div class="chat-msg-avatar">';
+     var ch=0;for(var j=0;j<otherName.length;j++)ch=(ch*31+otherName.charCodeAt(j))>>>0;
+     var cls='c'+(ch%6);
+     html+='<div class="chat-msg-avatar '+cls+'">';
      if(otherAvatar){html+='<img src="'+escapeHtml(otherAvatar)+'" alt="">'}
      else{html+=escapeHtml(otherName.substring(0,2))}
      html+='</div>';
@@ -324,6 +346,7 @@ function loadMessages(){
    html+='<span>'+time+'</span>';
    if(mine){
      var read=(m.is_read==1||m.is_read==='1'||m.is_read===true||parseInt(m.is_read)===1);
+     html+='<span class="chat-msg-meta-sep">·</span>';
      html+='<span class="chat-msg-status'+(read?' read':'')+'">'+(read?'Прочитано':'Доставлено')+'</span>';
    }
    html+='</div></div></div>';

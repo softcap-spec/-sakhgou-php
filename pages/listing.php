@@ -357,21 +357,32 @@ require __DIR__ . '/../includes/header.php';
 <!-- Chat Modal -->
 <?php if ($cu && !$isOwner): ?>
 <style>
-#chatModal .cm-msgs{flex:1;overflow-y:auto;padding:.625rem .875rem;display:flex;flex-direction:column;gap:.25rem;background:#fff}
-#chatModal .cm-row{display:flex;max-width:80%;position:relative;gap:.375rem}
+#chatModal .cm-msgs{flex:1;overflow-y:auto;padding:.75rem 1rem;display:flex;flex-direction:column;gap:.125rem;background:#fff}
+#chatModal .cm-row{display:flex;max-width:80%;position:relative;gap:.5rem;align-items:flex-end}
 #chatModal .cm-row.out{align-self:flex-end;align-items:flex-end;flex-direction:row-reverse;position:relative}
 #chatModal .cm-row.in{align-self:flex-start;align-items:flex-start;position:relative}
+#chatModal .cm-row.continues{margin-top:0}
 #chatModal .cm-col{display:flex;flex-direction:column;min-width:0}
 #chatModal .cm-row.out .cm-col{align-items:flex-end}
 #chatModal .cm-row.in .cm-col{align-items:flex-start}
-#chatModal .cm-bubble{padding:.5rem .75rem;border-radius:14px;font-size:.875rem;line-height:1.35;word-wrap:break-word;position:relative;max-width:100%}
-#chatModal .cm-row.out .cm-bubble{background:#EAF6FF;color:#0A1A2A;border-bottom-right-radius:4px}
-#chatModal .cm-row.in .cm-bubble{background:#F4F6F8;color:#0A1A2A;border-bottom-left-radius:4px}
-#chatModal .cm-meta{display:flex;align-items:center;gap:.25rem;margin-top:.125rem;font-size:.6875rem;color:#B8C2CC;padding:0 .25rem}
-#chatModal .cm-status{font-size:.625rem;color:#B8C2CC;line-height:1;white-space:nowrap}
+#chatModal .cm-bubble{padding:.5rem .875rem;border-radius:16px;font-size:.875rem;line-height:1.4;word-wrap:break-word;position:relative;max-width:100%;transition:box-shadow .15s}
+#chatModal .cm-row.out .cm-bubble{background:#EAF6FF;color:#0A1A2A;border-bottom-right-radius:5px;box-shadow:0 1px 2px rgba(10,123,186,0.08)}
+#chatModal .cm-row.in .cm-bubble{background:#F4F6F8;color:#0A1A2A;border-bottom-left-radius:5px;box-shadow:0 1px 2px rgba(10,26,42,0.04)}
+#chatModal .cm-row.continues.out .cm-bubble{border-bottom-right-radius:16px}
+#chatModal .cm-row.continues.in .cm-bubble{border-bottom-left-radius:16px}
+#chatModal .cm-meta{display:flex;align-items:center;gap:.3125rem;margin-top:.1875rem;font-size:.6875rem;color:#B8C2CC;padding:0 .25rem;white-space:nowrap}
+#chatModal .cm-meta-sep{color:#D1DAE3;font-size:.625rem}
+#chatModal .cm-status{font-size:.6875rem;color:#B8C2CC;line-height:1;white-space:nowrap}
 #chatModal .cm-status.read{color:#00B04C}
-#chatModal .cm-avatar{width:1.75rem;height:1.75rem;border-radius:50%;background:#EEF2F6;display:flex;align-items:center;justify-content:center;font-size:.625rem;font-weight:600;color:#5A6B7D;overflow:hidden;flex-shrink:0;align-self:flex-end}
+#chatModal .cm-avatar{width:1.75rem;height:1.75rem;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.6875rem;font-weight:700;overflow:hidden;flex-shrink:0;align-self:flex-end;letter-spacing:-.02em}
+#chatModal .cm-avatar.c0{background:#E3F2FD;color:#1565C0}
+#chatModal .cm-avatar.c1{background:#F3E5F5;color:#7B1FA2}
+#chatModal .cm-avatar.c2{background:#E8F5E9;color:#2E7D32}
+#chatModal .cm-avatar.c3{background:#FFF3E0;color:#E65100}
+#chatModal .cm-avatar.c4{background:#E0F7FA;color:#00838F}
+#chatModal .cm-avatar.c5{background:#FCE4EC;color:#C62828}
 #chatModal .cm-avatar img{width:100%;height:100%;object-fit:cover}
+#chatModal .cm-row.continues .cm-avatar{visibility:hidden}
 #chatModal .cm-actions{display:none;position:absolute;top:-8px;right:-8px;z-index:2}
 #chatModal .cm-col:hover .cm-actions{display:block}
 #chatModal .cm-del{width:20px;height:20px;border:0;border-radius:50%;background:#DC2626;color:#fff;font-size:14px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(0,0,0,0.15);transition:all .15s}
@@ -443,24 +454,27 @@ function cmLoad() {
         box.innerHTML = '<div style="text-align:center;color:#6B7B8D;font-size:.875rem;padding:2rem 0">Напишите первое сообщение</div>';
         return;
       }
-      var html = '', lastDate = '';
+      var html = '', lastDate = '', lastSender = 0, lastDir = '';
       for (var i=0; i<data.messages.length; i++) {
         var m = data.messages[i];
         var d = new Date(m.created_at.replace(/-/g,'/'));
         var dateStr = d.toLocaleDateString('ru-RU',{day:'numeric',month:'long'});
-        if (dateStr !== lastDate) { html += '<div class="cm-date">'+dateStr+'</div>'; lastDate = dateStr; }
+        if (dateStr !== lastDate) { html += '<div class="cm-date">'+dateStr+'</div>'; lastDate = dateStr; lastSender = 0; }
         var mine = (parseInt(m.sender_id) === cmUid);
         var time = d.toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'});
         var isDeleted = (m.is_deleted==1||m.is_deleted==='1'||parseInt(m.is_deleted)===1);
-        html += '<div class="cm-row '+(mine?'out':'in')+'">';
+        var continues = (parseInt(m.sender_id) === lastSender && lastDir === (mine?'out':'in'));
+        lastSender = parseInt(m.sender_id); lastDir = mine ? 'out' : 'in';
+        html += '<div class="cm-row '+(mine?'out':'in')+(continues?' continues':'')+'">';
         if (isDeleted) {
-          html += '<div style="padding:.5rem .75rem;border-radius:14px;font-size:.8125rem;color:#6B7B8D;font-style:italic;background:#F4F6F8;max-width:60%">Сообщение удалено</div>';
+          html += '<div style="padding:.5rem .875rem;border-radius:16px;font-size:.8125rem;color:#9AA5B1;font-style:italic;background:#F4F6F8;border-bottom-left-radius:5px;max-width:60%">Сообщение удалено</div>';
           html += '</div>';
           continue;
         }
-        /* Avatar for incoming */
+        /* Avatar for incoming — colored by name hash */
         if(!mine){
-          html+='<div class="cm-avatar">';
+          var ch=0;for(var j=0;j<cmOtherName.length;j++)ch=(ch*31+cmOtherName.charCodeAt(j))>>>0;
+          html+='<div class="cm-avatar c'+(ch%6)+'">';
           if(cmOtherAvatar){html+='<img src="'+escapeHtml(cmOtherAvatar)+'" alt="">'}
           else{html+=escapeHtml(cmOtherName.substring(0,2))}
           html+='</div>';
@@ -471,7 +485,7 @@ function cmLoad() {
         html += '<div class="cm-meta"><span>'+time+'</span>';
         if (mine) {
           var read = (m.is_read==1||m.is_read==='1'||m.is_read===true||parseInt(m.is_read)===1);
-          html += '<span class="cm-status'+(read?' read':'')+'">'+(read?'Прочитано':'Доставлено')+'</span>';
+          html += '<span class="cm-meta-sep">·</span><span class="cm-status'+(read?' read':'')+'">'+(read?'Прочитано':'Доставлено')+'</span>';
         }
         html += '</div></div></div>';
       }
