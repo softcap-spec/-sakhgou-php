@@ -46,47 +46,47 @@ $myId = (int)$cu['id'];
 .chat-fab-btn{width:3rem;height:3rem;border-radius:50%;border:0;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(15,23,32,0.12);transition:transform .2s,box-shadow .2s;position:relative}
 .chat-fab-btn:hover{transform:scale(1.06);box-shadow:0 6px 18px rgba(15,23,32,0.18)}
 .chat-fab-btn:active{transform:scale(.95)}
-.chat-fab-chat{background:#121E2B;color:#fff}
-.chat-fab-bell{background:#fff;color:#121E2B;border:1px solid #DFE4EA}
+.chat-fab-chat{background:#0A1A2A;color:#fff}
+.chat-fab-bell{background:#fff;color:#0A1A2A;border:1px solid #DFE4EA}
 .chat-fab-badge{position:absolute;top:-4px;right:-4px;background:#DC2626;color:#fff;font-size:.625rem;font-weight:700;min-width:1.125rem;height:1.125rem;border-radius:9999px;display:flex;align-items:center;justify-content:center;border:2px solid #fff;padding:0 .25rem}
 
 .chat-widget{position:fixed;bottom:4.5rem;right:1.25rem;z-index:91;width:24rem;height:34rem;max-height:calc(100vh - 6rem);background:#fff;border-radius:16px;box-shadow:0 24px 60px -12px rgba(15,23,32,0.25);display:none;flex-direction:column;overflow:hidden}
 .chat-widget.open{display:flex}
 
 .chat-w-header{padding:.75rem 1rem;display:flex;align-items:center;justify-content:space-between;background:#fff;border-bottom:1px solid #EBEEF2;flex-shrink:0}
-.chat-w-title{font-size:1rem;font-weight:700;color:#121E2B}
-.chat-w-close{width:2rem;height:2rem;border:0;background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;border-radius:8px;color:#7A8A9A;transition:all .15s}
-.chat-w-close:hover{background:#F0F3F7;color:#121E2B}
+.chat-w-title{font-size:1rem;font-weight:700;color:#0A1A2A}
+.chat-w-close{width:2rem;height:2rem;border:0;background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;border-radius:8px;color:#5A6B7D;transition:all .15s}
+.chat-w-close:hover{background:#F0F3F7;color:#0A1A2A}
 .chat-w-body{flex:1;overflow-y:auto}
 
 /* Chat list */
 .chat-list-item{padding:.75rem 1rem;border-bottom:1px solid #F0F3F7;cursor:pointer;transition:background .12s;display:flex;gap:.625rem;align-items:center}
 .chat-list-item:hover{background:#F7F9FB}
-.chat-avatar{border-radius:50%;background:#EEF2F6;display:flex;align-items:center;justify-content:center;font-weight:600;color:#7A8A9A;overflow:hidden;flex-shrink:0}
+.chat-avatar{border-radius:50%;background:#EEF2F6;display:flex;align-items:center;justify-content:center;font-weight:600;color:#5A6B7D;overflow:hidden;flex-shrink:0}
 .chat-avatar.lg{width:2.75rem;height:2.75rem;font-size:.75rem}
 .chat-avatar.md{width:2.25rem;height:2.25rem;font-size:.625rem}
 .chat-avatar img{width:100%;height:100%;object-fit:cover}
-.chat-list-name{font-size:.875rem;font-weight:600;color:#121E2B;line-height:1.2}
-.chat-list-preview{font-size:.75rem;color:#7A8A9A;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:.125rem;max-width:14rem}
-.chat-list-time{font-size:.6875rem;color:#9AAAB8;white-space:nowrap}
+.chat-list-name{font-size:.875rem;font-weight:600;color:#0A1A2A;line-height:1.2}
+.chat-list-preview{font-size:.75rem;color:#5A6B7D;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:.125rem;max-width:14rem}
+.chat-list-time{font-size:.6875rem;color:#6B7B8D;white-space:nowrap}
 .chat-list-unread{background:#DC2626;color:#fff;font-size:.625rem;font-weight:700;min-width:1.125rem;height:1.125rem;border-radius:9999px;display:flex;align-items:center;justify-content:center;padding:0 .25rem;flex-shrink:0;margin-left:auto}
-.chat-list-meta{font-size:.6875rem;color:#9AAAB8;margin-top:.125rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chat-list-meta{font-size:.6875rem;color:#6B7B8D;margin-top:.125rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
 /* Thread header — Avito style with listing card */
 .chat-thread{display:none;flex-direction:column;height:100%}
 .chat-thread.active{display:flex}
 .chat-thread-hdr{display:flex;align-items:center;gap:.5rem;padding:.5rem .75rem;border-bottom:1px solid #EBEEF2;background:#fff;flex-shrink:0}
-.chat-thread-back{color:#7A8A9A;flex-shrink:0;cursor:pointer;background:none;border:0;padding:.25rem;display:flex;align-items:center}
-.chat-thread-back:hover{color:#121E2B}
-.chat-thread-name{font-weight:700;color:#121E2B;font-size:.875rem;line-height:1.2}
-.chat-thread-status{font-size:.6875rem;color:#9AAAB8}
+.chat-thread-back{color:#5A6B7D;flex-shrink:0;cursor:pointer;background:none;border:0;padding:.25rem;display:flex;align-items:center}
+.chat-thread-back:hover{color:#0A1A2A}
+.chat-thread-name{font-weight:700;color:#0A1A2A;font-size:.875rem;line-height:1.2}
+.chat-thread-status{font-size:.6875rem;color:#6B7B8D}
 .chat-thread-status.online{color:#16A34A}
-.chat-thread-listing{font-size:.6875rem;color:#9AAAB8;margin-top:.125rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.chat-thread-listing .price{font-weight:600;color:#121E2B}
+.chat-thread-listing{font-size:.6875rem;color:#6B7B8D;margin-top:.125rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chat-thread-listing .price{font-weight:600;color:#0A1A2A}
 
 /* Messages — Avito style v7 */
 .chat-msgs{flex:1;overflow-y:auto;padding:.625rem .875rem;display:flex;flex-direction:column;gap:.375rem;background:#fff}
-.chat-date-sep{text-align:center;font-size:.6875rem;color:#9AAAB8;margin:.5rem 0;padding:.25rem .5rem;background:#F7F9FB;border-radius:8px;align-self:center}
+.chat-date-sep{text-align:center;font-size:.6875rem;color:#6B7B8D;margin:.5rem 0;padding:.25rem .5rem;background:#F7F9FB;border-radius:8px;align-self:center}
 
 /* Avito: bubble + time on the SIDE (not below) */
 .chat-msg-row{display:flex;align-items:flex-end;max-width:90%;position:relative;gap:.375rem}
@@ -101,27 +101,27 @@ $myId = (int)$cu['id'];
 .chat-msg-status{font-size:.625rem;color:#B8C2CC;line-height:1;white-space:nowrap}
 .chat-msg-status.read{color:#00B04C}
 /* Deleted message — shows placeholder */
-.chat-msg-deleted{padding:.5rem .75rem;border-radius:14px;font-size:.8125rem;color:#9AAAB8;font-style:italic;background:#F4F6F8;max-width:60%}
+.chat-msg-deleted{padding:.5rem .75rem;border-radius:14px;font-size:.8125rem;color:#6B7B8D;font-style:italic;background:#F4F6F8;max-width:60%}
 
 /* Action button on own messages (Avito: "Действия") */
 .chat-msg-actions{display:none;position:absolute;top:-6px;right:-6px;z-index:2}
 .chat-msg-row.out:hover .chat-msg-actions{display:flex}
-.chat-msg-act-btn{width:22px;height:22px;border:0;border-radius:50%;background:#fff;color:#7A8A9A;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(0,0,0,0.12);transition:all .15s}
+.chat-msg-act-btn{width:22px;height:22px;border:0;border-radius:50%;background:#fff;color:#5A6B7D;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(0,0,0,0.12);transition:all .15s}
 .chat-msg-act-btn:hover{background:#FEE2E2;color:#DC2626}
 
 /* Typing */
-.chat-typing{padding:.25rem .875rem;font-size:.75rem;color:#7A8A9A;display:none;font-style:italic;flex-shrink:0}
+.chat-typing{padding:.25rem .875rem;font-size:.75rem;color:#5A6B7D;display:none;font-style:italic;flex-shrink:0}
 .chat-typing.active{display:block}
 
 /* Input — Avito style: clip + input + send */
 .chat-input-row{border-top:1px solid #EBEEF2;padding:.5rem .75rem;display:flex;gap:.375rem;align-items:center;background:#fff;flex-shrink:0}
-.chat-clip{width:2.25rem;height:2.25rem;border:0;border-radius:50%;background:none;color:#7A8A9A;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0}
-.chat-clip:hover{background:#F0F3F7;color:#121E2B}
+.chat-clip{width:2.25rem;height:2.25rem;border:0;border-radius:50%;background:none;color:#5A6B7D;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0}
+.chat-clip:hover{background:#F0F3F7;color:#0A1A2A}
 .chat-input-wrap{flex:1}
 .chat-input{width:100%;border:1px solid #DFE4EA;border-radius:22px;padding:.5rem 1rem;font-size:.875rem;outline:none;transition:border-color .15s;background:#F7F9FB;box-sizing:border-box}
-.chat-input:focus{border-color:#1B6B8A;background:#fff}
-.chat-send{width:2.25rem;height:2.25rem;border:0;border-radius:50%;background:#1B6B8A;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0}
-.chat-send:hover{background:#155A75;transform:scale(1.05)}
+.chat-input:focus{border-color:#0A7BBA;background:#fff}
+.chat-send{width:2.25rem;height:2.25rem;border:0;border-radius:50%;background:#0A7BBA;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0}
+.chat-send:hover{background:#0868A0;transform:scale(1.05)}
 .chat-send:disabled{background:#C8D0DA;cursor:not-allowed;transform:none}
 
 /* Notifications */
@@ -129,10 +129,10 @@ $myId = (int)$cu['id'];
 .notif-panel.open{display:flex}
 .notif-item{padding:.75rem 1rem;border-bottom:1px solid #F0F3F7;cursor:pointer;transition:background .12s}
 .notif-item:hover{background:#F7F9FB}
-.notif-text{font-size:.8125rem;color:#121E2B}
-.notif-time{font-size:.6875rem;color:#9AAAB8;margin-top:.25rem}
+.notif-text{font-size:.8125rem;color:#0A1A2A}
+.notif-time{font-size:.6875rem;color:#6B7B8D;margin-top:.25rem}
 
-.chat-empty{padding:2rem 1rem;text-align:center;color:#9AAAB8;font-size:.875rem}
+.chat-empty{padding:2rem 1rem;text-align:center;color:#6B7B8D;font-size:.875rem}
 </style>
 
 <div class="chat-fab-container">
@@ -152,7 +152,7 @@ $myId = (int)$cu['id'];
     <span class="chat-w-title">Уведомления</span>
     <div style="display:flex;align-items:center;gap:0.5rem">
       <?php if (!empty($notifs)): ?>
-      <button onclick="markNotifsRead()" style="background:none;border:0;cursor:pointer;font-size:0.75rem;color:#1B6B8A;font-weight:600">Прочитать все</button>
+      <button onclick="markNotifsRead()" style="background:none;border:0;cursor:pointer;font-size:0.75rem;color:#0A7BBA;font-weight:600">Прочитать все</button>
       <?php endif; ?>
       <button class="chat-w-close" onclick="toggleNotif()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
     </div>
@@ -174,7 +174,7 @@ $myId = (int)$cu['id'];
     </div>
     <div class="chat-w-body">
       <?php if (empty($chats)): ?>
-        <div class="chat-empty">Нет сообщений<br><br><a href="/catalog" style="color:#1B6B8A;font-weight:600">Найти объявления →</a></div>
+        <div class="chat-empty">Нет сообщений<br><br><a href="/catalog" style="color:#0A7BBA;font-weight:600">Найти объявления →</a></div>
       <?php else: foreach($chats as $ch):
         $other = ($ch['sender_id'] == $cu['id']) ? $ch['receiver_id'] : $ch['sender_id'];
         $key = $ch['lid'].'_'.$other; $unr = $unreadByChat[$key] ?? 0;

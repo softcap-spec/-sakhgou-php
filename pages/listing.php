@@ -68,7 +68,7 @@ require __DIR__ . '/../includes/header.php';
       <!-- Title -->
       <div>
         <h1 class="font-display text-2xl sm:text-3xl leading-tight text-foreground"><?=h($item['title'])?></h1>
-        <div class="flex items-center gap-3 mt-2 text-xs text-[#9AAAB8]">
+        <div class="flex items-center gap-3 mt-2 text-xs text-[#6B7B8D]">
           <?php if (!empty($item['location'])): ?>
           <span class="flex items-center gap-1">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
@@ -116,7 +116,7 @@ require __DIR__ . '/../includes/header.php';
 
       <!-- Price (mobile) -->
       <div class="lg:hidden flex items-center justify-between bg-white border border-[#EBEEF2] rounded-xl p-4">
-        <div class="font-display text-2xl"><?=number_format((float)$item['price'],0,'.',' ')?> <span class="text-sm font-normal text-[#9AAAB8]"><?=price_label($item['listing_type'])?></span></div>
+        <div class="font-display text-2xl"><?=number_format((float)$item['price'],0,'.',' ')?> <span class="text-sm font-normal text-[#6B7B8D]"><?=price_label($item['listing_type'])?></span></div>
         <?php if(!empty($item['host_phone'])): ?>
         <button onclick="revealPhone()" class="inline-flex items-center gap-1.5 rounded-lg bg-accent text-white h-9 px-4 text-sm font-medium">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
@@ -132,7 +132,7 @@ require __DIR__ . '/../includes/header.php';
         <?php if (!empty($item['description'])): ?>
         <p class="text-[#3A4A5C] leading-relaxed whitespace-pre-line text-sm"><?=h($item['description'])?></p>
         <?php else: ?>
-        <p class="text-[#9AAAB8] text-sm">Описание не указано</p>
+        <p class="text-[#6B7B8D] text-sm">Описание не указано</p>
         <?php endif; ?>
       </div>
 
@@ -157,7 +157,7 @@ require __DIR__ . '/../includes/header.php';
         <dl class="grid grid-cols-1 sm:grid-cols-2 gap-x-6">
           <?php foreach($specs as $l=>$v): ?>
           <div class="flex justify-between py-2 border-b border-[#F0F3F7]">
-            <dt class="text-sm text-[#7A8A9A]"><?=$l?></dt>
+            <dt class="text-sm text-[#5A6B7D]"><?=$l?></dt>
             <dd class="text-sm font-medium text-foreground text-right"><?=h((string)$v)?></dd>
           </div>
           <?php endforeach; ?>
@@ -189,18 +189,18 @@ require __DIR__ . '/../includes/header.php';
         <div class="flex items-center justify-between mb-4">
           <h2 class="font-display text-lg">Отзывы</h2>
           <?php if($item['reviews_count']>0):?>
-          <span class="text-sm text-[#7A8A9A]"><span class="text-amber-500"><?=$item['reviews_count']>0?'★ ':''?></span><?=round($item['avg_rating'],1)?> · <?=$item['reviews_count']?></span>
+          <span class="text-sm text-[#5A6B7D]"><span class="text-amber-500"><?=$item['reviews_count']>0?'★ ':''?></span><?=round($item['avg_rating'],1)?> · <?=$item['reviews_count']?></span>
           <?php endif; ?>
         </div>
         <?php if(empty($reviews)): ?>
-        <p class="text-sm text-[#9AAAB8]">Пока нет отзывов</p>
+        <p class="text-sm text-[#6B7B8D]">Пока нет отзывов</p>
         <?php else: foreach($reviews as $r): ?>
         <div class="border-t border-[#F0F3F7] py-3.5">
           <div class="flex items-center gap-2 mb-1.5">
             <?= avatar_html(['name'=>$r['author_name'],'avatar_url'=>$r['author_avatar']??null], 'w-7 h-7', 'text-[0.6rem]') ?>
             <span class="text-sm font-medium"><?=h($r['author_name'])?></span>
             <span class="text-amber-500 text-xs"><?=str_repeat('★',(int)$r['rating'])?></span>
-            <span class="text-xs text-[#9AAAB8] ml-auto"><?=time_ago($r['created_at'])?></span>
+            <span class="text-xs text-[#6B7B8D] ml-auto"><?=time_ago($r['created_at'])?></span>
           </div>
           <p class="text-sm text-[#3A4A5C]"><?=h($r['text'])?></p>
         </div>
@@ -215,9 +215,9 @@ require __DIR__ . '/../includes/header.php';
 
         <!-- Price card -->
         <div class="bg-white border border-[#EBEEF2] rounded-xl p-5">
-          <div class="font-display text-3xl text-foreground"><?=number_format((float)$item['price'],0,'.',' ')?> <span class="text-sm font-normal text-[#9AAAB8]"><?=price_label($item['listing_type'])?></span></div>
+          <div class="font-display text-3xl text-foreground"><?=number_format((float)$item['price'],0,'.',' ')?> <span class="text-sm font-normal text-[#6B7B8D]"><?=price_label($item['listing_type'])?></span></div>
           <?php if (!empty($item['location'])): ?>
-          <div class="text-xs text-[#7A8A9A] mt-1.5 flex items-center gap-1">
+          <div class="text-xs text-[#5A6B7D] mt-1.5 flex items-center gap-1">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
             <?=h($item['location'])?>
           </div>
@@ -269,12 +269,12 @@ require __DIR__ . '/../includes/header.php';
             <?= avatar_html(['name' => $item['host_name'], 'avatar_url' => $item['host_avatar']], 'w-11 h-11', 'text-sm') ?>
             <div class="min-w-0">
               <div class="font-semibold text-sm truncate"><?=h($item['host_name'])?></div>
-              <div class="text-xs text-[#9AAAB8]">На сайте с <?=date('m.Y',strtotime($item['created_at']))?></div>
+              <div class="text-xs text-[#6B7B8D]">На сайте с <?=date('m.Y',strtotime($item['created_at']))?></div>
             </div>
           </a>
           <?php if($item['reviews_count']>0): ?>
           <div class="mt-3 pt-3 border-t border-[#F0F3F7] flex items-center justify-between text-sm">
-            <span class="text-[#7A8A9A]">Рейтинг</span>
+            <span class="text-[#5A6B7D]">Рейтинг</span>
             <span><span class="text-amber-500">★</span> <?=round($item['avg_rating'],1)?> (<?=$item['reviews_count']?>)</span>
           </div>
           <?php endif; ?>
@@ -303,9 +303,9 @@ require __DIR__ . '/../includes/header.php';
                 <?php endif; ?>
               </div>
               <div class="min-w-0 flex-1">
-                <div class="text-xs text-[#7A8A9A]"><?=h($ci['cat_name'])?></div>
+                <div class="text-xs text-[#5A6B7D]"><?=h($ci['cat_name'])?></div>
                 <div class="text-sm font-medium text-[#3A4A5C] truncate group-hover:text-accent transition-colors leading-snug"><?=h($ci['title'])?></div>
-                <div class="text-sm font-semibold text-foreground mt-0.5"><?=number_format((float)$ci['price'],0,'.',' ')?> <span class="text-[0.625rem] font-normal text-[#9AAAB8]"><?=price_label($ci['listing_type'])?></span></div>
+                <div class="text-sm font-semibold text-foreground mt-0.5"><?=number_format((float)$ci['price'],0,'.',' ')?> <span class="text-[0.625rem] font-normal text-[#6B7B8D]"><?=price_label($ci['listing_type'])?></span></div>
               </div>
             </a>
             <?php endforeach; ?>
@@ -316,7 +316,7 @@ require __DIR__ . '/../includes/header.php';
         <!-- Safety note -->
         <div class="bg-[#F7F9FB] border border-[#EBEEF2] rounded-xl p-4">
           <div class="flex gap-2.5">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1B6B8A" stroke-width="2" class="shrink-0 mt-0.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0A7BBA" stroke-width="2" class="shrink-0 mt-0.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
             <div class="text-xs text-[#54677A] leading-relaxed">
               <strong class="text-foreground">Безопасная сделка</strong><br>
               Проверяйте объект перед оплатой. Не переводите предоплату незнакомым людям.
@@ -343,7 +343,7 @@ require __DIR__ . '/../includes/header.php';
           <?php if($simg): ?><img src="/uploads/<?=h($simg)?>" alt="<?=h($s['title'])?>" loading="lazy"><?php endif; ?>
         </div>
         <div class="listing-body">
-          <div class="listing-price"><?=number_format((float)$s['price'],0,'.',' ')?> <span class="text-[0.625rem] font-normal text-[#9AAAB8]"><?=price_label($s['listing_type'])?></span></div>
+          <div class="listing-price"><?=number_format((float)$s['price'],0,'.',' ')?> <span class="text-[0.625rem] font-normal text-[#6B7B8D]"><?=price_label($s['listing_type'])?></span></div>
           <div class="listing-title"><?=h($s['title'])?></div>
           <div class="listing-meta"><span><?=h($s['location'])?></span></div>
         </div>
@@ -364,7 +364,7 @@ require __DIR__ . '/../includes/header.php';
 #chatModal .cm-bubble{padding:.5rem .75rem;border-radius:14px;font-size:.875rem;line-height:1.35;word-wrap:break-word;position:relative}
 #chatModal .cm-row.out .cm-bubble{background:#EAF6FF;color:#0A1A2A;border-bottom-right-radius:4px}
 #chatModal .cm-row.in .cm-bubble{background:#F4F6F8;color:#0A1A2A;border-bottom-left-radius:4px}
-#chatModal .cm-meta{display:flex;align-items:center;gap:.25rem;margin-top:.125rem;font-size:.6875rem;color:#9AAAB8;padding:0 .25rem}
+#chatModal .cm-meta{display:flex;align-items:center;gap:.25rem;margin-top:.125rem;font-size:.6875rem;color:#6B7B8D;padding:0 .25rem}
 #chatModal .cm-row.out .cm-meta{justify-content:flex-end}
 #chatModal .cm-tick{display:inline-block;font-size:14px;font-weight:700;line-height:1;margin-left:2px}
 #chatModal .cm-tick.read{color:#39B54A}
@@ -373,7 +373,7 @@ require __DIR__ . '/../includes/header.php';
 #chatModal .cm-row.out:hover .cm-actions{display:block}
 #chatModal .cm-del{width:20px;height:20px;border:0;border-radius:50%;background:#DC2626;color:#fff;font-size:14px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(0,0,0,0.15);transition:all .15s}
 #chatModal .cm-del:hover{background:#B91C1C;transform:scale(1.1)}
-#chatModal .cm-date{text-align:center;font-size:.6875rem;color:#9AAAB8;margin:.5rem 0;padding:.25rem .5rem;background:#F7F9FB;border-radius:8px;align-self:center}
+#chatModal .cm-date{text-align:center;font-size:.6875rem;color:#6B7B8D;margin:.5rem 0;padding:.25rem .5rem;background:#F7F9FB;border-radius:8px;align-self:center}
 </style>
 <div id="chatModal" class="fixed inset-0 z-[100] hidden" style="background:rgba(15,23,32,0.4)">
   <div class="absolute inset-0" onclick="closeChatModal()"></div>
@@ -384,23 +384,23 @@ require __DIR__ . '/../includes/header.php';
         <?= avatar_html(['name'=>$item['host_name'],'avatar_url'=>$item['host_avatar']], 'w-8 h-8', 'text-xs') ?>
         <div class="min-w-0">
           <div class="text-sm font-semibold truncate"><?=h($item['host_name'])?></div>
-          <div class="text-xs text-[#9AAAB8] truncate"><?=h($item['title'])?></div>
+          <div class="text-xs text-[#6B7B8D] truncate"><?=h($item['title'])?></div>
         </div>
       </div>
-      <button onclick="closeChatModal()" class="w-8 h-8 flex items-center justify-center rounded-lg text-[#7A8A9A] hover:bg-[#F7F9FB] hover:text-foreground transition-colors">
+      <button onclick="closeChatModal()" class="w-8 h-8 flex items-center justify-center rounded-lg text-[#5A6B7D] hover:bg-[#F7F9FB] hover:text-foreground transition-colors">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
       </button>
     </div>
     <!-- Messages -->
     <div id="cmMessages" class="cm-msgs">
-      <div style="text-align:center;color:#9AAAB8;font-size:.875rem;padding:2rem 0">Загрузка...</div>
+      <div style="text-align:center;color:#6B7B8D;font-size:.875rem;padding:2rem 0">Загрузка...</div>
     </div>
     <!-- Input -->
     <div style="border-top:1px solid #EBEEF2;padding:.5rem .75rem;display:flex;gap:.375rem;align-items:center;background:#fff">
       <div style="flex:1;position:relative">
         <input type="text" id="cmInput" placeholder="Сообщение..." style="width:100%;border:1px solid #DFE4EA;border-radius:22px;padding:.5rem 1rem;font-size:.875rem;outline:none;background:#F7F9FB" onkeydown="if(event.key==='Enter')cmSend()" oninput="cmTyping()">
       </div>
-      <button onclick="cmSend()" style="width:2.5rem;height:2.5rem;border:0;border-radius:50%;background:#1B6B8A;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+      <button onclick="cmSend()" style="width:2.5rem;height:2.5rem;border:0;border-radius:50%;background:#0A7BBA;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
       </button>
     </div>
@@ -431,7 +431,7 @@ function cmLoad() {
     .then(function(data){
       var box = document.getElementById('cmMessages');
       if (!data.messages || data.messages.length === 0) {
-        box.innerHTML = '<div style="text-align:center;color:#9AAAB8;font-size:.875rem;padding:2rem 0">Напишите первое сообщение</div>';
+        box.innerHTML = '<div style="text-align:center;color:#6B7B8D;font-size:.875rem;padding:2rem 0">Напишите первое сообщение</div>';
         return;
       }
       var html = '', lastDate = '';
@@ -445,7 +445,7 @@ function cmLoad() {
         var isDeleted = (m.is_deleted==1||m.is_deleted==='1'||parseInt(m.is_deleted)===1);
         html += '<div class="cm-row '+(mine?'out':'in')+'">';
         if (isDeleted) {
-          html += '<div style="padding:.5rem .75rem;border-radius:14px;font-size:.8125rem;color:#9AAAB8;font-style:italic;background:#F4F6F8;max-width:60%">Сообщение удалено</div>';
+          html += '<div style="padding:.5rem .75rem;border-radius:14px;font-size:.8125rem;color:#6B7B8D;font-style:italic;background:#F4F6F8;max-width:60%">Сообщение удалено</div>';
           html += '</div>';
           continue;
         }

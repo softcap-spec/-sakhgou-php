@@ -98,7 +98,7 @@ require __DIR__ . '/../includes/header.php';
     <div style="display:flex;align-items:center;gap:0.875rem">
       <?= avatar_html($user, 'w-10 h-10', 'text-base') ?>
       <div>
-        <span style="font-size:0.6875rem;text-transform:uppercase;letter-spacing:0.1em;color:#7A8A9A;font-weight:500">Личный кабинет</span>
+        <span style="font-size:0.6875rem;text-transform:uppercase;letter-spacing:0.1em;color:#5A6B7D;font-weight:500">Личный кабинет</span>
         <h1 style="font-family:Manrope,sans-serif;font-weight:700;font-size:2rem;letter-spacing:-0.02em;margin:0;line-height:1.2"><?=h($user['name'])?></h1>
       </div>
     </div>
@@ -112,9 +112,9 @@ require __DIR__ . '/../includes/header.php';
   <div style="display:flex;gap:0.25rem;margin-bottom:2rem;flex-wrap:wrap;border-bottom:1px solid #EEF2F6;padding-bottom:0.875rem">
     <?php foreach ($tabs as $k => $v): $active = ($sub === $k); ?>
     <a href="/dashboard<?=$k==='listings'?'':'?sub='.$k?>"
-       style="display:inline-flex;align-items:center;padding:0.5rem 1rem;font-size:0.8125rem;font-weight:500;border-radius:8px;text-decoration:none;transition:all 0.15s ease;<?=$active?'background:#121E2B;color:#F7F9FB':'color:#7A8A9A;background:transparent'?>"
-       onmouseover="if(!this.classList.contains('active')){this.style.background='#EEF2F6';this.style.color='#121E2B'}"
-       onmouseout="if(!this.classList.contains('active')){this.style.background='transparent';this.style.color='#7A8A9A'}"
+       style="display:inline-flex;align-items:center;padding:0.5rem 1rem;font-size:0.8125rem;font-weight:500;border-radius:8px;text-decoration:none;transition:all 0.15s ease;<?=$active?'background:#0A1A2A;color:#F7F9FB':'color:#5A6B7D;background:transparent'?>"
+       onmouseover="if(!this.classList.contains('active')){this.style.background='#EEF2F6';this.style.color='#0A1A2A'}"
+       onmouseout="if(!this.classList.contains('active')){this.style.background='transparent';this.style.color='#5A6B7D'}"
        class="<?=$active?'active':''?>"><?=$v?></a>
     <?php endforeach; ?>
   </div>
@@ -125,8 +125,8 @@ require __DIR__ . '/../includes/header.php';
         <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#C8D0DA" stroke-width="1.5" style="margin-bottom:1.25rem">
           <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/>
         </svg>
-        <p style="font-size:1rem;font-weight:600;color:#121E2B;margin:0 0 0.25rem">У вас пока нет объявлений</p>
-        <p style="font-size:0.8125rem;color:#7A8A9A;margin:0 0 1.5rem">Создайте первое объявление и начните зарабатывать</p>
+        <p style="font-size:1rem;font-weight:600;color:#0A1A2A;margin:0 0 0.25rem">У вас пока нет объявлений</p>
+        <p style="font-size:0.8125rem;color:#5A6B7D;margin:0 0 1.5rem">Создайте первое объявление и начните зарабатывать</p>
         <a href="/create" class="cta-btn" style="gap:0.375rem">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
           Создать объявление
@@ -146,14 +146,14 @@ require __DIR__ . '/../includes/header.php';
             <?php endif; ?>
           </div>
           <?php if (!empty($item['promo_type'])): ?>
-          <span class="promo-badge" style="position:absolute;top:0.625rem;left:0.625rem;<?=$item['promo_type']==='top'?'background:#1B6B8A':($item['promo_type']==='highlight'?'background:#D97706':'background:#DC2626')?>">
+          <span class="promo-badge" style="position:absolute;top:0.625rem;left:0.625rem;<?=$item['promo_type']==='top'?'background:#0A7BBA':($item['promo_type']==='highlight'?'background:#D97706':'background:#DC2626')?>">
             <?=$item['promo_type']==='top'?'TOP':($item['promo_type']==='highlight'?'PROMO':'Срочно')?>
           </span>
           <?php endif; ?>
           <div class="listing-body" style="gap:0.5rem">
             <div style="display:flex;align-items:center;gap:0.5rem;font-size:0.6875rem">
               <span class="badge" style="<?=$item['status']==='active'?'color:#166534;border-color:#BBF7D0;background:#F0FDF4':''?>"><?=$item['status']==='active'?'Активно':$item['status']?></span>
-              <span style="color:#7A8A9A"><?=h($item['category_name'])?></span>
+              <span style="color:#5A6B7D"><?=h($item['category_name'])?></span>
             </div>
             <div class="listing-price"><?=number_format((float)$item['price'],0,'.',' ')?> <?=price_label($item['listing_type'])?></div>
             <div class="listing-title"><?=h($item['title'])?></div>
@@ -208,35 +208,35 @@ require __DIR__ . '/../includes/header.php';
     <style>
     .dm-layout{display:flex;gap:0;border:1px solid #EEF2F6;border-radius:12px;overflow:hidden;background:#fff;box-shadow:0 4px 16px rgba(15,23,32,0.06);min-height:28rem}
     .dm-threads{width:340px;flex-shrink:0;border-right:1px solid #EEF2F6;display:flex;flex-direction:column;overflow:hidden;background:#F7F9FB}
-    .dm-threads-hd{padding:.75rem 1rem;font-weight:700;font-size:.9375rem;color:#121E2B;border-bottom:1px solid #EEF2F6}
+    .dm-threads-hd{padding:.75rem 1rem;font-weight:700;font-size:.9375rem;color:#0A1A2A;border-bottom:1px solid #EEF2F6}
     .dm-threads-list{flex:1;overflow-y:auto}
     .dm-thread{padding:.75rem 1rem;display:flex;align-items:center;gap:.625rem;cursor:pointer;border-bottom:1px solid #EEF2F6;transition:background .1s}
     .dm-thread:hover{background:#fff}
-    .dm-thread.sel{background:#E8F4FB;border-left:3px solid #1B6B8A}
-    .dm-thread-av{width:42px;height:42px;border-radius:50%;overflow:hidden;flex-shrink:0;background:#DFE4EA;display:flex;align-items:center;justify-content:center;font-weight:700;color:#7A8A9A}
+    .dm-thread.sel{background:#E8F4FB;border-left:3px solid #0A7BBA}
+    .dm-thread-av{width:42px;height:42px;border-radius:50%;overflow:hidden;flex-shrink:0;background:#DFE4EA;display:flex;align-items:center;justify-content:center;font-weight:700;color:#5A6B7D}
     .dm-thread-av img{width:100%;height:100%;object-fit:cover}
     .dm-thread-info{flex:1;min-width:0}
     .dm-thread-top{display:flex;justify-content:space-between;align-items:center;gap:.375rem}
-    .dm-thread-name{font-weight:600;font-size:.8125rem;color:#121E2B;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .dm-thread-time{font-size:.6875rem;color:#9AAAB8;white-space:nowrap}
-    .dm-thread-listing{font-size:.6875rem;color:#7A8A9A;margin-top:1px}
+    .dm-thread-name{font-weight:600;font-size:.8125rem;color:#0A1A2A;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .dm-thread-time{font-size:.6875rem;color:#6B7B8D;white-space:nowrap}
+    .dm-thread-listing{font-size:.6875rem;color:#5A6B7D;margin-top:1px}
     .dm-thread-preview{display:flex;justify-content:space-between;align-items:center;gap:.375rem;margin-top:2px}
     .dm-thread-txt{font-size:.75rem;color:#3A4A5C;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1}
     .dm-thread-badge{background:#F59E0B;color:#fff;font-size:.625rem;font-weight:700;border-radius:999px;min-width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center;padding:0 5px;flex-shrink:0}
     .dm-chat{flex:1;display:flex;flex-direction:column;min-width:0}
-    .dm-chat-empty{flex:1;display:flex;align-items:center;justify-content:center;color:#9AAAB8;font-size:.875rem;text-align:center;padding:2rem}
+    .dm-chat-empty{flex:1;display:flex;align-items:center;justify-content:center;color:#6B7B8D;font-size:.875rem;text-align:center;padding:2rem}
     .dm-msg-actions{display:none;position:absolute;top:-8px;right:-8px;z-index:2}
     .dm-msg-row.out:hover .dm-msg-actions{display:block}
     .dm-msg-del{width:20px;height:20px;border:0;border-radius:50%;background:#DC2626;color:#fff;font-size:14px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(0,0,0,0.15);transition:all .15s}
     .dm-msg-del:hover{background:#B91C1C;transform:scale(1.1)}
-    .dm-msg-status{font-size:.625rem;color:#9AAAB8;margin-top:.125rem;padding:0 .25rem}
+    .dm-msg-status{font-size:.625rem;color:#6B7B8D;margin-top:.125rem;padding:0 .25rem}
     .dm-msg-status.read{color:#00B04C}
     .dm-chat-hd{display:flex;align-items:center;gap:.625rem;padding:.75rem 1rem;border-bottom:1px solid #EEF2F6;background:#fff;flex-shrink:0}
-    .dm-chat-hd-av{width:36px;height:36px;border-radius:50%;overflow:hidden;flex-shrink:0;background:#DFE4EA;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.875rem;color:#7A8A9A}
+    .dm-chat-hd-av{width:36px;height:36px;border-radius:50%;overflow:hidden;flex-shrink:0;background:#DFE4EA;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.875rem;color:#5A6B7D}
     .dm-chat-hd-av img{width:100%;height:100%;object-fit:cover}
     .dm-chat-hd-info{flex:1;min-width:0}
-    .dm-chat-hd-name{font-weight:600;font-size:.875rem;color:#121E2B}
-    .dm-chat-hd-listing{font-size:.6875rem;color:#7A8A9A}
+    .dm-chat-hd-name{font-weight:600;font-size:.875rem;color:#0A1A2A}
+    .dm-chat-hd-listing{font-size:.6875rem;color:#5A6B7D}
     .dm-chat-hd-on{font-size:.6875rem;color:#16A34A;display:none}
     .dm-chat-hd-on.show{display:block}
     .dm-chat-msgs{flex:1;overflow-y:auto;padding:.625rem .875rem;display:flex;flex-direction:column;gap:.25rem;background:#fff}
@@ -246,21 +246,21 @@ require __DIR__ . '/../includes/header.php';
     .dm-msg-bubble{padding:.5rem .75rem;border-radius:14px;font-size:.875rem;line-height:1.35;word-wrap:break-word;position:relative}
     .dm-msg-row.out .dm-msg-bubble{background:#EAF6FF;color:#0A1A2A;border-bottom-right-radius:4px}
     .dm-msg-row.in .dm-msg-bubble{background:#F4F6F8;color:#0A1A2A;border-bottom-left-radius:4px}
-    .dm-msg-meta{display:flex;align-items:center;gap:.25rem;margin-top:.125rem;font-size:.6875rem;color:#9AAAB8;padding:0 .25rem}
+    .dm-msg-meta{display:flex;align-items:center;gap:.25rem;margin-top:.125rem;font-size:.6875rem;color:#6B7B8D;padding:0 .25rem}
     .dm-msg-row.out .dm-msg-meta{justify-content:flex-end}
-    .dm-date-sep{text-align:center;font-size:.6875rem;color:#9AAAB8;margin:.5rem 0;padding:.25rem .5rem;background:#F7F9FB;border-radius:8px;align-self:center}
+    .dm-date-sep{text-align:center;font-size:.6875rem;color:#6B7B8D;margin:.5rem 0;padding:.25rem .5rem;background:#F7F9FB;border-radius:8px;align-self:center}
     .dm-tick{display:inline-block;font-size:14px;font-weight:700;line-height:1;margin-left:2px}
     .dm-tick.read{color:#39B54A}
     .dm-tick.unread{color:#BFC8D4}
-    .dm-typing{padding:.25rem .875rem;font-size:.75rem;color:#7A8A9A;display:none;font-style:italic;flex-shrink:0}
+    .dm-typing{padding:.25rem .875rem;font-size:.75rem;color:#5A6B7D;display:none;font-style:italic;flex-shrink:0}
     .dm-typing.show{display:block}
     .dm-input-row{border-top:1px solid #EEF2F6;padding:.5rem .75rem;display:flex;gap:.375rem;align-items:center;background:#fff;flex-shrink:0}
     .dm-input-wrap{flex:1}
     .dm-input{width:100%;border:1px solid #DFE4EA;border-radius:22px;padding:.5rem 1rem;font-size:.875rem;outline:none;transition:border-color .15s;background:#F7F9FB;box-sizing:border-box}
-    .dm-input:focus{border-color:#1B6B8A;background:#fff}
-    .dm-send{width:2.5rem;height:2.5rem;border:0;border-radius:50%;background:#1B6B8A;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0}
+    .dm-input:focus{border-color:#0A7BBA;background:#fff}
+    .dm-send{width:2.5rem;height:2.5rem;border:0;border-radius:50%;background:#0A7BBA;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0}
     .dm-send:hover{background:#14566E}
-    .dm-back{display:none;border:0;background:none;color:#7A8A9A;cursor:pointer;padding:.25rem;flex-shrink:0}
+    .dm-back{display:none;border:0;background:none;color:#5A6B7D;cursor:pointer;padding:.25rem;flex-shrink:0}
     @media(max-width:700px){.dm-layout{flex-direction:column;min-height:auto}
       .dm-threads{width:100%;border-right:0;max-height:50vh}.dm-back{display:block}
       .dm-chat:not(.show){display:none}.dm-chat.show{display:flex;position:fixed;top:0;left:0;right:0;bottom:0;z-index:100;background:#fff}}
@@ -271,8 +271,8 @@ require __DIR__ . '/../includes/header.php';
         <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#C8D0DA" stroke-width="1.5" style="margin-bottom:1.25rem">
           <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
         </svg>
-        <p style="font-size:1rem;font-weight:600;color:#121E2B;margin:0 0 0.25rem">Нет сообщений</p>
-        <p style="font-size:0.8125rem;color:#7A8A9A;margin:0 0 1.5rem">Здесь появятся ваши переписки по объявлениям</p>
+        <p style="font-size:1rem;font-weight:600;color:#0A1A2A;margin:0 0 0.25rem">Нет сообщений</p>
+        <p style="font-size:0.8125rem;color:#5A6B7D;margin:0 0 1.5rem">Здесь появятся ваши переписки по объявлениям</p>
         <a href="/catalog" class="btn-outline">Смотреть объявления</a>
       </div>
     <?php else: ?>
@@ -366,7 +366,7 @@ require __DIR__ . '/../includes/header.php';
           if(dt!=prevDate){h+='<div class="dm-date-sep">'+dt+'</div>';prevDate=dt}
           var isDeleted=(m.is_deleted==1||m.is_deleted==='1'||parseInt(m.is_deleted)===1);
           h+='<div class="dm-msg-row '+(mine?'out':'in')+'">';
-          if(isDeleted){h+='<div style="padding:.5rem .75rem;border-radius:14px;font-size:.8125rem;color:#9AAAB8;font-style:italic;background:#F4F6F8;max-width:60%">Сообщение удалено</div></div>';return}
+          if(isDeleted){h+='<div style="padding:.5rem .75rem;border-radius:14px;font-size:.8125rem;color:#6B7B8D;font-style:italic;background:#F4F6F8;max-width:60%">Сообщение удалено</div></div>';return}
           if(mine) h+='<div class="dm-msg-actions"><button class="dm-msg-del" onclick="dmDelete('+m.id+')" title="Удалить">&times;</button></div>';
           h+='<div class="dm-msg-bubble">'+dmEsc(m.text)+'</div>';
           h+='<div style="font-size:.6875rem;color:#B8C2CC;margin-top:.125rem;padding:0 .25rem">'+m.created_at.split(' ')[1].substring(0,5)+'</div>';
@@ -431,8 +431,8 @@ require __DIR__ . '/../includes/header.php';
         <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#C8D0DA" stroke-width="1.5" style="margin-bottom:1.25rem">
           <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
         </svg>
-        <p style="font-size:1rem;font-weight:600;color:#121E2B;margin:0 0 0.25rem">Нет избранных объявлений</p>
-        <p style="font-size:0.8125rem;color:#7A8A9A;margin:0 0 1.5rem">Добавляйте объявления в избранное кликом по сердечку</p>
+        <p style="font-size:1rem;font-weight:600;color:#0A1A2A;margin:0 0 0.25rem">Нет избранных объявлений</p>
+        <p style="font-size:0.8125rem;color:#5A6B7D;margin:0 0 1.5rem">Добавляйте объявления в избранное кликом по сердечку</p>
         <a href="/catalog" class="btn-outline">Перейти в каталог</a>
       </div>
     <?php else: ?>
@@ -465,7 +465,7 @@ require __DIR__ . '/../includes/header.php';
         <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#C8D0DA" stroke-width="1.5" style="margin-bottom:1.25rem">
           <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
         </svg>
-        <p style="font-size:1rem;font-weight:600;color:#121E2B;margin:0 0 0.25rem">Нет бронирований</p>
+        <p style="font-size:1rem;font-weight:600;color:#0A1A2A;margin:0 0 0.25rem">Нет бронирований</p>
       </div>
     <?php else: ?>
       <div style="display:flex;flex-direction:column;gap:0.75rem">
@@ -473,12 +473,12 @@ require __DIR__ . '/../includes/header.php';
         <div style="background:#fff;border:1px solid #EEF2F6;border-radius:12px;padding:1.25rem;box-shadow:0 4px 12px rgba(15,23,32,0.06)">
           <div style="display:flex;justify-content:space-between;align-items:flex-start">
             <div>
-              <a href="/listing/<?=$b['listing_id']?>" style="font-family:Manrope,sans-serif;font-weight:700;font-size:1.0625rem;color:#121E2B;text-decoration:none"><?=h($b['listing_title'])?></a>
-              <div style="font-size:0.8125rem;color:#7A8A9A;margin-top:0.25rem"><?=h($b['location']??'')?> &middot; хозяин: <?=h($b['host_name'])?></div>
+              <a href="/listing/<?=$b['listing_id']?>" style="font-family:Manrope,sans-serif;font-weight:700;font-size:1.0625rem;color:#0A1A2A;text-decoration:none"><?=h($b['listing_title'])?></a>
+              <div style="font-size:0.8125rem;color:#5A6B7D;margin-top:0.25rem"><?=h($b['location']??'')?> &middot; хозяин: <?=h($b['host_name'])?></div>
             </div>
             <div style="text-align:right">
               <div style="font-family:Manrope,sans-serif;font-weight:700;font-size:1.0625rem"><?=number_format((float)$b['total_price'],0,'.',' ')?> ₽</div>
-              <div style="font-size:0.6875rem;color:#7A8A9A;margin-top:0.25rem"><?=$b['created_at']?></div>
+              <div style="font-size:0.6875rem;color:#5A6B7D;margin-top:0.25rem"><?=$b['created_at']?></div>
             </div>
           </div>
         </div>
@@ -493,7 +493,7 @@ require __DIR__ . '/../includes/header.php';
         <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#C8D0DA" stroke-width="1.5" style="margin-bottom:1.25rem">
           <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
         </svg>
-        <p style="font-size:1rem;font-weight:600;color:#121E2B;margin:0 0 0.25rem">Нет бронирований у вас</p>
+        <p style="font-size:1rem;font-weight:600;color:#0A1A2A;margin:0 0 0.25rem">Нет бронирований у вас</p>
       </div>
     <?php else: ?>
       <div style="display:flex;flex-direction:column;gap:0.75rem">
@@ -501,12 +501,12 @@ require __DIR__ . '/../includes/header.php';
         <div style="background:#fff;border:1px solid #EEF2F6;border-radius:12px;padding:1.25rem;box-shadow:0 4px 12px rgba(15,23,32,0.06)">
           <div style="display:flex;justify-content:space-between;align-items:flex-start">
             <div>
-              <span style="font-size:0.8125rem;color:#7A8A9A">Гость: <?=h($b['guest_name'])?></span><br>
-              <a href="/listing/<?=$b['listing_id']?>" style="font-family:Manrope,sans-serif;font-weight:700;font-size:1.0625rem;color:#121E2B;text-decoration:none"><?=h($b['listing_title'])?></a>
+              <span style="font-size:0.8125rem;color:#5A6B7D">Гость: <?=h($b['guest_name'])?></span><br>
+              <a href="/listing/<?=$b['listing_id']?>" style="font-family:Manrope,sans-serif;font-weight:700;font-size:1.0625rem;color:#0A1A2A;text-decoration:none"><?=h($b['listing_title'])?></a>
             </div>
             <div style="text-align:right">
               <div style="font-family:Manrope,sans-serif;font-weight:700;font-size:1.0625rem"><?=number_format((float)$b['total_price'],0,'.',' ')?> ₽</div>
-              <div style="font-size:0.6875rem;color:#7A8A9A;margin-top:0.25rem"><?=$b['created_at']?></div>
+              <div style="font-size:0.6875rem;color:#5A6B7D;margin-top:0.25rem"><?=$b['created_at']?></div>
             </div>
           </div>
         </div>
@@ -531,7 +531,7 @@ require __DIR__ . '/../includes/header.php';
               Сменить аватар
               <input type="file" name="avatar" accept="image/*" hidden onchange="this.form.submit()">
             </label>
-            <p style="font-size:0.6875rem;color:#7A8A9A;margin:0.375rem 0 0">JPG, PNG, WebP</p>
+            <p style="font-size:0.6875rem;color:#5A6B7D;margin:0.375rem 0 0">JPG, PNG, WebP</p>
           </div>
         </div>
         <div class="form-group">
@@ -545,7 +545,7 @@ require __DIR__ . '/../includes/header.php';
         <div class="form-group">
           <label>Телефон</label>
           <input type="text" name="phone" value="<?=h($user['phone']??'')?>" style="width:100%;box-sizing:border-box" <?php if ($user['role'] !== 'admin'): ?>readonly onfocus="this.blur()" title="Телефон можно изменить только через администратора"<?php endif; ?>>
-          <?php if ($user['role'] !== 'admin'): ?><p style="font-size:0.6875rem;color:#7A8A9A;margin:0.25rem 0 0">Телефон можно изменить только через администратора</p><?php endif; ?>
+          <?php if ($user['role'] !== 'admin'): ?><p style="font-size:0.6875rem;color:#5A6B7D;margin:0.25rem 0 0">Телефон можно изменить только через администратора</p><?php endif; ?>
         </div>
         <button type="submit" name="update_profile" value="1" class="cta-btn" style="width:100%;gap:0.375rem;padding:0.625rem 1.25rem">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
@@ -558,7 +558,7 @@ require __DIR__ . '/../includes/header.php';
         <?= csrf_field() ?>
         <input type="hidden" name="change_password" value="1">
         <h3 style="font-family:Manrope,sans-serif;font-weight:700;font-size:1.0625rem;margin:0 0 0.25rem">Смена пароля</h3>
-        <p style="font-size:0.75rem;color:#7A8A9A;margin:0 0 1.25rem">Введите текущий и новый пароль</p>
+        <p style="font-size:0.75rem;color:#5A6B7D;margin:0 0 1.25rem">Введите текущий и новый пароль</p>
         <?php if (isset($_GET['pwok'])): ?>
         <div class="flash success" style="margin-bottom:1rem">Пароль изменён</div>
         <?php endif; ?>
