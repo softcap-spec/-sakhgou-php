@@ -361,9 +361,9 @@ require __DIR__ . '/../includes/header.php';
 #chatModal .cm-row{display:flex;max-width:80%;flex-direction:column}
 #chatModal .cm-row.out{align-self:flex-end;align-items:flex-end;position:relative}
 #chatModal .cm-row.in{align-self:flex-start;align-items:flex-start;position:relative}
-#chatModal .cm-bubble{padding:.5rem .75rem .75rem;border-radius:14px;font-size:.875rem;line-height:1.35;word-wrap:break-word;position:relative;min-width:5rem}
-#chatModal .cm-row.out .cm-bubble{background:#E8F4FB;color:#121E2B;border-bottom-right-radius:4px}
-#chatModal .cm-row.in .cm-bubble{background:#EEF2F6;color:#121E2B;border-bottom-left-radius:4px}
+#chatModal .cm-bubble{padding:.5rem .75rem;border-radius:14px;font-size:.875rem;line-height:1.35;word-wrap:break-word;position:relative}
+#chatModal .cm-row.out .cm-bubble{background:#EAF6FF;color:#0A1A2A;border-bottom-right-radius:4px}
+#chatModal .cm-row.in .cm-bubble{background:#F4F6F8;color:#0A1A2A;border-bottom-left-radius:4px}
 #chatModal .cm-meta{display:flex;align-items:center;gap:.25rem;margin-top:.125rem;font-size:.6875rem;color:#9AAAB8;padding:0 .25rem}
 #chatModal .cm-row.out .cm-meta{justify-content:flex-end}
 #chatModal .cm-tick{display:inline-block;font-size:14px;font-weight:700;line-height:1;margin-left:2px}
@@ -442,17 +442,19 @@ function cmLoad() {
         if (dateStr !== lastDate) { html += '<div class="cm-date">'+dateStr+'</div>'; lastDate = dateStr; }
         var mine = (parseInt(m.sender_id) === cmUid);
         var time = d.toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'});
-        var tick = '';
-        if (mine) {
-          var read = (m.is_read==1||m.is_read==='1'||m.is_read===true||parseInt(m.is_read)===1);
-          tick = '<span class="cm-tick '+(read?'read':'unread')+'">'+(read?'\u2713\u2713':'\u2713')+'</span>';
-        }
+        var isDeleted = (m.is_deleted==1||m.is_deleted==='1'||parseInt(m.is_deleted)===1);
         html += '<div class="cm-row '+(mine?'out':'in')+'">';
+        if (isDeleted) {
+          html += '<div style="padding:.5rem .75rem;border-radius:14px;font-size:.8125rem;color:#9AAAB8;font-style:italic;background:#F4F6F8;max-width:60%">Сообщение удалено</div>';
+          html += '</div>';
+          continue;
+        }
         if (mine) html += '<div class="cm-actions"><button class="cm-del" onclick="cmDelete('+m.id+')" title="Удалить">&times;</button></div>';
-        html += '<div class="cm-bubble">'+escapeHtml(m.text)+'<span style="position:absolute;bottom:.25rem;right:.5rem;font-size:.625rem;color:'+(mine?'#7AB0C4':'#9AAAB8')+'">'+time+'</span></div>';
+        html += '<div class="cm-bubble">'+escapeHtml(m.text)+'</div>';
+        html += '<div style="font-size:.6875rem;color:#B8C2CC;margin-top:.125rem;padding:0 .25rem">'+time+'</div>';
         if (mine) {
           var read = (m.is_read==1||m.is_read==='1'||m.is_read===true||parseInt(m.is_read)===1);
-          html += '<div style="font-size:.625rem;color:'+(read?'#16A34A':'#9AAAB8')+';margin-top:.125rem;padding:0 .25rem">'+(read?'Прочитано':'Доставлено')+'</div>';
+          html += '<div style="font-size:.625rem;color:'+(read?'#00B04C':'#B8C2CC')+';margin-top:.0625rem;padding:0 .25rem">'+(read?'Прочитано':'Доставлено')+'</div>';
         }
         html += '</div>';
       }

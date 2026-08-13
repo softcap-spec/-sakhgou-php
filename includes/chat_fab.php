@@ -85,25 +85,23 @@ $myId = (int)$cu['id'];
 .chat-thread-listing .price{font-weight:600;color:#121E2B}
 
 /* Messages — Avito style v7 */
-.chat-msgs{flex:1;overflow-y:auto;padding:.625rem .875rem;display:flex;flex-direction:column;gap:.125rem;background:#fff}
+.chat-msgs{flex:1;overflow-y:auto;padding:.625rem .875rem;display:flex;flex-direction:column;gap:.375rem;background:#fff}
 .chat-date-sep{text-align:center;font-size:.6875rem;color:#9AAAB8;margin:.5rem 0;padding:.25rem .5rem;background:#F7F9FB;border-radius:8px;align-self:center}
 
-/* Avito: bubble with time inside, status text below for own messages */
+/* Avito: bubble + time below (NOT inside) */
 .chat-msg-row{display:flex;flex-direction:column;max-width:80%;position:relative}
 .chat-msg-row.out{align-self:flex-end;align-items:flex-end}
 .chat-msg-row.in{align-self:flex-start;align-items:flex-start}
-.chat-msg-bubble{padding:.5rem .75rem .75rem;border-radius:14px;font-size:.875rem;line-height:1.35;word-wrap:break-word;position:relative;min-width:5rem}
-.chat-msg-row.out .chat-msg-bubble{background:#E8F4FB;color:#121E2B;border-bottom-right-radius:4px}
-.chat-msg-row.in .chat-msg-bubble{background:#EEF2F6;color:#121E2B;border-bottom-left-radius:4px}
-/* Time inside bubble, bottom-right */
-.chat-msg-time{position:absolute;bottom:.25rem;right:.5rem;font-size:.625rem;color:#9AAAB8;line-height:1}
-.chat-msg-row.out .chat-msg-time{color:#7AB0C4}
-/* Deleted message */
-.chat-msg-deleted{padding:.5rem .75rem;border-radius:14px;font-size:.75rem;color:#9AAAB8;font-style:italic;background:#F7F9FB;border-bottom-left-radius:4px;border-bottom-right-radius:4px;max-width:60%}
-.chat-msg-row.out .chat-msg-deleted{align-self:flex-end}
-/* Status text (Avito: "Доставлено" / "Прочитано") */
-.chat-msg-status{font-size:.625rem;color:#9AAAB8;margin-top:.125rem;padding:0 .25rem}
-.chat-msg-status.read{color:#16A34A}
+.chat-msg-bubble{padding:.5rem .75rem;border-radius:14px;font-size:.875rem;line-height:1.35;word-wrap:break-word;position:relative}
+.chat-msg-row.out .chat-msg-bubble{background:#EAF6FF;color:#0A1A2A;border-bottom-right-radius:4px}
+.chat-msg-row.in .chat-msg-bubble{background:#F4F6F8;color:#0A1A2A;border-bottom-left-radius:4px}
+/* Time BELOW bubble (Avito style) */
+.chat-msg-time{font-size:.6875rem;color:#B8C2CC;margin-top:.125rem;padding:0 .25rem;line-height:1}
+/* Status text below time (Avito: "Доставлено" / "Прочитано") */
+.chat-msg-status{font-size:.625rem;color:#B8C2CC;margin-top:.0625rem;padding:0 .25rem;line-height:1}
+.chat-msg-status.read{color:#00B04C}
+/* Deleted message — shows placeholder, not hidden (Avito style) */
+.chat-msg-deleted{padding:.5rem .75rem;border-radius:14px;font-size:.8125rem;color:#9AAAB8;font-style:italic;background:#F4F6F8;border-bottom-left-radius:4px;border-bottom-right-radius:4px;max-width:60%}
 
 /* Action button on own messages (Avito: "Действия") */
 .chat-msg-actions{display:none;position:absolute;top:-6px;right:-6px;z-index:2}
@@ -293,11 +291,18 @@ function loadMessages(){
    if(dateStr!==lastDate){html+='<div class="chat-date-sep">'+dateStr+'</div>';lastDate=dateStr}
    var mine=(parseInt(m.sender_id)===myUid);
    var time=d.toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'});
+   var isDeleted=(m.is_deleted==1||m.is_deleted==='1'||parseInt(m.is_deleted)===1);
    html+='<div class="chat-msg-row '+(mine?'out':'in')+'">';
+   if(isDeleted){
+     html+='<div class="chat-msg-deleted">Сообщение удалено</div>';
+     html+='</div>';
+     continue;
+   }
    if(mine){
      html+='<div class="chat-msg-actions"><button class="chat-msg-act-btn" onclick="deleteMessage('+m.id+')" title="Удалить">&times;</button></div>';
    }
-   html+='<div class="chat-msg-bubble">'+escapeHtml(m.text)+'<span class="chat-msg-time">'+time+'</span></div>';
+   html+='<div class="chat-msg-bubble">'+escapeHtml(m.text)+'</div>';
+   html+='<div class="chat-msg-time">'+time+'</div>';
    if(mine){
      var read=(m.is_read==1||m.is_read==='1'||m.is_read===true||parseInt(m.is_read)===1);
      html+='<div class="chat-msg-status'+(read?' read':'')+'">'+(read?'Прочитано':'Доставлено')+'</div>';

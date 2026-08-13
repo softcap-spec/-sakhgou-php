@@ -101,7 +101,7 @@ switch ($page) {
       // Get messages + other user info
       $lid = (int)($_GET['lid'] ?? 0);
       $other = (int)($_GET['uid'] ?? 0);
-      $stmt = $pdo->prepare('SELECT *, 0 AS deleted FROM messages WHERE listing_id=? AND is_deleted=0 AND ((sender_id=? AND receiver_id=?) OR (sender_id=? AND receiver_id=?)) ORDER BY created_at ASC');
+      $stmt = $pdo->prepare('SELECT * FROM messages WHERE listing_id=? AND ((sender_id=? AND receiver_id=?) OR (sender_id=? AND receiver_id=?)) ORDER BY created_at ASC');
       $stmt->execute([$lid,$cu['id'],$other,$other,$cu['id']]);
       $msgs = $stmt->fetchAll();
       // Mark as read
