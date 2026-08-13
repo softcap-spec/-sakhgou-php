@@ -103,11 +103,16 @@ $myId = (int)$cu['id'];
 /* Deleted message — shows placeholder */
 .chat-msg-deleted{padding:.5rem .75rem;border-radius:14px;font-size:.8125rem;color:#6B7B8D;font-style:italic;background:#F4F6F8;max-width:60%}
 
-/* Action button on own messages (Avito: "Действия") */
-.chat-msg-actions{display:none;position:absolute;top:-6px;right:-6px;z-index:2}
+/* Action button on own messages (Avito: ⋯ menu) */
+.chat-msg-actions{display:none;position:absolute;top:-4px;right:-4px;z-index:2}
 .chat-msg-row.out:hover .chat-msg-actions{display:flex}
-.chat-msg-act-btn{width:22px;height:22px;border:0;border-radius:50%;background:#fff;color:#5A6B7D;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(0,0,0,0.12);transition:all .15s}
-.chat-msg-act-btn:hover{background:#FEE2E2;color:#DC2626}
+.chat-msg-act-btn{width:24px;height:24px;border:0;border-radius:50%;background:#fff;color:#5A6B7D;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(0,0,0,0.1);transition:all .15s;line-height:1;padding:0}
+.chat-msg-act-btn:hover{background:#EEF2F6;color:#0A1A2A}
+/* Action menu dropdown */
+.chat-act-menu{position:absolute;top:28px;right:-4px;background:#fff;border:1px solid #D1DAE3;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,0.1);z-index:10;display:none;min-width:140px;overflow:hidden}
+.chat-act-menu.open{display:block}
+.chat-act-item{display:block;width:100%;padding:.5rem .75rem;font-size:.8125rem;color:#DC2626;background:none;border:0;cursor:pointer;text-align:left}
+.chat-act-item:hover{background:#FEF2F2}
 
 /* Typing */
 .chat-typing{padding:.25rem .875rem;font-size:.75rem;color:#5A6B7D;display:none;font-style:italic;flex-shrink:0}
@@ -299,7 +304,7 @@ function loadMessages(){
      continue;
    }
    if(mine){
-     html+='<div class="chat-msg-actions"><button class="chat-msg-act-btn" onclick="deleteMessage('+m.id+')" title="Удалить">&times;</button></div>';
+     html+='<div class="chat-msg-actions"><button class="chat-msg-act-btn" onclick="toggleActMenu(event,'+m.id+')" title="Действия">&#8943;</button><div class="chat-act-menu" id="actMenu'+m.id+'"><button class="chat-act-item" onclick="deleteMessage('+m.id+')">Удалить</button></div></div>';
    }
    html+='<div class="chat-msg-bubble">'+escapeHtml(m.text)+'</div>';
    html+='<div class="chat-msg-side">';
@@ -334,8 +339,19 @@ function sendMessage(){
 
 function escapeHtml(s){var d=document.createElement('div');d.textContent=s;return d.innerHTML}
 
+function toggleActMenu(e,mid){
+ e.stopPropagation();
+ var m=document.getElementById('actMenu'+mid);
+ if(!m)return;
+ var isOpen=m.classList.contains('open');
+ document.querySelectorAll('.chat-act-menu.open').forEach(function(x){x.classList.remove('open')});
+ if(!isOpen)m.classList.add('open');
+}
+
+document.addEventListener('click',function(){document.querySelectorAll('.chat-act-menu.open').forEach(function(x){x.classList.remove('open')})});
+
 function deleteMessage(mid){
- if(!confirm('Удалить сообщение?'))return;
+ document.querySelectorAll('.chat-act-menu.open').forEach(function(x){x.classList.remove('open')});
  fetch('/api/delete?_='+Date.now(),{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'mid='+mid})
  .then(function(r){return r.json()})
  .then(function(d){if(d.ok)loadMessages()})

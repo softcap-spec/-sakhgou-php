@@ -372,7 +372,11 @@ require __DIR__ . '/../includes/header.php';
 #chatModal .cm-actions{display:none;position:absolute;top:-8px;right:-8px;z-index:2}
 #chatModal .cm-row.out:hover .cm-actions{display:block}
 #chatModal .cm-del{width:20px;height:20px;border:0;border-radius:50%;background:#DC2626;color:#fff;font-size:14px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(0,0,0,0.15);transition:all .15s}
-#chatModal .cm-del:hover{background:#B91C1C;transform:scale(1.1)}
+#chatModal .cm-del:hover{background:#EEF2F6;color:#0A1A2A}
+#chatModal .cm-act-menu{position:absolute;top:28px;right:-4px;background:#fff;border:1px solid #D1DAE3;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,0.1);z-index:10;display:none;min-width:140px;overflow:hidden}
+#chatModal .cm-act-menu.open{display:block}
+#chatModal .cm-act-item{display:block;width:100%;padding:.5rem .75rem;font-size:.8125rem;color:#DC2626;background:none;border:0;cursor:pointer;text-align:left}
+#chatModal .cm-act-item:hover{background:#FEF2F2}
 #chatModal .cm-date{text-align:center;font-size:.6875rem;color:#6B7B8D;margin:.5rem 0;padding:.25rem .5rem;background:#F7F9FB;border-radius:8px;align-self:center}
 </style>
 <div id="chatModal" class="fixed inset-0 z-[100] hidden" style="background:rgba(15,23,32,0.4)">
@@ -449,7 +453,7 @@ function cmLoad() {
           html += '</div>';
           continue;
         }
-        if (mine) html += '<div class="cm-actions"><button class="cm-del" onclick="cmDelete('+m.id+')" title="Удалить">&times;</button></div>';
+        if (mine) html += '<div class="cm-actions"><button class="cm-del" onclick="cmToggleAct(event,'+m.id+')" title="Действия">&#8943;</button><div class="cm-act-menu" id="cmAct'+m.id+'"><button class="cm-act-item" onclick="cmDelete('+m.id+')">Удалить</button></div></div>';
         html += '<div class="cm-bubble">'+escapeHtml(m.text)+'</div>';
         html += '<div style="font-size:.6875rem;color:#B8C2CC;margin-top:.125rem;padding:0 .25rem">'+time+'</div>';
         if (mine) {
@@ -490,8 +494,10 @@ function cmSend() {
 }
 function escapeHtml(s){var d=document.createElement('div');d.textContent=s;return d.innerHTML;}
 
+function cmToggleAct(e,mid){e.stopPropagation();var m=document.getElementById('cmAct'+mid);if(!m)return;var isOpen=m.classList.contains('open');document.querySelectorAll('.cm-act-menu.open').forEach(function(x){x.classList.remove('open')});if(!isOpen)m.classList.add('open')}
+
 function cmDelete(mid){
-  if(!confirm('Удалить сообщение?'))return;
+  document.querySelectorAll('.cm-act-menu.open').forEach(function(x){x.classList.remove('open')});
   fetch('/api/delete',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'mid='+mid}).then(function(r){return r.json()}).then(function(d){if(d.ok)cmLoad()});
 }
 </script>

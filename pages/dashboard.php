@@ -228,7 +228,11 @@ require __DIR__ . '/../includes/header.php';
     .dm-msg-actions{display:none;position:absolute;top:-8px;right:-8px;z-index:2}
     .dm-msg-row.out:hover .dm-msg-actions{display:block}
     .dm-msg-del{width:20px;height:20px;border:0;border-radius:50%;background:#DC2626;color:#fff;font-size:14px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(0,0,0,0.15);transition:all .15s}
-    .dm-msg-del:hover{background:#B91C1C;transform:scale(1.1)}
+    .dm-msg-del:hover{background:#EEF2F6;color:#0A1A2A}
+    .dm-act-menu{position:absolute;top:28px;right:-4px;background:#fff;border:1px solid #D1DAE3;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,0.1);z-index:10;display:none;min-width:140px;overflow:hidden}
+    .dm-act-menu.open{display:block}
+    .dm-act-item{display:block;width:100%;padding:.5rem .75rem;font-size:.8125rem;color:#DC2626;background:none;border:0;cursor:pointer;text-align:left}
+    .dm-act-item:hover{background:#FEF2F2}
     .dm-msg-status{font-size:.625rem;color:#6B7B8D;margin-top:.125rem;padding:0 .25rem}
     .dm-msg-status.read{color:#00B04C}
     .dm-chat-hd{display:flex;align-items:center;gap:.625rem;padding:.75rem 1rem;border-bottom:1px solid #EEF2F6;background:#fff;flex-shrink:0}
@@ -367,7 +371,7 @@ require __DIR__ . '/../includes/header.php';
           var isDeleted=(m.is_deleted==1||m.is_deleted==='1'||parseInt(m.is_deleted)===1);
           h+='<div class="dm-msg-row '+(mine?'out':'in')+'">';
           if(isDeleted){h+='<div style="padding:.5rem .75rem;border-radius:14px;font-size:.8125rem;color:#6B7B8D;font-style:italic;background:#F4F6F8;max-width:60%">Сообщение удалено</div></div>';return}
-          if(mine) h+='<div class="dm-msg-actions"><button class="dm-msg-del" onclick="dmDelete('+m.id+')" title="Удалить">&times;</button></div>';
+          if(mine) h+='<div class="dm-msg-actions"><button class="dm-msg-del" onclick="dmToggleAct(event,'+m.id+')" title="Действия">&#8943;</button><div class="dm-act-menu" id="dmAct'+m.id+'"><button class="dm-act-item" onclick="dmDelete('+m.id+')">Удалить</button></div></div>';
           h+='<div class="dm-msg-bubble">'+dmEsc(m.text)+'</div>';
           h+='<div style="font-size:.6875rem;color:#B8C2CC;margin-top:.125rem;padding:0 .25rem">'+m.created_at.split(' ')[1].substring(0,5)+'</div>';
           if(mine){h+='<div class="dm-msg-status '+(m.is_read?'read':'')+'">'+(m.is_read?'Прочитано':'Доставлено')+'</div>'}
@@ -400,8 +404,10 @@ require __DIR__ . '/../includes/header.php';
 
     function dmSendKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();dmSend()}}
 
+    function dmToggleAct(e,mid){e.stopPropagation();var m=document.getElementById('dmAct'+mid);if(!m)return;var isOpen=m.classList.contains('open');document.querySelectorAll('.dm-act-menu.open').forEach(function(x){x.classList.remove('open')});if(!isOpen)m.classList.add('open')}
+
     function dmDelete(mid){
-      if(!confirm('Удалить сообщение?'))return;
+      document.querySelectorAll('.dm-act-menu.open').forEach(function(x){x.classList.remove('open')});
       fetch('/api/delete',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'mid='+mid}).then(function(r){return r.json()}).then(function(d){if(d.ok)dmLoadMsgs()});
     }
 
