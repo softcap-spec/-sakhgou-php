@@ -426,6 +426,7 @@ require __DIR__ . '/../includes/header.php';
 </div>
 <script>
 var cmLid = <?=$lid?>;
+var cmCsrf = <?=json_encode(csrf_token())?>;
 var cmUid = <?=json_encode($cu['id'])?>;
 var cmHost = <?=json_encode((int)$item['user_id'])?>;
 var cmPoll = null;
@@ -497,7 +498,7 @@ function cmLoad() {
 function cmTyping() {
   if (cmTypingTimer) clearTimeout(cmTypingTimer);
   cmTypingTimer = setTimeout(function(){}, 500);
-  fetch('/api/typing?_='+Date.now(), {method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'lid='+cmLid}).catch(function(){});
+  fetch('/api/typing?_='+Date.now(), {method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'lid='+cmLid+'&_csrf='+encodeURIComponent(cmCsrf)}).catch(function(){});
 }
 function cmSend() {
   var input = document.getElementById('cmInput');
@@ -508,7 +509,7 @@ function cmSend() {
   fetch('/api/send?_='+Date.now(), {
     method: 'POST',
     headers: {'Content-Type':'application/x-www-form-urlencoded'},
-    body: 'lid=' + cmLid + '&text=' + encodeURIComponent(text)
+    body: 'lid=' + cmLid + '&text=' + encodeURIComponent(text) + '&_csrf=' + encodeURIComponent(cmCsrf)
   })
   .then(function(r){return r.json()})
   .then(function(data){
@@ -525,7 +526,7 @@ function cmToggleAct(e,mid){e.stopPropagation();var m=document.getElementById('c
 
 function cmDelete(mid){
   document.querySelectorAll('.cm-act-menu.open').forEach(function(x){x.classList.remove('open')});
-  fetch('/api/delete',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'mid='+mid}).then(function(r){return r.json()}).then(function(d){if(d.ok)cmLoad()});
+  fetch('/api/delete',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'mid='+mid+'&_csrf='+encodeURIComponent(cmCsrf)}).then(function(r){return r.json()}).then(function(d){if(d.ok)cmLoad()});
 }
 </script>
 <?php endif; ?>

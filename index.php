@@ -104,21 +104,28 @@ switch ($page) {
       $stmt = $pdo->prepare('SELECT * FROM messages WHERE listing_id=? AND ((sender_id=? AND receiver_id=?) OR (sender_id=? AND receiver_id=?)) ORDER BY created_at ASC');
       $stmt->execute([$lid,$cu['id'],$other,$other,$cu['id']]);
       $msgs = $stmt->fetchAll();
-      // Mark as read
-      $pdo->prepare('UPDATE messages SET is_read=1 WHERE listing_id=? AND receiver_id=? AND sender_id=? AND is_read=0')->execute([$lid,$cu['id'],$other]);
-      // Other user info
-      $ou = $pdo->prepare('SELECT name, avatar_url, last_seen FROM users WHERE id=?');
-      $ou->execute([$other]);
-      $otherUser = $ou->fetch();
+      $hasConversation = count($msgs) > 0;
+      // Mark as read (only if a conversation exists)
+      if ($hasConversation) {
+        $pdo->prepare('UPDATE messages SET is_read=1 WHERE listing_id=? AND receiver_id=? AND sender_id=? AND is_read=0')->execute([$lid,$cu['id'],$other]);
+      }
+      // Other user info — only expose profile if a conversation actually exists
+      $otherUser = null;
+      $isTyping = false;
+      if ($hasConversation) {
+        $ou = $pdo->prepare('SELECT name, avatar_url, last_seen FROM users WHERE id=?');
+        $ou->execute([$other]);
+        $otherUser = $ou->fetch();
+        // Typing status
+        $typing = $pdo->prepare('SELECT typing_lid, typing_at FROM users WHERE id=?');
+        $typing->execute([$other]);
+        $t = $typing->fetch();
+        $isTyping = ($t && $t['typing_lid'] == $lid && time() - strtotime($t['typing_at']) < 8);
+      }
       // Listing info
       $ll = $pdo->prepare('SELECT title, price, listing_type FROM listings WHERE id=?');
       $ll->execute([$lid]);
       $listingInfo = $ll->fetch();
-      // Typing status
-      $typing = $pdo->prepare('SELECT typing_lid, typing_at FROM users WHERE id=?');
-      $typing->execute([$other]);
-      $t = $typing->fetch();
-      $isTyping = ($t && $t['typing_lid'] == $lid && time() - strtotime($t['typing_at']) < 8);
       echo json_encode([
         'messages' => $msgs,
         'other' => $otherUser ? ['name'=>$otherUser['name'],'avatar'=>$otherUser['avatar_url'],'last_seen'=>$otherUser['last_seen']] : null,
@@ -128,6 +135,7 @@ switch ($page) {
       exit;
     }
     if ($action === 'typing' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+      csrf_check();
       $lid = (int)($_POST['lid'] ?? 0);
       if ($lid > 0) {
         $pdo->prepare('UPDATE users SET typing_lid=?, typing_at=NOW() WHERE id=?')->execute([$lid, $cu['id']]);
@@ -136,6 +144,7 @@ switch ($page) {
       exit;
     }
     if ($action === 'send' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+      csrf_check();
       $lid = (int)($_POST['lid'] ?? 0);
       $text = trim($_POST['text'] ?? '');
       if ($lid > 0 && $text !== '') {
@@ -148,6 +157,10 @@ switch ($page) {
           if ($listing['user_id'] == $cu['id']) {
             $other = (int)($_POST['uid'] ?? 0);
             if ($other <= 0 || $other == $cu['id']) { echo json_encode(['error'=>'invalid']); exit; }
+            // Owner may only reply to someone who already messaged them on this listing
+            $chk = $pdo->prepare('SELECT COUNT(*) FROM messages WHERE listing_id=? AND ((sender_id=? AND receiver_id=?) OR (sender_id=? AND receiver_id=?))');
+            $chk->execute([$lid,$cu['id'],$other,$other,$cu['id']]);
+            if ((int)$chk->fetchColumn() === 0) { echo json_encode(['error'=>'invalid']); exit; }
             $receiver = $other;
           } else {
             $receiver = $listing['user_id'];
@@ -164,6 +177,7 @@ switch ($page) {
       exit;
     }
     if ($action === 'delete' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+      csrf_check();
       $mid = (int)($_POST['mid'] ?? 0);
       if ($mid > 0) {
         $stmt = $pdo->prepare('UPDATE messages SET is_deleted=1 WHERE id=? AND sender_id=?');

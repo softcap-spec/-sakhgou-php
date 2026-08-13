@@ -332,6 +332,7 @@ require __DIR__ . '/../includes/header.php';
 
     <script>
     var dmMyId=<?=$myId?>;
+    var dmCsrf=<?=json_encode(csrf_token())?>;
     var dmCurLid=0,dmCurUid=0,dmPoll=null,dmTypingTimer=null;
     var dmCurName='',dmCurAvatar='',dmCurListing='';
 
@@ -420,7 +421,7 @@ require __DIR__ . '/../includes/header.php';
       var txt=inp.value.trim();
       if(!txt||!dmCurLid||!dmCurUid)return;
       inp.value='';
-      fetch('/api/send',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'lid='+dmCurLid+'&uid='+dmCurUid+'&text='+encodeURIComponent(txt)}).then(function(r){return r.json()}).then(function(d){if(d.ok)dmLoadMsgs()});
+      fetch('/api/send',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'lid='+dmCurLid+'&uid='+dmCurUid+'&text='+encodeURIComponent(txt)+'&_csrf='+encodeURIComponent(dmCsrf)}).then(function(r){return r.json()}).then(function(d){if(d.ok)dmLoadMsgs()});
     }
 
     function dmSendKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();dmSend()}}
@@ -429,13 +430,13 @@ require __DIR__ . '/../includes/header.php';
 
     function dmDelete(mid){
       document.querySelectorAll('.dm-act-menu.open').forEach(function(x){x.classList.remove('open')});
-      fetch('/api/delete',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'mid='+mid}).then(function(r){return r.json()}).then(function(d){if(d.ok)dmLoadMsgs()});
+      fetch('/api/delete',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'mid='+mid+'&_csrf='+encodeURIComponent(dmCsrf)}).then(function(r){return r.json()}).then(function(d){if(d.ok)dmLoadMsgs()});
     }
 
     function dmType(){
       if(!dmCurLid)return;
       if(dmTypingTimer)clearTimeout(dmTypingTimer);
-      fetch('/api/typing',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'lid='+dmCurLid});
+      fetch('/api/typing',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'lid='+dmCurLid+'&_csrf='+encodeURIComponent(dmCsrf)});
       dmTypingTimer=setTimeout(function(){},3000);
     }
 

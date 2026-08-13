@@ -256,6 +256,7 @@ $myId = (int)$cu['id'];
 
 <script>
 var currentLid=0,currentUid=0,pollTimer=null,typingTimer=null,myUid=<?=$myId?>;
+var chatCsrf=<?=json_encode(csrf_token())?>;
 var otherAvatar='',otherName='',listingTitle='',listingPrice=0,listingType='';
 
 function toggleChat(){var w=document.getElementById('chatWidget'),n=document.getElementById('notifPanel');n.classList.remove('open');w.classList.toggle('open');if(!w.classList.contains('open')){backToList();if(pollTimer){clearInterval(pollTimer);pollTimer=null}}}
@@ -360,14 +361,14 @@ function onTyping(){
  if(!currentLid||!currentUid)return;
  if(typingTimer)clearTimeout(typingTimer);
  typingTimer=setTimeout(function(){},500);
- fetch('/api/typing?_='+Date.now(),{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'lid='+currentLid}).catch(function(){});
+ fetch('/api/typing?_='+Date.now(),{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'lid='+currentLid+'&_csrf='+encodeURIComponent(chatCsrf)}).catch(function(){});
 }
 
 function sendMessage(){
  var input=document.getElementById('chatInput'),text=input.value.trim();
  if(!text||!currentLid)return;
  input.value='';input.disabled=true;
- fetch('/api/send?_='+Date.now(),{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'lid='+currentLid+'&uid='+currentUid+'&text='+encodeURIComponent(text)})
+ fetch('/api/send?_='+Date.now(),{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'lid='+currentLid+'&uid='+currentUid+'&text='+encodeURIComponent(text)+'&_csrf='+encodeURIComponent(chatCsrf)})
  .then(function(r){return r.json()})
  .then(function(data){input.disabled=false;input.focus();if(data.ok)loadMessages();else alert('Ошибка отправки')})
  .catch(function(){input.disabled=false});
@@ -388,7 +389,7 @@ document.addEventListener('click',function(){document.querySelectorAll('.chat-ac
 
 function deleteMessage(mid){
  document.querySelectorAll('.chat-act-menu.open').forEach(function(x){x.classList.remove('open')});
- fetch('/api/delete?_='+Date.now(),{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'mid='+mid})
+ fetch('/api/delete?_='+Date.now(),{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'mid='+mid+'&_csrf='+encodeURIComponent(chatCsrf)})
  .then(function(r){return r.json()})
  .then(function(d){if(d.ok)loadMessages()})
  .catch(function(){});
