@@ -226,7 +226,7 @@ require __DIR__ . '/../includes/header.php';
     .dm-chat{flex:1;display:flex;flex-direction:column;min-width:0}
     .dm-chat-empty{flex:1;display:flex;align-items:center;justify-content:center;color:#6B7B8D;font-size:.875rem;text-align:center;padding:2rem}
     .dm-msg-actions{display:none;position:absolute;top:-8px;right:-8px;z-index:2}
-    .dm-msg-row.out:hover .dm-msg-actions{display:block}
+    .dm-msg-col:hover .dm-msg-actions{display:block}
     .dm-msg-del{width:20px;height:20px;border:0;border-radius:50%;background:#DC2626;color:#fff;font-size:14px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(0,0,0,0.15);transition:all .15s}
     .dm-msg-del:hover{background:#EEF2F6;color:#0A1A2A}
     .dm-act-menu{position:absolute;top:28px;right:-4px;background:#fff;border:1px solid #D1DAE3;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,0.1);z-index:10;display:none;min-width:140px;overflow:hidden}
@@ -244,18 +244,21 @@ require __DIR__ . '/../includes/header.php';
     .dm-chat-hd-on{font-size:.6875rem;color:#16A34A;display:none}
     .dm-chat-hd-on.show{display:block}
     .dm-chat-msgs{flex:1;overflow-y:auto;padding:.625rem .875rem;display:flex;flex-direction:column;gap:.25rem;background:#fff}
-    .dm-msg-row{display:flex;max-width:75%;flex-direction:column}
-    .dm-msg-row.out{position:relative;align-self:flex-end;align-items:flex-end}
-    .dm-msg-row.in{position:relative;align-self:flex-start;align-items:flex-start}
-    .dm-msg-bubble{padding:.5rem .75rem;border-radius:14px;font-size:.875rem;line-height:1.35;word-wrap:break-word;position:relative}
+    .dm-msg-row{display:flex;max-width:80%;position:relative;gap:.375rem}
+    .dm-msg-row.out{position:relative;align-self:flex-end;flex-direction:row-reverse}
+    .dm-msg-row.in{position:relative;align-self:flex-start}
+    .dm-msg-col{display:flex;flex-direction:column;min-width:0}
+    .dm-msg-row.out .dm-msg-col{align-items:flex-end}
+    .dm-msg-row.in .dm-msg-col{align-items:flex-start}
+    .dm-msg-bubble{padding:.5rem .75rem;border-radius:14px;font-size:.875rem;line-height:1.35;word-wrap:break-word;position:relative;max-width:100%}
     .dm-msg-row.out .dm-msg-bubble{background:#EAF6FF;color:#0A1A2A;border-bottom-right-radius:4px}
     .dm-msg-row.in .dm-msg-bubble{background:#F4F6F8;color:#0A1A2A;border-bottom-left-radius:4px}
-    .dm-msg-meta{display:flex;align-items:center;gap:.25rem;margin-top:.125rem;font-size:.6875rem;color:#6B7B8D;padding:0 .25rem}
-    .dm-msg-row.out .dm-msg-meta{justify-content:flex-end}
+    .dm-msg-meta{display:flex;align-items:center;gap:.25rem;margin-top:.125rem;font-size:.6875rem;color:#B8C2CC;padding:0 .25rem}
+    .dm-msg-status{font-size:.625rem;color:#B8C2CC;line-height:1;white-space:nowrap}
+    .dm-msg-status.read{color:#00B04C}
+    .dm-msg-avatar{width:1.75rem;height:1.75rem;border-radius:50%;background:#EEF2F6;display:flex;align-items:center;justify-content:center;font-size:.625rem;font-weight:600;color:#5A6B7D;overflow:hidden;flex-shrink:0;align-self:flex-end}
+    .dm-msg-avatar img{width:100%;height:100%;object-fit:cover}
     .dm-date-sep{text-align:center;font-size:.6875rem;color:#6B7B8D;margin:.5rem 0;padding:.25rem .5rem;background:#F7F9FB;border-radius:8px;align-self:center}
-    .dm-tick{display:inline-block;font-size:14px;font-weight:700;line-height:1;margin-left:2px}
-    .dm-tick.read{color:#39B54A}
-    .dm-tick.unread{color:#BFC8D4}
     .dm-typing{padding:.25rem .875rem;font-size:.75rem;color:#5A6B7D;display:none;font-style:italic;flex-shrink:0}
     .dm-typing.show{display:block}
     .dm-input-row{border-top:1px solid #EEF2F6;padding:.5rem .75rem;display:flex;gap:.375rem;align-items:center;background:#fff;flex-shrink:0}
@@ -371,11 +374,14 @@ require __DIR__ . '/../includes/header.php';
           var isDeleted=(m.is_deleted==1||m.is_deleted==='1'||parseInt(m.is_deleted)===1);
           h+='<div class="dm-msg-row '+(mine?'out':'in')+'">';
           if(isDeleted){h+='<div style="padding:.5rem .75rem;border-radius:14px;font-size:.8125rem;color:#6B7B8D;font-style:italic;background:#F4F6F8;max-width:60%">Сообщение удалено</div></div>';return}
+          /* Avatar for incoming */
+          if(!mine){h+='<div class="dm-msg-avatar">';if(dmCurAvatar){h+='<img src="'+dmEsc(dmCurAvatar)+'" alt="">'}else{h+=dmEsc(dmCurName.substring(0,2))}h+='</div>'}
+          h+='<div class="dm-msg-col">';
           if(mine) h+='<div class="dm-msg-actions"><button class="dm-msg-del" onclick="dmToggleAct(event,'+m.id+')" title="Действия">&#8943;</button><div class="dm-act-menu" id="dmAct'+m.id+'"><button class="dm-act-item" onclick="dmDelete('+m.id+')">Удалить</button></div></div>';
           h+='<div class="dm-msg-bubble">'+dmEsc(m.text)+'</div>';
-          h+='<div style="font-size:.6875rem;color:#B8C2CC;margin-top:.125rem;padding:0 .25rem">'+m.created_at.split(' ')[1].substring(0,5)+'</div>';
-          if(mine){h+='<div class="dm-msg-status '+(m.is_read?'read':'')+'">'+(m.is_read?'Прочитано':'Доставлено')+'</div>'}
-          h+='</div>';
+          h+='<div class="dm-msg-meta"><span>'+m.created_at.split(' ')[1].substring(0,5)+'</span>';
+          if(mine){h+='<span class="dm-msg-status '+(m.is_read?'read':'')+'">'+(m.is_read?'Прочитано':'Доставлено')+'</span>'}
+          h+='</div></div></div>';
         });
         c.innerHTML=h||'<div class="dm-chat-empty">Нет сообщений</div>';
         c.scrollTop=c.scrollHeight;

@@ -84,28 +84,33 @@ $myId = (int)$cu['id'];
 .chat-thread-listing{font-size:.6875rem;color:#6B7B8D;margin-top:.125rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .chat-thread-listing .price{font-weight:600;color:#0A1A2A}
 
-/* Messages — Avito style v7 */
+/* Messages — Avito style v8: bubble + meta below + avatar */
 .chat-msgs{flex:1;overflow-y:auto;padding:.625rem .875rem;display:flex;flex-direction:column;gap:.375rem;background:#fff}
 .chat-date-sep{text-align:center;font-size:.6875rem;color:#6B7B8D;margin:.5rem 0;padding:.25rem .5rem;background:#F7F9FB;border-radius:8px;align-self:center}
 
-/* Avito: bubble + time on the SIDE (not below) */
-.chat-msg-row{display:flex;align-items:flex-end;max-width:90%;position:relative;gap:.375rem}
+/* Row: avatar (in only) + bubble + meta below */
+.chat-msg-row{display:flex;max-width:85%;position:relative;gap:.375rem}
 .chat-msg-row.out{align-self:flex-end;flex-direction:row-reverse}
 .chat-msg-row.in{align-self:flex-start}
-.chat-msg-bubble{padding:.5rem .75rem;border-radius:14px;font-size:.875rem;line-height:1.35;word-wrap:break-word;position:relative}
+.chat-msg-col{display:flex;flex-direction:column;min-width:0}
+.chat-msg-row.out .chat-msg-col{align-items:flex-end}
+.chat-msg-row.in .chat-msg-col{align-items:flex-start}
+.chat-msg-bubble{padding:.5rem .75rem;border-radius:14px;font-size:.875rem;line-height:1.35;word-wrap:break-word;position:relative;max-width:100%}
 .chat-msg-row.out .chat-msg-bubble{background:#EAF6FF;color:#0A1A2A;border-bottom-right-radius:4px}
 .chat-msg-row.in .chat-msg-bubble{background:#F4F6F8;color:#0A1A2A;border-bottom-left-radius:4px}
-/* Time on the side, aligned to bottom of bubble */
-.chat-msg-side{display:flex;flex-direction:column;justify-content:flex-end;gap:.0625rem;padding-bottom:.125rem;flex-shrink:0}
-.chat-msg-time{font-size:.6875rem;color:#B8C2CC;line-height:1;white-space:nowrap}
+/* Meta below bubble: time + status */
+.chat-msg-meta{display:flex;align-items:center;gap:.25rem;margin-top:.125rem;font-size:.6875rem;color:#B8C2CC;padding:0 .25rem}
 .chat-msg-status{font-size:.625rem;color:#B8C2CC;line-height:1;white-space:nowrap}
 .chat-msg-status.read{color:#00B04C}
-/* Deleted message — shows placeholder */
+/* Avatar for incoming messages */
+.chat-msg-avatar{width:1.75rem;height:1.75rem;border-radius:50%;background:#EEF2F6;display:flex;align-items:center;justify-content:center;font-size:.625rem;font-weight:600;color:#5A6B7D;overflow:hidden;flex-shrink:0;align-self:flex-end}
+.chat-msg-avatar img{width:100%;height:100%;object-fit:cover}
+/* Deleted message */
 .chat-msg-deleted{padding:.5rem .75rem;border-radius:14px;font-size:.8125rem;color:#6B7B8D;font-style:italic;background:#F4F6F8;max-width:60%}
 
 /* Action button on own messages (Avito: ⋯ menu) */
 .chat-msg-actions{display:none;position:absolute;top:-4px;right:-4px;z-index:2}
-.chat-msg-row.out:hover .chat-msg-actions{display:flex}
+.chat-msg-col:hover .chat-msg-actions{display:flex}
 .chat-msg-act-btn{width:24px;height:24px;border:0;border-radius:50%;background:#fff;color:#5A6B7D;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(0,0,0,0.1);transition:all .15s;line-height:1;padding:0}
 .chat-msg-act-btn:hover{background:#EEF2F6;color:#0A1A2A}
 /* Action menu dropdown */
@@ -303,17 +308,25 @@ function loadMessages(){
      html+='</div>';
      continue;
    }
+   /* Avatar for incoming */
+   if(!mine){
+     html+='<div class="chat-msg-avatar">';
+     if(otherAvatar){html+='<img src="'+escapeHtml(otherAvatar)+'" alt="">'}
+     else{html+=escapeHtml(otherName.substring(0,2))}
+     html+='</div>';
+   }
+   html+='<div class="chat-msg-col">';
    if(mine){
      html+='<div class="chat-msg-actions"><button class="chat-msg-act-btn" onclick="toggleActMenu(event,'+m.id+')" title="Действия">&#8943;</button><div class="chat-act-menu" id="actMenu'+m.id+'"><button class="chat-act-item" onclick="deleteMessage('+m.id+')">Удалить</button></div></div>';
    }
    html+='<div class="chat-msg-bubble">'+escapeHtml(m.text)+'</div>';
-   html+='<div class="chat-msg-side">';
-   html+='<div class="chat-msg-time">'+time+'</div>';
+   html+='<div class="chat-msg-meta">';
+   html+='<span>'+time+'</span>';
    if(mine){
      var read=(m.is_read==1||m.is_read==='1'||m.is_read===true||parseInt(m.is_read)===1);
-     html+='<div class="chat-msg-status'+(read?' read':'')+'">'+(read?'Прочитано':'Доставлено')+'</div>';
+     html+='<span class="chat-msg-status'+(read?' read':'')+'">'+(read?'Прочитано':'Доставлено')+'</span>';
    }
-   html+='</div></div>';
+   html+='</div></div></div>';
   }
   box.innerHTML=html;
   box.scrollTop=box.scrollHeight;

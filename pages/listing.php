@@ -358,19 +358,22 @@ require __DIR__ . '/../includes/header.php';
 <?php if ($cu && !$isOwner): ?>
 <style>
 #chatModal .cm-msgs{flex:1;overflow-y:auto;padding:.625rem .875rem;display:flex;flex-direction:column;gap:.25rem;background:#fff}
-#chatModal .cm-row{display:flex;max-width:80%;flex-direction:column}
-#chatModal .cm-row.out{align-self:flex-end;align-items:flex-end;position:relative}
+#chatModal .cm-row{display:flex;max-width:80%;position:relative;gap:.375rem}
+#chatModal .cm-row.out{align-self:flex-end;align-items:flex-end;flex-direction:row-reverse;position:relative}
 #chatModal .cm-row.in{align-self:flex-start;align-items:flex-start;position:relative}
-#chatModal .cm-bubble{padding:.5rem .75rem;border-radius:14px;font-size:.875rem;line-height:1.35;word-wrap:break-word;position:relative}
+#chatModal .cm-col{display:flex;flex-direction:column;min-width:0}
+#chatModal .cm-row.out .cm-col{align-items:flex-end}
+#chatModal .cm-row.in .cm-col{align-items:flex-start}
+#chatModal .cm-bubble{padding:.5rem .75rem;border-radius:14px;font-size:.875rem;line-height:1.35;word-wrap:break-word;position:relative;max-width:100%}
 #chatModal .cm-row.out .cm-bubble{background:#EAF6FF;color:#0A1A2A;border-bottom-right-radius:4px}
 #chatModal .cm-row.in .cm-bubble{background:#F4F6F8;color:#0A1A2A;border-bottom-left-radius:4px}
-#chatModal .cm-meta{display:flex;align-items:center;gap:.25rem;margin-top:.125rem;font-size:.6875rem;color:#6B7B8D;padding:0 .25rem}
-#chatModal .cm-row.out .cm-meta{justify-content:flex-end}
-#chatModal .cm-tick{display:inline-block;font-size:14px;font-weight:700;line-height:1;margin-left:2px}
-#chatModal .cm-tick.read{color:#39B54A}
-#chatModal .cm-tick.unread{color:#BFC8D4}
+#chatModal .cm-meta{display:flex;align-items:center;gap:.25rem;margin-top:.125rem;font-size:.6875rem;color:#B8C2CC;padding:0 .25rem}
+#chatModal .cm-status{font-size:.625rem;color:#B8C2CC;line-height:1;white-space:nowrap}
+#chatModal .cm-status.read{color:#00B04C}
+#chatModal .cm-avatar{width:1.75rem;height:1.75rem;border-radius:50%;background:#EEF2F6;display:flex;align-items:center;justify-content:center;font-size:.625rem;font-weight:600;color:#5A6B7D;overflow:hidden;flex-shrink:0;align-self:flex-end}
+#chatModal .cm-avatar img{width:100%;height:100%;object-fit:cover}
 #chatModal .cm-actions{display:none;position:absolute;top:-8px;right:-8px;z-index:2}
-#chatModal .cm-row.out:hover .cm-actions{display:block}
+#chatModal .cm-col:hover .cm-actions{display:block}
 #chatModal .cm-del{width:20px;height:20px;border:0;border-radius:50%;background:#DC2626;color:#fff;font-size:14px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(0,0,0,0.15);transition:all .15s}
 #chatModal .cm-del:hover{background:#EEF2F6;color:#0A1A2A}
 #chatModal .cm-act-menu{position:absolute;top:28px;right:-4px;background:#fff;border:1px solid #D1DAE3;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,0.1);z-index:10;display:none;min-width:140px;overflow:hidden}
@@ -416,6 +419,8 @@ var cmUid = <?=json_encode($cu['id'])?>;
 var cmHost = <?=json_encode((int)$item['user_id'])?>;
 var cmPoll = null;
 var cmTypingTimer = null;
+var cmOtherName = <?=json_encode($item['host_name'] ?? '')?>;
+var cmOtherAvatar = <?=json_encode($item['host_avatar'] ?? '')?>;
 
 function openChatModal() {
   document.getElementById('chatModal').classList.remove('hidden');
@@ -453,14 +458,22 @@ function cmLoad() {
           html += '</div>';
           continue;
         }
+        /* Avatar for incoming */
+        if(!mine){
+          html+='<div class="cm-avatar">';
+          if(cmOtherAvatar){html+='<img src="'+escapeHtml(cmOtherAvatar)+'" alt="">'}
+          else{html+=escapeHtml(cmOtherName.substring(0,2))}
+          html+='</div>';
+        }
+        html += '<div class="cm-col">';
         if (mine) html += '<div class="cm-actions"><button class="cm-del" onclick="cmToggleAct(event,'+m.id+')" title="Действия">&#8943;</button><div class="cm-act-menu" id="cmAct'+m.id+'"><button class="cm-act-item" onclick="cmDelete('+m.id+')">Удалить</button></div></div>';
         html += '<div class="cm-bubble">'+escapeHtml(m.text)+'</div>';
-        html += '<div style="font-size:.6875rem;color:#B8C2CC;margin-top:.125rem;padding:0 .25rem">'+time+'</div>';
+        html += '<div class="cm-meta"><span>'+time+'</span>';
         if (mine) {
           var read = (m.is_read==1||m.is_read==='1'||m.is_read===true||parseInt(m.is_read)===1);
-          html += '<div style="font-size:.625rem;color:'+(read?'#00B04C':'#B8C2CC')+';margin-top:.0625rem;padding:0 .25rem">'+(read?'Прочитано':'Доставлено')+'</div>';
+          html += '<span class="cm-status'+(read?' read':'')+'">'+(read?'Прочитано':'Доставлено')+'</span>';
         }
-        html += '</div>';
+        html += '</div></div></div>';
       }
       box.innerHTML = html;
       box.scrollTop = box.scrollHeight;
