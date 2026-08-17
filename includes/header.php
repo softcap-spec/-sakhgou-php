@@ -39,7 +39,7 @@ $canonical_path = strtok($_SERVER['REQUEST_URI'] ?? '/', '?');
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.tailwindcss.com"></script>
 <script>tailwind.config={theme:{extend:{fontFamily:{sans:['Manrope','Arial','sans-serif'],display:['Manrope','Arial','sans-serif']},colors:{background:'#F0F4F8',foreground:'#0A1A2A',card:'#FFFFFF','card-foreground':'#0A1A2A',popover:'#FFFFFF','popover-foreground':'#0A1A2A',primary:'#0A1A2A','primary-foreground':'#F0F4F8',secondary:'#E8EDF2','secondary-foreground':'#0A1A2A',muted:'#8BA0B5','muted-foreground':'#5A6B7D',accent:'#0A7BBA','accent-fg':'#FFFFFF',destructive:'#DC2626',success:'#16A34A',warn:'#EAB308',border:'#D1DAE3',input:'#FFFFFF',ring:'#0A7BBA'},borderRadius:{sm:'0.375rem',DEFAULT:'0.5rem',md:'0.5rem',lg:'0.75rem',xl:'0.75rem'}}}}</script>
-<link rel="stylesheet" href="/includes/style.css?v=31">
+<link rel="stylesheet" href="/includes/style.css?v=32">
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -103,7 +103,8 @@ $canonical_path = strtok($_SERVER['REQUEST_URI'] ?? '/', '?');
     </a>
     <div class="hidden md:flex items-center gap-0.5 bg-white border border-[#DFE4EA] rounded-lg p-0.5">
       <?php foreach (['all'=>'Все','property'=>'Жильё','tour'=>'Туры','fishing'=>'Рыбалка','rental_gear'=>'Снаряжение','car_rental'=>'Прокат авто'] as $k=>$v):
-        $active = ($k==='all' && empty($_GET['cat'])) || (isset($_GET['cat']) && $_GET['cat']===$k);
+        $cur_cat = (($page ?? '') === 'catalog') ? (string)($sub ?? '') : '';
+        $active = ($k === 'all') ? ($cur_cat === '') : ($cur_cat === $k);
       ?>
       <a href="/catalog/<?=$k==='all'?'':$k?>" class="px-3 py-1.5 text-sm font-medium rounded-md transition-colors whitespace-nowrap <?=$active?'bg-accent text-white':'text-[#54677A] hover:text-foreground hover:bg-[#EEF2F6]'?>"><?=$v?></a>
       <?php endforeach; ?>
