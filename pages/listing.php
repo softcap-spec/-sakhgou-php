@@ -87,12 +87,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['book'])) {
     } elseif (strtotime($check_out) <= strtotime($check_in)) {
       $book_error = 'Дата выезда должна быть позже даты заезда';
     } else {
+      // Check date overlap with existing active bookings (prevent double-booking)
+      $conflict = $pdo->prepare("SELECT COUNT(*) FROM bookings WHERE listing_id = ? AND status IN ('pending','confirmed') AND check_in_date < ? AND check_out_date > ?");
+      $conflict->execute([$lid, $check_out, $check_in]);
+      if ((int)$conflict->fetchColumn() > 0) {
+        $book_error = 'Эти даты уже забронированы';
+      } else {
       $days = max(1, (int)((strtotime($check_out) - strtotime($check_in)) / 86400));
       $total = $days * (float)$item['price'];
       $pdo->prepare('INSERT INTO bookings (listing_id, guest_id, host_id, check_in_date, check_out_date, guests_count, status, total_price, guest_message, created_at) VALUES (?,?,?,?,?,?,?,?,?,NOW())')->execute([$lid, $cu['id'], $item['user_id'], $check_in, $check_out, $guests, 'pending', $total, $bmsg]);
       // Notify host
       $pdo->prepare('INSERT INTO notifications (user_id, type, text, link, is_read, created_at) VALUES (?,?,?,?,0,NOW())')->execute([$item['user_id'], 'booking', 'Новая заявка на бронирование: '.$item['title'], '/dashboard?sub=host_bookings']);
       $book_sent = true;
+      }
     }
   }
 }

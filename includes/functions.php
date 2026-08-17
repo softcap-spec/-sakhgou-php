@@ -44,6 +44,9 @@ function sanitize_banner_html(string $html): string {
   $html = preg_replace('#\son\w+\s*=\s*("[^"]*"|\'[^\']*\'|[^\s>]+)#i', '', $html);
   // Strip javascript:/vbscript: URLs
   $html = preg_replace('#(javascript|vbscript)\s*:#i', '', $html);
+  // Strip data: URIs (mXSS via inline SVG/JS in img src, and data: href)
+  $html = preg_replace('#\ssrc\s*=\s*["\']?data:[^"\'\s>]*#i', '', $html);
+  $html = preg_replace('#\shref\s*=\s*["\']?data:[^"\'\s>]*#i', ' href="#"', $html);
   // Whitelist safe tags
   $allowed = '<a><img><div><span><p><br><b><strong><i><em><u><ul><ol><li><h3><h4><h5><sup><sub><figure><figcaption><blockquote>';
   $html = strip_tags($html, $allowed);
