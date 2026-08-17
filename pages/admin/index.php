@@ -229,7 +229,7 @@ require_once __DIR__ . '/../../includes/header.php';
   <div class="max-w-7xl mx-auto px-4">
     <div class="flex items-center gap-3 mb-2">
       <h1 class="font-display text-2xl">Админ-панель</h1>
-      <span class="text-xs bg-accent/10 text-accent px-2 py-0.5 rounded-full font-medium">v<?= defined('APP_VERSION') ? APP_VERSION : '1.0' ?></span>
+      <span class="text-xs bg-accent text-white px-2 py-0.5 rounded-full font-medium">v<?= defined('APP_VERSION') ? APP_VERSION : '1.0' ?></span>
     </div>
 
     <?php if (isset($_GET['ok'])): ?>
@@ -469,7 +469,7 @@ elseif ($tab === 'users'):
               <td class="px-4 py-3 font-medium"><?= h($u['name']) ?></td>
               <td class="px-4 py-3 text-xs text-muted-foreground hidden sm:table-cell"><?= h($u['email']) ?></td>
               <td class="px-4 py-3 text-center hidden sm:table-cell">
-                <span class="text-xs px-2 py-0.5 rounded-full <?= $u['role']==='admin'?'bg-purple-100 text-purple-700':($u['role']==='host'?'bg-blue-100 text-blue-700':'bg-muted text-muted-foreground') ?>"><?= h($u['role']) ?></span>
+                <span class="text-xs px-2 py-0.5 rounded-full <?= $u['role']==='admin'?'bg-purple-600 text-white':($u['role']==='host'?'bg-accent text-white':'bg-muted text-muted-foreground') ?>"><?= h($u['role']) ?></span>
               </td>
               <td class="px-4 py-3 text-center"><?= $u['banned'] ? '🚫' : '✅' ?></td>
               <td class="px-4 py-3 text-right">
@@ -600,7 +600,7 @@ elseif ($tab === 'payments'):
               <td class="px-4 py-3 text-xs"><?=h($pm['host_name'])?></td>
               <td class="px-4 py-3 text-xs hidden sm:table-cell"><a href="/listing/<?=$pm['listing_id']?>" class="hover:text-accent"><?=h($pm['listing_title'])?></a></td>
               <td class="px-4 py-3 text-center hidden sm:table-cell">
-                <span class="text-xs px-2 py-0.5 rounded-full <?= $pm['promo_type']==='top' ? 'bg-amber-100 text-amber-700' : ($pm['promo_type']==='highlight' ? 'bg-blue-100 text-blue-700' : 'bg-red-100 text-red-700') ?>"><?=h($pm['promo_type'])?></span>
+                <span class="text-xs px-2 py-0.5 rounded-full <?= $pm['promo_type']==='top' ? 'bg-amber-500 text-white' : ($pm['promo_type']==='highlight' ? 'bg-accent text-white' : 'bg-red-500 text-white') ?>"><?=h($pm['promo_type'])?></span>
               </td>
               <td class="px-4 py-3 text-right text-xs hidden sm:table-cell"><?=number_format((float)$pm['payment_amount'],0,',',' ')?> ₽</td>
               <td class="px-4 py-3 text-center"><span class="text-xs px-2 py-0.5 rounded-full <?= $pm['payment_status']==='paid' ? 'bg-green-100 text-green-700' : ($pm['payment_status']==='refunded' ? 'bg-gray-100 text-gray-600' : 'bg-yellow-100 text-yellow-700') ?>"><?=h($pm['payment_status'])?></span></td>
@@ -710,7 +710,7 @@ elseif ($tab === 'categories'):
             <tr class="border-b hover:bg-muted/20">
               <td class="px-4 py-3">
                 <div class="flex items-center gap-2">
-                  <div class="w-6 h-6 bg-accent/10 rounded flex items-center justify-center text-[10px] text-accent font-semibold"><?= mb_substr($c['name'], 0, 1) ?></div>
+                  <div class="w-6 h-6 bg-accent rounded flex items-center justify-center text-[10px] text-white font-semibold"><?= mb_substr($c['name'], 0, 1) ?></div>
                   <span class="font-medium" id="cat-name-<?=$c['id']?>"><?= h($c['name']) ?></span>
                 </div>
               </td>
@@ -840,7 +840,7 @@ elseif ($tab === 'banners'):
           <tr class="border-b hover:bg-muted/20">
             <td class="px-4 py-3">#<?=$b['id']?></td>
             <td class="px-4 py-3 font-medium"><?=h($b['title'])?></td>
-            <td class="px-4 py-3"><span class="text-xs px-2 py-0.5 rounded-full <?=$b['type']==='code'?'bg-purple-100 text-purple-700':'bg-blue-100 text-blue-700'?>"><?=$b['type']==='code'?'HTML':'IMG'?></span></td>
+            <td class="px-4 py-3"><span class="text-xs px-2 py-0.5 rounded-full <?=$b['type']==='code'?'bg-purple-600 text-white':'bg-accent text-white'?>"><?=$b['type']==='code'?'HTML':'IMG'?></span></td>
             <td class="px-4 py-3 text-xs text-muted-foreground hidden sm:table-cell"><?=h($b['placement'])?></td>
             <td class="px-4 py-3 text-center">
               <form method="post" class="inline"><input type="hidden" name="action" value="toggle_banner"><input type="hidden" name="id" value="<?=$b['id']?>"><button type="submit" class="text-lg"><?=$b['is_active']?'🟢':'🔴'?></button></form>

@@ -201,6 +201,14 @@ tr:hover { background: #F7F9FB; }
 .text-muted-foreground { color: #7A8A9A; }
 .text-accent { color: #0A7BBA; }
 
+/* --- Гарантированные цвета (фоллбэк, если Tailwind CDN не сгенерировал кастомный accent) --- */
+.bg-accent { background-color: #0A7BBA !important; }
+.text-white { color: #FFFFFF !important; }
+.text-foreground { color: #0A1A2A !important; }
+.hover\:bg-accent\/90:hover { background-color: #0A86C7 !important; }
+.bg-accent\/10 { background-color: rgba(10, 123, 186, 0.1) !important; }
+.bg-accent\/30 { background-color: rgba(10, 123, 186, 0.3) !important; }
+
 /* --- Form group --- */
 .form-group { margin-bottom: 1rem; }
 
