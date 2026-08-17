@@ -117,7 +117,7 @@ $page_title = 'Вход — СахGO';
       </div>
       <?php endif; ?>
 
-      <form method="post" class="space-y-4">
+      <form method="post" class="space-y-4" onsubmit="if(typeof ymGoal==='function')ymGoal('login')">
         <?= csrf_field() ?>
 
         <div>
@@ -257,4 +257,5 @@ document.getElementById('carouselViewport').addEventListener('wheel',function(e)
   else if(e.deltaX < -20 || e.deltaY < -20) goTo(cIdx-1, false);
 },{passive:false});
 </script>
+<?php require_once __DIR__ . '/../includes/metrics_counter.php'; ?>
 </body></html>

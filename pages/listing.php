@@ -269,7 +269,7 @@ require __DIR__ . '/../includes/header.php';
         <?php if ($cu && !$isOwner): ?>
         <div class="border-t border-[#F0F3F7] pt-4 mt-4">
           <h3 class="text-sm font-semibold mb-3">Оставить отзыв</h3>
-          <form method="post" id="reviewForm">
+          <form method="post" id="reviewForm" onsubmit="if(typeof ymGoal==='function')ymGoal('review')">
             <?= csrf_field() ?>
             <input type="hidden" name="rating" id="ratingVal" value="5">
             <div class="flex items-center gap-1 mb-3" id="starRating">
@@ -326,7 +326,7 @@ require __DIR__ . '/../includes/header.php';
               <div class="bg-[#F0FDF4] border border-[#BBF7D0] text-[#166534] rounded-lg px-3 py-2.5 text-xs">Заявка отправлена! Хозяин свяжется с вами.</div>
               <?php else: ?>
               <?php if ($book_error): ?><div class="bg-[#FEF2F2] border border-[#FECACA] text-[#DC2626] rounded-lg px-3 py-2.5 text-xs mb-2"><?=h($book_error)?></div><?php endif; ?>
-              <form method="post">
+              <form method="post" onsubmit="if(typeof ymGoal==='function')ymGoal('booking')">
                 <?= csrf_field() ?>
                 <div class="grid grid-cols-2 gap-2">
                   <div>
@@ -628,7 +628,7 @@ function cmSend() {
   .then(function(data){
     input.disabled = false;
     input.focus();
-    if (data.ok) cmLoad();
+    if (data.ok) { cmLoad(); if(typeof ymGoal==='function')ymGoal('send_message'); }
     else { alert('Ошибка отправки'); }
   })
   .catch(function(){ input.disabled = false; });

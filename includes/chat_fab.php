@@ -381,7 +381,7 @@ function sendMessage(){
  input.value='';input.disabled=true;
  fetch('/api/send?_='+Date.now(),{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'lid='+currentLid+'&uid='+currentUid+'&text='+encodeURIComponent(text)+'&_csrf='+encodeURIComponent(chatCsrf)})
  .then(function(r){return r.json()})
- .then(function(data){input.disabled=false;input.focus();if(data.ok)loadMessages();else alert('Ошибка отправки')})
+ .then(function(data){input.disabled=false;input.focus();if(data.ok){loadMessages();if(typeof ymGoal==='function')ymGoal('send_message')}else alert('Ошибка отправки')})
  .catch(function(){input.disabled=false});
 }
 

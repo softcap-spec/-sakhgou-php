@@ -21,6 +21,9 @@ define('ITEMS_PER_PAGE', 12);
 define('MAX_UPLOAD_SIZE', 2 * 1024 * 1024); // 2MB
 define('UPLOAD_DIR', __DIR__ . '/uploads');
 
+// Яндекс.Метрика: номер счётчика (например '12345678'). Пусто '' = счётчик выключен.
+define('YANDEX_METRIKA_ID', '');
+
 // SMTP (optional — if set, emails go via SMTP; otherwise fallback to mail())
 // Example (Yandex 360 / Selectel / Mail.ru):
 // define('SMTP_HOST', 'smtp.yandex.ru');

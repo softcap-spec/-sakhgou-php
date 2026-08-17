@@ -53,4 +53,5 @@ if ('serviceWorker' in navigator) {
   });
 }
 </script>
+<?php require_once __DIR__ . '/metrics_counter.php'; ?>
 </div></body></html>
