@@ -17,6 +17,7 @@ function auth_register(string $email, string $password, string $name, string $ph
   $stmt->execute([$email, $hash, $name, $phone]);
   
   $userId = (int) $pdo->lastInsertId();
+  session_regenerate_id(true);
   $_SESSION['user_id'] = $userId;
   $_SESSION['user_role'] = 'user';
   return ['ok' => true, 'user_id' => $userId];
@@ -47,6 +48,7 @@ function auth_login(string $email, string $password): array {
   // Clear attempts on success
   unset($_SESSION[$key]);
   
+  session_regenerate_id(true);
   $_SESSION['user_id'] = (int) $user['id'];
   $_SESSION['user_role'] = $user['role'];
   $_SESSION['user_name'] = $user['name'];

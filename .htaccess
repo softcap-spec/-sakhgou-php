@@ -3,11 +3,24 @@ RewriteEngine On
 # Sitemap
 RewriteRule ^sitemap\.xml$ sitemap.php [L]
 
+# Block dotfiles and sensitive files
+RedirectMatch 404 /\.(git|svn|hg|env|htaccess|htpasswd)
+RedirectMatch 404 /\.(bak|bak2|sql|inc)
+RedirectMatch 404 /(^|/)_t\.php$
+RedirectMatch 404 /(^|/)_test_banner\.php$
+RedirectMatch 404 /(^|/)tmp_seed\.sql$
+
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^(.*)$ index.php?url=$1 [QSA,L]
 
 # Protect config.php from direct access
 <Files "config.php">
+  Require all denied
+</Files>
+<Files "config.php.bak">
+  Require all denied
+</Files>
+<Files "config.php.bak2">
   Require all denied
 </Files>

@@ -339,7 +339,7 @@ require __DIR__ . '/../includes/header.php';
       <?php foreach($similar as $s): ?>
       <a href="/listing/<?=$s['id']?>" class="listing-card">
         <div class="listing-img">
-          <?php $simg = $pdo->query("SELECT filename FROM listing_images WHERE listing_id={$s['id']} ORDER BY sort_order LIMIT 1")->fetchColumn(); ?>
+          <?php $simgStmt = $pdo->prepare("SELECT filename FROM listing_images WHERE listing_id = ? ORDER BY sort_order LIMIT 1"); $simgStmt->execute([$s['id']]); $simg = $simgStmt->fetchColumn(); ?>
           <?php if($simg): ?><img src="/uploads/<?=h($simg)?>" alt="<?=h($s['title'])?>" loading="lazy"><?php endif; ?>
         </div>
         <div class="listing-body">

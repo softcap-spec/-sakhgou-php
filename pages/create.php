@@ -120,7 +120,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['finish'])) {
     if (!empty($_SESSION['tmp_images'])) {
       $pdo->beginTransaction();
       foreach ($_SESSION['tmp_images'] as $i => $img) {
-        $ext = pathinfo($img['orig'], PATHINFO_EXTENSION) ?: 'jpg';
+        // S3 fix: use MIME-based extension, not original filename
+        $ext_map = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp'];
+        $finfo = new finfo(FILEINFO_MIME_TYPE);
+        $srcPath = $tmpDir . '/' . $img['file'];
+        $mime = @$finfo->file($srcPath);
+        $ext = $ext_map[$mime] ?? 'jpg';
         $fn = $lid . '_' . ($i+1) . '_' . time() . '.' . $ext;
         $src = $tmpDir . '/' . $img['file'];
         $dst = UPLOAD_DIR . '/' . $fn;
