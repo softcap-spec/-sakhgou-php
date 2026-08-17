@@ -46,4 +46,11 @@
   </div>
 </footer>
 <?php require_once __DIR__ . '/chat_fab.php'; ?>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function() {
+    navigator.serviceWorker.register('/sw.js').catch(function(){});
+  });
+}
+</script>
 </div></body></html>

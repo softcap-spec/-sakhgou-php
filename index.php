@@ -137,6 +137,7 @@ switch ($page) {
     }
     if ($action === 'typing' && $_SERVER['REQUEST_METHOD'] === 'POST') {
       csrf_check();
+      if (!rate_limit('typing', 5)) { echo json_encode(['error'=>'rate_limit']); exit; }
       $lid = (int)($_POST['lid'] ?? 0);
       if ($lid > 0) {
         $pdo->prepare('UPDATE users SET typing_lid=?, typing_at=NOW() WHERE id=?')->execute([$lid, $cu['id']]);
@@ -146,6 +147,7 @@ switch ($page) {
     }
     if ($action === 'send' && $_SERVER['REQUEST_METHOD'] === 'POST') {
       csrf_check();
+      if (!rate_limit('send', 2)) { echo json_encode(['error'=>'rate_limit']); exit; }
       $lid = (int)($_POST['lid'] ?? 0);
       $text = trim($_POST['text'] ?? '');
       if ($lid > 0 && $text !== '') {

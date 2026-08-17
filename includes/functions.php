@@ -30,6 +30,37 @@ function h(string $s): string {
   return htmlspecialchars($s, ENT_QUOTES, 'UTF-8');
 }
 
+/**
+ * S5 fix: sanitize banner HTML — strip scripts, iframes, event handlers, javascript: URLs.
+ * Whitelist of safe tags only. Admin-entered HTML banners can no longer inject XSS.
+ */
+function sanitize_banner_html(string $html): string {
+  // Drop full script/iframe/object/embed/form blocks (with their content)
+  $html = preg_replace('#<\s*script[^>]*>.*?<\s*/\s*script\s*>#is', '', $html);
+  $html = preg_replace('#<\s*iframe[^>]*>.*?<\s*/\s*iframe\s*>#is', '', $html);
+  $html = preg_replace('#<\s*(object|embed|form|input|button|select|textarea)[^>]*>.*?<\s*/\s*\1\s*>#is', '', $html);
+  $html = preg_replace('#<\s*(object|embed|input|button|select|textarea)[^>]*/?>#is', '', $html);
+  // Strip inline event handlers (onclick, onerror, onload, ...)
+  $html = preg_replace('#\son\w+\s*=\s*("[^"]*"|\'[^\']*\'|[^\s>]+)#i', '', $html);
+  // Strip javascript:/vbscript: URLs
+  $html = preg_replace('#(javascript|vbscript)\s*:#i', '', $html);
+  // Whitelist safe tags
+  $allowed = '<a><img><div><span><p><br><b><strong><i><em><u><ul><ol><li><h3><h4><h5><sup><sub><figure><figcaption><blockquote>';
+  $html = strip_tags($html, $allowed);
+  return $html;
+}
+
+/**
+ * S6 fix: simple per-session rate limiting. Returns true if allowed, false if throttled.
+ */
+function rate_limit(string $key, int $seconds): bool {
+  $k = 'rl_' . $key;
+  $now = time();
+  if (isset($_SESSION[$k]) && ($now - $_SESSION[$k]) < $seconds) return false;
+  $_SESSION[$k] = $now;
+  return true;
+}
+
 function format_price(float $price): string {
   if ($price == 0) return 'Бесплатно';
   return number_format($price, 0, ',', ' ') . ' ₽';
@@ -77,7 +108,7 @@ function get_category(string $slug): ?array {
   return null;
 }
 
-function get_listings(string $category = '', string $search = '', int $page = 1, string $status = 'active'): array {
+function get_listings(string $category = '', string $search = '', int $page = 1, string $status = 'active', array $filters = []): array {
   $pdo = db();
   $where = ['l.status = ?'];
   $params = [$status];
@@ -91,6 +122,15 @@ function get_listings(string $category = '', string $search = '', int $page = 1,
     $params[] = "%$search%";
     $params[] = "%$search%";
   }
+  // Filters: price range, location, listing type
+  $price_min = (isset($filters['price_min']) && $filters['price_min'] !== '') ? (float)$filters['price_min'] : null;
+  $price_max = (isset($filters['price_max']) && $filters['price_max'] !== '') ? (float)$filters['price_max'] : null;
+  $location = trim($filters['location'] ?? '');
+  $type = $filters['type'] ?? '';
+  if ($price_min !== null) { $where[] = 'l.price >= ?'; $params[] = $price_min; }
+  if ($price_max !== null) { $where[] = 'l.price <= ?'; $params[] = $price_max; }
+  if ($location !== '') { $where[] = 'l.location LIKE ?'; $params[] = "%$location%"; }
+  if ($type !== '') { $where[] = 'l.listing_type = ?'; $params[] = $type; }
   
   $whereSQL = implode(' AND ', $where);
   $offset = ($page - 1) * ITEMS_PER_PAGE;
@@ -198,6 +238,87 @@ function captcha_validate(string $answer): bool {
 }
 
 /**
+ * Send email. Prefers SMTP (constants in config.php); falls back to mail() if SMTP not configured.
+ */
+function send_mail_smtp(string $to, string $subject, string $body): bool {
+  $host = defined('SMTP_HOST') ? SMTP_HOST : '';
+  $from = defined('SMTP_FROM') ? SMTP_FROM : 'noreply@sakhgo.ru';
+  $from_name = defined('SMTP_FROM_NAME') ? SMTP_FROM_NAME : 'СахGO';
+
+  if (!$host) {
+    $headers = "From: $from_name <$from>\r\nContent-Type: text/plain; charset=UTF-8";
+    return @mail($to, $subject, $body, $headers);
+  }
+
+  $port = defined('SMTP_PORT') ? (int)SMTP_PORT : 587;
+  $secure = defined('SMTP_SECURE') ? SMTP_SECURE : 'tls'; // tls | ssl | none
+  $user = defined('SMTP_USER') ? SMTP_USER : '';
+  $pass = defined('SMTP_PASS') ? SMTP_PASS : '';
+
+  try {
+    $remote = ($secure === 'ssl') ? 'ssl://' . $host : $host;
+    $fp = @fsockopen($remote, $port, $errno, $errstr, 10);
+    if (!$fp) return @mail($to, $subject, $body, "From: $from_name <$from>\r\nContent-Type: text/plain; charset=UTF-8");
+
+    $read = function() use ($fp) {
+      $data = '';
+      while ($line = fgets($fp, 515)) {
+        $data .= $line;
+        if (isset($line[3]) && $line[3] === ' ') break;
+      }
+      return $data;
+    };
+    $send = function($cmd) use ($fp) { fwrite($fp, $cmd . "\r\n"); };
+
+    $read(); // banner
+    $send('EHLO ' . (isset($_SERVER['SERVER_NAME']) ? $_SERVER['SERVER_NAME'] : 'sakhgo.ru'));
+    $read();
+
+    if ($secure === 'tls') {
+      $send('STARTTLS');
+      $read();
+      if (!stream_socket_enable_crypto($fp, true, STREAM_CRYPTO_METHOD_TLS_CLIENT)) {
+        fclose($fp); return false;
+      }
+      $send('EHLO sakhgo.ru');
+      $read();
+    }
+
+    if ($user !== '') {
+      $send('AUTH LOGIN');
+      $read();
+      $send(base64_encode($user));
+      $read();
+      $send(base64_encode($pass));
+      $read();
+    }
+
+    $send('MAIL FROM:<' . $from . '>');
+    $read();
+    $send('RCPT TO:<' . $to . '>');
+    $read();
+    $send('DATA');
+    $read();
+
+    $subject_enc = '=?UTF-8?B?' . base64_encode($subject) . '?=';
+    $msg = "From: $from_name <$from>\r\n";
+    $msg .= "To: <$to>\r\n";
+    $msg .= "Subject: $subject_enc\r\n";
+    $msg .= "MIME-Version: 1.0\r\n";
+    $msg .= "Content-Type: text/plain; charset=UTF-8\r\n";
+    $msg .= "Content-Transfer-Encoding: 8bit\r\n\r\n";
+    $msg .= $body . "\r\n.\r\n";
+    $send($msg);
+    $read();
+    $send('QUIT');
+    fclose($fp);
+    return true;
+  } catch (\Throwable $e) {
+    return false;
+  }
+}
+
+/**
  * Send email notification for new message (throttled: one per conversation per hour)
  */
 function notify_new_message(int $sender_id, int $receiver_id, int $listing_id, string $listing_title): void {
@@ -218,8 +339,7 @@ function notify_new_message(int $sender_id, int $receiver_id, int $listing_id, s
   $body .= "У вас новое сообщение по объявлению «{$listing_title}».\n\n";
   $body .= "Перейти к сообщению: https://сахгоу.рф/listing/{$listing_id}\n\n";
   $body .= "С уважением, команда СахGO\n";
-  $headers = "From: noreply@sakhgo.ru\r\nContent-Type: text/plain; charset=UTF-8";
-  @mail($user['email'], $subject, $body, $headers);
+  send_mail_smtp($user['email'], $subject, $body);
 }
 
 function add_notification(int $user_id, string $type, string $text, string $link = ''): void {
@@ -372,7 +492,7 @@ function render_banners(string $placement): void {
           if (!empty($b['advertiser'])) echo '<div class="text-[10px] text-[#7A8A9A] mt-1">' . h($b['advertiser']) . '</div>';
           echo '</div>' . $close;
         } else {
-          echo '<div class="listing-card">' . $b['content'] . '</div>';
+          echo '<div class="listing-card">' . sanitize_banner_html($b['content']) . '</div>';
         }
         continue;
       }
@@ -386,7 +506,7 @@ function render_banners(string $placement): void {
           $html = '<div class="max-w-3xl mx-auto">' . $img . '</div>';
         }
       } else {
-        $html = $b['content']; // raw HTML
+        $html = sanitize_banner_html($b['content']); // S5: sanitized, not raw HTML
       }
       
       echo '<div class="my-4 max-w-7xl mx-auto relative">' . $html;

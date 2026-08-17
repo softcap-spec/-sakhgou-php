@@ -20,6 +20,16 @@ define('DB_CHARSET', 'utf8mb4');
 define('ITEMS_PER_PAGE', 12);
 define('MAX_UPLOAD_SIZE', 2 * 1024 * 1024); // 2MB
 define('UPLOAD_DIR', __DIR__ . '/uploads');
+
+// SMTP (optional — if set, emails go via SMTP; otherwise fallback to mail())
+// Example (Yandex 360 / Selectel / Mail.ru):
+// define('SMTP_HOST', 'smtp.yandex.ru');
+// define('SMTP_PORT', 465);
+// define('SMTP_SECURE', 'ssl'); // ssl | tls | none
+// define('SMTP_USER', 'noreply@yourdomain.ru');
+// define('SMTP_PASS', 'your_app_password');
+// define('SMTP_FROM', 'noreply@yourdomain.ru');
+// define('SMTP_FROM_NAME', 'СахGO');
 define('CATEGORIES', json_encode([
   ['slug' => 'property',    'name' => 'Жильё',       'icon' => '🏠'],
   ['slug' => 'tour',        'name' => 'Туры',        'icon' => '🏔️'],

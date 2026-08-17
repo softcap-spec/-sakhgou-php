@@ -50,6 +50,53 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['fav'])) {
   if ($cu) { $isFavorite = toggle_favorite($cu['id'], $lid); header('Location: /listing/'.$lid); exit; }
 }
 
+// Review submission
+$review_sent = false; $review_error = '';
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['review'])) {
+  csrf_check();
+  if ($cu && !$isOwner) {
+    $rating = max(1, min(5, (int)($_POST['rating'] ?? 5)));
+    $rtext = trim($_POST['review_text'] ?? '');
+    if (mb_strlen($rtext) < 5) {
+      $review_error = 'Текст отзыва слишком короткий (минимум 5 символов)';
+    } else {
+      // One review per user per listing
+      $dup = $pdo->prepare('SELECT id FROM reviews WHERE listing_id = ? AND user_id = ?');
+      $dup->execute([$lid, $cu['id']]);
+      if ($dup->fetch()) {
+        $review_error = 'Вы уже оставляли отзыв на это объявление';
+      } else {
+        $pdo->prepare('INSERT INTO reviews (listing_id, user_id, rating, text, moderated, created_at) VALUES (?,?,?,?,0,NOW())')->execute([$lid, $cu['id'], $rating, $rtext]);
+        $review_sent = true;
+      }
+    }
+  }
+}
+
+// Booking submission
+$book_sent = false; $book_error = '';
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['book'])) {
+  csrf_check();
+  if ($cu && !$isOwner) {
+    $check_in = $_POST['check_in'] ?? '';
+    $check_out = $_POST['check_out'] ?? '';
+    $guests = max(1, (int)($_POST['guests'] ?? 1));
+    $bmsg = trim($_POST['guest_message'] ?? '');
+    if (!$check_in || !$check_out) {
+      $book_error = 'Укажите даты заезда и выезда';
+    } elseif (strtotime($check_out) <= strtotime($check_in)) {
+      $book_error = 'Дата выезда должна быть позже даты заезда';
+    } else {
+      $days = max(1, (int)((strtotime($check_out) - strtotime($check_in)) / 86400));
+      $total = $days * (float)$item['price'];
+      $pdo->prepare('INSERT INTO bookings (listing_id, guest_id, host_id, check_in_date, check_out_date, guests_count, status, total_price, guest_message, created_at) VALUES (?,?,?,?,?,?,?,?,?,NOW())')->execute([$lid, $cu['id'], $item['user_id'], $check_in, $check_out, $guests, 'pending', $total, $bmsg]);
+      // Notify host
+      $pdo->prepare('INSERT INTO notifications (user_id, type, text, link, is_read, created_at) VALUES (?,?,?,?,0,NOW())')->execute([$item['user_id'], 'booking', 'Новая заявка на бронирование: '.$item['title'], '/dashboard?sub=host_bookings']);
+      $book_sent = true;
+    }
+  }
+}
+
 $page_title = h($item['title']) . ' — СахGO';
 $page_description = h(mb_substr($item['description'] ?? $item['title'], 0, 160));
 require __DIR__ . '/../includes/header.php';
@@ -185,7 +232,7 @@ require __DIR__ . '/../includes/header.php';
       <?php endif; ?>
 
       <!-- Reviews -->
-      <div class="bg-white border border-[#EBEEF2] rounded-xl p-5">
+      <div class="bg-white border border-[#EBEEF2] rounded-xl p-5" id="reviews">
         <div class="flex items-center justify-between mb-4">
           <h2 class="font-display text-lg">Отзывы</h2>
           <?php if($item['reviews_count']>0):?>
@@ -205,6 +252,30 @@ require __DIR__ . '/../includes/header.php';
           <p class="text-sm text-[#3A4A5C]"><?=h($r['text'])?></p>
         </div>
         <?php endforeach; endif; ?>
+
+        <?php if ($review_sent): ?>
+        <div class="mt-4 bg-[#F0FDF4] border border-[#BBF7D0] text-[#166534] rounded-lg px-4 py-3 text-sm">Спасибо! Отзыв отправлен на модерацию и появится после проверки.</div>
+        <?php elseif ($review_error): ?>
+        <div class="mt-4 bg-[#FEF2F2] border border-[#FECACA] text-[#DC2626] rounded-lg px-4 py-3 text-sm"><?=h($review_error)?></div>
+        <?php endif; ?>
+
+        <?php if ($cu && !$isOwner): ?>
+        <div class="border-t border-[#F0F3F7] pt-4 mt-4">
+          <h3 class="text-sm font-semibold mb-3">Оставить отзыв</h3>
+          <form method="post" id="reviewForm">
+            <?= csrf_field() ?>
+            <input type="hidden" name="rating" id="ratingVal" value="5">
+            <div class="flex items-center gap-1 mb-3" id="starRating">
+              <?php for ($i=1; $i<=5; $i++): ?>
+              <button type="button" onclick="setRating(<?=$i?>)" id="star<?=$i?>" class="text-2xl leading-none text-amber-400" style="background:none;border:0;cursor:pointer;padding:0">★</button>
+              <?php endfor; ?>
+              <span class="text-xs text-[#5A6B7D] ml-2" id="ratingLabel">Отлично</span>
+            </div>
+            <textarea name="review_text" rows="3" placeholder="Поделитесь впечатлениями…" style="width:100%;box-sizing:border-box;border:1px solid #DFE4EA;border-radius:8px;padding:0.625rem 0.875rem;font-size:0.875rem;outline:none;font-family:inherit;resize:vertical"></textarea>
+            <button type="submit" name="review" value="1" class="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-accent text-white h-10 px-5 text-sm font-medium hover:bg-accent/90 transition-colors">Отправить отзыв</button>
+          </form>
+        </div>
+        <?php endif; ?>
       </div>
 
     </div>
@@ -238,6 +309,41 @@ require __DIR__ . '/../includes/header.php';
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
               Написать сообщение
             </button>
+            <?php if (in_array($lt, ['property','tour','fishing','car_rental','rental_gear'])): ?>
+            <button onclick="toggleBookForm()" class="w-full inline-flex items-center justify-center gap-1.5 rounded-lg bg-accent text-white hover:bg-accent/90 h-11 px-4 text-sm font-semibold transition-colors">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              Забронировать
+            </button>
+            <div id="bookForm" class="hidden mt-2 border border-[#EBEEF2] rounded-xl p-4 bg-[#F7F9FB]">
+              <?php if ($book_sent): ?>
+              <div class="bg-[#F0FDF4] border border-[#BBF7D0] text-[#166534] rounded-lg px-3 py-2.5 text-xs">Заявка отправлена! Хозяин свяжется с вами.</div>
+              <?php else: ?>
+              <?php if ($book_error): ?><div class="bg-[#FEF2F2] border border-[#FECACA] text-[#DC2626] rounded-lg px-3 py-2.5 text-xs mb-2"><?=h($book_error)?></div><?php endif; ?>
+              <form method="post">
+                <?= csrf_field() ?>
+                <div class="grid grid-cols-2 gap-2">
+                  <div>
+                    <label class="text-[0.65rem] text-[#5A6B7D] font-semibold block mb-1">Заезд</label>
+                    <input type="date" name="check_in" required class="w-full border border-[#DFE4EA] rounded-lg px-2.5 py-2 text-sm" style="box-sizing:border-box">
+                  </div>
+                  <div>
+                    <label class="text-[0.65rem] text-[#5A6B7D] font-semibold block mb-1">Выезд</label>
+                    <input type="date" name="check_out" required class="w-full border border-[#DFE4EA] rounded-lg px-2.5 py-2 text-sm" style="box-sizing:border-box">
+                  </div>
+                </div>
+                <div class="mt-2">
+                  <label class="text-[0.65rem] text-[#5A6B7D] font-semibold block mb-1">Гостей</label>
+                  <input type="number" name="guests" value="2" min="1" max="20" class="w-full border border-[#DFE4EA] rounded-lg px-2.5 py-2 text-sm" style="box-sizing:border-box">
+                </div>
+                <div class="mt-2">
+                  <label class="text-[0.65rem] text-[#5A6B7D] font-semibold block mb-1">Сообщение хозяину</label>
+                  <textarea name="guest_message" rows="2" placeholder="Добрый день! Интересуют даты…" class="w-full border border-[#DFE4EA] rounded-lg px-2.5 py-2 text-sm" style="box-sizing:border-box;resize:vertical;font-family:inherit"></textarea>
+                </div>
+                <button type="submit" name="book" value="1" class="w-full mt-3 rounded-lg bg-accent text-white h-10 text-sm font-semibold hover:bg-accent/90 transition-colors">Отправить заявку</button>
+              </form>
+              <?php endif; ?>
+            </div>
+            <?php endif; ?>
             <?php endif; ?>
 
             <?php if ($cu): ?>
@@ -575,6 +681,19 @@ function revealPhone(){
   document.getElementById('revealedPhone').classList.remove('hidden');
   var m = document.getElementById('revealedPhoneMobile');
   if(m){ m.classList.remove('hidden'); }
+}
+function setRating(n){
+  document.getElementById('ratingVal').value=n;
+  var labels=['Ужасно','Плохо','Нормально','Хорошо','Отлично'];
+  document.getElementById('ratingLabel').textContent=labels[n-1];
+  for(var i=1;i<=5;i++){
+    var s=document.getElementById('star'+i);
+    s.style.color=i<=n?'#F59E0B':'#D1DAE3';
+  }
+}
+function toggleBookForm(){
+  var f=document.getElementById('bookForm');
+  if(f){ f.classList.toggle('hidden'); }
 }
 </script>
 <?php require __DIR__ . '/../includes/footer.php'; ?>

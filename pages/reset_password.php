@@ -21,9 +21,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       // Send reset email
       $resetUrl = SITE_URL . '/reset-password?token=' . urlencode($token) . '&step=2';
       $subject = 'Сброс пароля — СахGO';
-      $body = "Здравствуйте!\n\nДля сброса пароля перейдите по ссылке (действует 1 час):\n{$resetUrl}\n\nЕсли вы не запрашивали сброс — проигнорируйте это письмо.";
-      $headers = "From: noreply@сахгоу.рф\r\nContent-Type: text/plain; charset=UTF-8";
-      @mail($email, $subject, $body, $headers);
+      $resetUrl = SITE_URL . '/reset-password?' . http_build_query(['token' => $token, 'step' => 2]);
+      send_mail_smtp($email, $subject, $body);
     }
     $success = true;
   }

@@ -209,7 +209,7 @@ $myId = (int)$cu['id'];
         $isMine = ($ch['sender_id'] == $cu['id']);
         $preview = ($isMine ? 'Вы: ' : '') . mb_substr($ch['text'], 0, 50);
       ?>
-        <div class="chat-list-item" onclick="openThread(<?=$ch['lid']?>,<?=$other?>,'<?=h(addslashes($ch['other_name']))?>','<?=h(addslashes($ch['listing_title']))?>','<?=h(addslashes($ch['other_avatar']??''))?>',<?= (float)$ch['listing_price'] ?>,'<?=h($ch['listing_type']??'')?>')">
+        <div class="chat-list-item" data-lid="<?=$ch['lid']?>" data-uid="<?=$other?>" data-name="<?=h($ch['other_name'])?>" data-listing="<?=h($ch['listing_title'])?>" data-avatar="<?=h($ch['other_avatar']??'')?>" data-price="<?=(float)$ch['listing_price']?>" data-type="<?=h($ch['listing_type']??'')?>" onclick="openThreadFromEl(this)">
           <div class="chat-avatar lg"><?php if($ch['other_avatar']):?><img src="<?=h($ch['other_avatar'])?>" alt=""><?php else:?><?=mb_substr($ch['other_name'],0,2)?><?php endif;?></div>
           <div style="flex:1;min-width:0">
             <div style="display:flex;align-items:center;justify-content:space-between;gap:.5rem">
@@ -260,6 +260,17 @@ var chatCsrf=<?=json_encode(csrf_token())?>;
 var otherAvatar='',otherName='',listingTitle='',listingPrice=0,listingType='';
 
 function toggleChat(){var w=document.getElementById('chatWidget'),n=document.getElementById('notifPanel');n.classList.remove('open');w.classList.toggle('open');if(!w.classList.contains('open')){backToList();if(pollTimer){clearInterval(pollTimer);pollTimer=null}}}
+function openThreadFromEl(el){
+ openThread(
+  parseInt(el.dataset.lid),
+  parseInt(el.dataset.uid),
+  el.dataset.name||'',
+  el.dataset.listing||'',
+  el.dataset.avatar||'',
+  parseFloat(el.dataset.price)||0,
+  el.dataset.type||''
+ );
+}
 function toggleNotif(){var n=document.getElementById('notifPanel'),w=document.getElementById('chatWidget');w.classList.remove('open');n.classList.toggle('open')}
 function markNotifsRead(){var csrf=document.querySelector('#notifPanel input[name="_csrf"]');var b='action=mark_notifs_read';if(csrf)b+='&_csrf='+encodeURIComponent(csrf.value);fetch('/',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:b}).then(function(r){return r.json()}).then(function(d){if(d.ok){var badges=document.querySelectorAll('.chat-fab-badge');badges.forEach(function(b){if(b.parentElement&&b.parentElement.classList.contains('chat-fab-bell'))b.remove()});document.getElementById('notifPanel').querySelector('.chat-w-body').innerHTML='<div class="chat-empty">Нет уведомлений</div>';var btn=document.querySelector('.notif-panel .chat-w-header button[onclick*="markNotifsRead"]');if(btn)btn.style.display='none'}}).catch(function(){location.reload()})}
 

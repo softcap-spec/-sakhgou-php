@@ -73,9 +73,17 @@ function auth_user(): ?array {
     if (!$lsr['last_seen'] || (time() - strtotime($lsr['last_seen'])) > 60) {
       db()->prepare('UPDATE users SET last_seen = NOW() WHERE id = ?')->execute([$u['id']]);
     }
-    $cn = db()->prepare('SELECT COUNT(*) FROM notifications WHERE user_id = ? AND is_read = 0');
-    $cn->execute([$u['id']]);
-    $u['unread_notifications'] = (int)$cn->fetchColumn();
+    // S7 fix: cache unread notifications count in session (TTL 60s) to cut N+1 queries
+    $ck = 'unread_cache_' . $u['id'];
+    $now = time();
+    if (isset($_SESSION[$ck]) && ($now - $_SESSION[$ck]['t']) < 60) {
+      $u['unread_notifications'] = $_SESSION[$ck]['n'];
+    } else {
+      $cn = db()->prepare('SELECT COUNT(*) FROM notifications WHERE user_id = ? AND is_read = 0');
+      $cn->execute([$u['id']]);
+      $u['unread_notifications'] = (int)$cn->fetchColumn();
+      $_SESSION[$ck] = ['t' => $now, 'n' => $u['unread_notifications']];
+    }
   }
   return $u;
 }

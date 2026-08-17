@@ -1,0 +1,16 @@
+{
+  "name": "СахGO — маркетплейс Сахалина",
+  "short_name": "СахGO",
+  "description": "Туры, жильё, рыбалка, прокат авто и снаряжения на Сахалине и Курилах",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F0F4F8",
+  "theme_color": "#0A7BBA",
+  "lang": "ru",
+  "icons": [
+    { "src": "/favicon.png", "sizes": "256x256", "type": "image/png" },
+    { "src": "/favicon.ico", "sizes": "48x48", "type": "image/x-icon" }
+  ]
+}
