@@ -4,13 +4,35 @@
  */
 require_once __DIR__ . '/db.php';
 
+/**
+ * Нормализация телефона: оставляем цифры, приводим к +7XXXXXXXXXX
+ */
+function normalize_phone(string $phone): string {
+  $d = preg_replace('/\D/', '', $phone);
+  if (strlen($d) === 11 && $d[0] === '8') $d = '7' . substr($d, 1);
+  if (strlen($d) === 10) $d = '7' . $d;
+  return $d;
+}
+
+/**
+ * Проверка: корректный российский номер (+7/8 + 10 цифр)
+ */
+function valid_phone(string $phone): bool {
+  return (bool)preg_match('/^7\d{10}$/', normalize_phone($phone));
+}
+
 function auth_register(string $email, string $password, string $name, string $phone): array {
   $pdo = db();
-  if (empty($phone)) return ['ok' => false, 'error' => 'Укажите номер телефона'];
+  $phone = normalize_phone($phone);
+  if (!valid_phone($phone)) return ['ok' => false, 'error' => 'Укажите корректный номер телефона (например, +7 900 000-00-00)'];
   // Проверка существующего email
   $stmt = $pdo->prepare('SELECT id FROM users WHERE email = ?');
   $stmt->execute([$email]);
   if ($stmt->fetch()) return ['ok' => false, 'error' => 'Email уже занят'];
+  // Проверка уникальности телефона
+  $stmt = $pdo->prepare('SELECT id FROM users WHERE phone = ?');
+  $stmt->execute([$phone]);
+  if ($stmt->fetch()) return ['ok' => false, 'error' => 'Этот номер телефона уже привязан к другому аккаунту'];
   
   $hash = password_hash($password, PASSWORD_BCRYPT);
   $stmt = $pdo->prepare('INSERT INTO users (email, password_hash, name, phone) VALUES (?, ?, ?, ?)');
@@ -91,6 +113,13 @@ function auth_user(): ?array {
 function auth_required(): array {
   $user = auth_user();
   if (!$user) { header('Location: /login'); exit; }
+  // Обязательная привязка email и телефона: если чего-то нет — на страницу привязки
+  $url = $_GET['url'] ?? '';
+  $parts = $url ? explode('/', rtrim($url, '/')) : [];
+  $page = $parts[0] ?? 'home';
+  if ((empty($user['email']) || empty($user['phone'])) && !in_array($page, ['bind-contacts', 'logout', 'api'], true)) {
+    header('Location: /bind-contacts'); exit;
+  }
   return $user;
 }
 

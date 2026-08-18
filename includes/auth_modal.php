@@ -52,6 +52,7 @@ if ($current_user) return; // не показываем модалку если 
       <h2>С возвращением!</h2>
       <div id="loginError" class="auth-error"></div>
       <form onsubmit="return doLogin(event)">
+        <input type="hidden" id="loginCsrf" name="_csrf" value="<?= h(csrf_token()) ?>">
         <div class="form-group">
           <label>Email</label>
           <input type="email" id="loginEmail" name="email" placeholder="you@example.com" required>
@@ -73,6 +74,7 @@ if ($current_user) return; // не показываем модалку если 
       <div id="regError" class="auth-error"></div>
       <div id="regSuccess" class="auth-success"></div>
       <form onsubmit="return doRegister(event)">
+        <input type="hidden" id="regCsrf" name="_csrf" value="<?= h(csrf_token()) ?>">
         <div class="form-group">
           <label>Имя</label>
           <input type="text" id="regName" name="name" placeholder="Как вас зовут?" required>
@@ -83,7 +85,7 @@ if ($current_user) return; // не показываем модалку если 
         </div>
         <div class="form-group">
           <label>Телефон</label>
-          <input type="tel" id="regPhone" name="phone" placeholder="+7 999 123-45-67" oninput="formatPhone(this)">
+          <input type="tel" id="regPhone" name="phone" placeholder="+7 999 123-45-67" oninput="formatPhone(this)" required>
         </div>
         <div class="form-group">
           <label>Пароль</label>
@@ -99,6 +101,8 @@ if ($current_user) return; // не показываем модалку если 
 </div>
 
 <script>
+var authLoginCsrf = document.getElementById('loginCsrf').value;
+var authRegCsrf = document.getElementById('regCsrf').value;
 function openAuth(mode) {
   document.getElementById('authOverlay').classList.add('open');
   if (mode) switchAuthTab(mode);
@@ -149,7 +153,7 @@ function doLogin(e) {
   fetch('/login', {
     method: 'POST',
     headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-    body: 'email=' + encodeURIComponent(email) + '&password=' + encodeURIComponent(pass)
+    body: 'email=' + encodeURIComponent(email) + '&password=' + encodeURIComponent(pass) + '&_csrf=' + encodeURIComponent(authLoginCsrf)
   }).then(function(r) { return r.text(); }).then(function(html) {
     if (html.includes('flash error')) {
       showErr('loginError', 'Неверный email или пароль');
@@ -170,10 +174,12 @@ function doRegister(e) {
   var phone = document.getElementById('regPhone').value;
   var pass = document.getElementById('regPass').value;
   if (pass.length < 6) { showErr('regError', 'Пароль должен быть не менее 6 символов'); return false; }
+  var phoneDigits = phone.replace(/\D/g, '');
+  if (!/^7\d{10}$/.test(phoneDigits)) { showErr('regError', 'Укажите корректный номер телефона'); return false; }
   fetch('/register', {
     method: 'POST',
     headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-    body: 'name=' + encodeURIComponent(name) + '&email=' + encodeURIComponent(email) + '&phone=' + encodeURIComponent(phone) + '&password=' + encodeURIComponent(pass) + '&password2=' + encodeURIComponent(pass)
+    body: 'name=' + encodeURIComponent(name) + '&email=' + encodeURIComponent(email) + '&phone=' + encodeURIComponent(phone) + '&password=' + encodeURIComponent(pass) + '&password2=' + encodeURIComponent(pass) + '&_csrf=' + encodeURIComponent(authRegCsrf)
   }).then(function(r) { return r.text(); }).then(function(html) {
     if (html.includes('flash error')) {
       var match = html.match(/flash error">([^<]+)/);

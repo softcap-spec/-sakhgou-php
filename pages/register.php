@@ -24,6 +24,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   if (empty($name) || mb_strlen($name) < 2) $errors[] = 'Имя должно быть не короче 2 символов';
   if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) $errors[] = 'Укажите корректный email';
   if (empty($phone)) $errors[] = 'Укажите номер телефона';
+  elseif (!valid_phone($phone)) $errors[] = 'Укажите корректный номер телефона (например, +7 900 000-00-00)';
   if (mb_strlen($password) < 6) $errors[] = 'Пароль должен быть не короче 6 символов';
   if ($password !== $password2) $errors[] = 'Пароли не совпадают';
   if (!captcha_validate($_POST['captcha'] ?? '')) {

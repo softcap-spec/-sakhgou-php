@@ -85,6 +85,9 @@ switch ($page) {
   case 'promote':
     require __DIR__ . '/pages/promote.php';
     break;
+  case 'bind-contacts':
+    require __DIR__ . '/pages/bind-contacts.php';
+    break;
   case 'admin':
     require __DIR__ . '/pages/admin/index.php';
     break;
