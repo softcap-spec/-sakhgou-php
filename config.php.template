@@ -24,6 +24,20 @@ define('UPLOAD_DIR', __DIR__ . '/uploads');
 // Яндекс.Метрика: номер счётчика (например '12345678'). Пусто '' = счётчик выключен.
 define('YANDEX_METRIKA_ID', '');
 
+// Реквизиты оператора (футер, страница «Контакты», Политика конфиденциальности).
+// Пустые поля ('') скрываются на сайте.
+define('REQUISITES', [
+  'name' => 'ООО «СахТур»',
+  'ogrn' => '',
+  'inn' => '6500000001',
+  'kpp' => '',
+  'legal_address' => '',
+  'postal_address' => '',
+  'work_hours' => '',
+  'phone' => '',
+  'email' => 'support@sakh.su',
+]);
+
 // SMTP (optional — if set, emails go via SMTP; otherwise fallback to mail())
 // Example (Yandex 360 / Selectel / Mail.ru):
 // define('SMTP_HOST', 'smtp.yandex.ru');

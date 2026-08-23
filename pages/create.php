@@ -66,12 +66,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['finish'])) {
   $price = (float)($_POST['price'] ?? 0);
   $loc = $_POST['location'] ?? '';
   $guests = (int)($_POST['max_guests'] ?? 0);
+  $tourOrgType = $_POST['tour_organizer_type'] ?? '';
+  $tourOpName = trim($_POST['tour_operator_name'] ?? '');
+  $tourOpRegno = trim($_POST['tour_operator_regno'] ?? '');
 
   if (empty($title)) $errors[] = ['field'=>'title', 'text'=>'Введите название'];
   if ($price <= 0) $errors[] = ['field'=>'price', 'text'=>'Укажите цену'];
   if (empty($desc)) $errors[] = ['field'=>'description', 'text'=>'Добавьте описание'];
   if (empty($loc)) $errors[] = ['field'=>'location', 'text'=>'Укажите локацию'];
   if (empty($lt) || !isset($LISTING_LABELS[$lt])) $errors[] = ['field'=>'listing_type', 'text'=>'Выберите тип объявления'];
+  if ($lt === 'tour' && empty($tourOrgType)) $errors[] = ['field'=>'tour_organizer_type', 'text'=>'Укажите статус организатора (туроператор / турагент / частное лицо)'];
 
   if (empty($errors)) {
     try {
@@ -87,15 +91,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['finish'])) {
       $slug = $baseSlug . '-' . ($n++);
     }
 
-    $stmt = $pdo->prepare("INSERT INTO listings (user_id,category_id,listing_type,subcategory,title,slug,description,price,currency,max_guests,location,
+    $stmt = $pdo->prepare("INSERT INTO listings (user_id,category_id,listing_type,subcategory,tour_organizer_type,tour_operator_name,tour_operator_regno,title,slug,description,price,currency,max_guests,location,
       rooms_count,beds_count,bathrooms_count,area_sqm,amenities,check_in_time,check_out_time,deposit_amount,
       tour_duration_hours,tour_duration_days,difficulty_level,group_size_min,group_size_max,start_point,
       requires_border_permit,depends_on_weather,transport_included,transport_type,
       gear_condition,fishing_type,fishing_method,gear_included,catch_guarantee,license_required,boat_included,
       meals_included,season,cancellation_policy,status)
-      VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+      VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
     $stmt->execute([
-      $cu['id'], $real_cid, $lt, $cat, $title, $slug, $desc, $price, 'RUB',
+      $cu['id'], $real_cid, $lt, $cat, $tourOrgType, $tourOpName, $tourOpRegno, $title, $slug, $desc, $price, 'RUB',
       $guests, $loc,
       (int)($_POST['rooms_count']??0), (int)($_POST['beds_count']??0), (int)($_POST['bathrooms_count']??1), (int)($_POST['area_sqm']??0),
       json_encode($_POST['amenities']??[], JSON_UNESCAPED_UNICODE),
@@ -299,6 +303,22 @@ require __DIR__ . '/../includes/header.php';
           <?php endforeach; ?>
         </div>
         <div class="form-group" style="margin-top:1rem"><label>Тип транспорта</label><input type="text" name="transport_type" value="<?=h($_POST['transport_type']??'')?>" style="width:100%;box-sizing:border-box" placeholder="Джип, катер..."></div>
+        <div style="margin-top:1.5rem">
+          <h3 style="font-family:Manrope,sans-serif;font-weight:600;font-size:0.9375rem;margin:0 0 0.5rem">Исполнитель услуги (ФЗ-132)</h3>
+          <p style="font-size:0.75rem;color:#7A8A9A;margin:0 0 0.75rem">Укажите статус организатора. Для туроператоров требуется вхождение в единый федеральный реестр туроператоров; для турагентов — указание туроператора, от имени которого действует агент.</p>
+          <div class="form-group"><label>Статус организатора <span style="color:#DC2626">*</span></label>
+            <select name="tour_organizer_type" style="width:100%;box-sizing:border-box">
+              <option value="">Выберите...</option>
+              <option value="tour_operator" <?=($_POST['tour_organizer_type']??'')==='tour_operator'?'selected':''?>>Туроператор (в реестре)</option>
+              <option value="travel_agent" <?=($_POST['tour_organizer_type']??'')==='travel_agent'?'selected':''?>>Турагент</option>
+              <option value="individual" <?=($_POST['tour_organizer_type']??'')==='individual'?'selected':''?>>Частное лицо</option>
+            </select>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-top:0.75rem">
+            <div class="form-group"><label>Наименование туроператора</label><input type="text" name="tour_operator_name" value="<?=h($_POST['tour_operator_name']??'')?>" style="width:100%;box-sizing:border-box" placeholder="ООО «...»"></div>
+            <div class="form-group"><label>Реестровый номер</label><input type="text" name="tour_operator_regno" value="<?=h($_POST['tour_operator_regno']??'')?>" style="width:100%;box-sizing:border-box" placeholder="РТО 000000"></div>
+          </div>
+        </div>
       <?php elseif ($lt === 'fishing'): ?>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
           <div class="form-group"><label>Тип рыбалки</label>
@@ -343,7 +363,7 @@ require __DIR__ . '/../includes/header.php';
     <?php elseif ($step === 4): ?>
       <!-- Step 4: Photos -->
       <h2 style="font-family:Manrope,sans-serif;font-weight:700;font-size:1.25rem;margin:0 0 1.5rem">Фотографии</h2>
-      <?php foreach(['listing_type','category','title','description','price','location','max_guests','rooms_count','beds_count','bathrooms_count','area_sqm','check_in','check_out','deposit','tour_hours','tour_days','difficulty','group_min','group_max','start_point','transport_inc','border_permit','weather_dep','meals','transport_type','gear_condition','fishing_type','fishing_method','gear_inc','catch_g','license','boat','season'] as $f): ?>
+      <?php foreach(['listing_type','category','title','description','price','location','max_guests','rooms_count','beds_count','bathrooms_count','area_sqm','check_in','check_out','deposit','tour_hours','tour_days','difficulty','group_min','group_max','start_point','transport_inc','border_permit','weather_dep','meals','transport_type','gear_condition','fishing_type','fishing_method','gear_inc','catch_g','license','boat','tour_organizer_type','tour_operator_name','tour_operator_regno','season'] as $f): ?>
       <input type="hidden" name="<?=$f?>" value="<?=h($_POST[$f]??'')?>">
       <?php endforeach; ?>
       <?php if (isset($_POST['amenities'])): foreach($_POST['amenities'] as $a): ?><input type="hidden" name="amenities[]" value="<?=h($a)?>"><?php endforeach; endif; ?>

@@ -26,6 +26,7 @@
           <a href="/help" class="block text-[#7A8A9A] hover:text-foreground transition-colors">Частые вопросы</a>
           <a href="/privacy" class="block text-[#7A8A9A] hover:text-foreground transition-colors">Конфиденциальность</a>
           <a href="/terms" class="block text-[#7A8A9A] hover:text-foreground transition-colors">Условия</a>
+          <a href="/contacts" class="block text-[#7A8A9A] hover:text-foreground transition-colors">Контакты и реквизиты</a>
         </div>
       </div>
       <div>
@@ -34,6 +35,17 @@
           <a href="/create" class="block text-[#7A8A9A] hover:text-foreground transition-colors">Разместить объявление</a>
           <a href="/promote" class="block text-[#7A8A9A] hover:text-foreground transition-colors">Продвижение</a>
         </div>
+      </div>
+    </div>
+    <?php $req = get_requisites(); ?>
+    <div class="border-t border-[#EBEEF2] pt-5 mb-5 text-xs text-[#7A8A9A]">
+      <div class="font-semibold text-[#3A4A5C] mb-1.5"><?=h($req['name'])?></div>
+      <div class="space-y-0.5 leading-relaxed">
+        <?php if ($req['ogrn'] !== ''): ?><div>ОГРН: <?=h($req['ogrn'])?></div><?php endif; ?>
+        <?php if ($req['inn'] !== ''): ?><div>ИНН: <?=h($req['inn'])?></div><?php endif; ?>
+        <?php if ($req['legal_address'] !== ''): ?><div><?=h($req['legal_address'])?></div><?php endif; ?>
+        <?php if ($req['phone'] !== ''): ?><div>Телефон: <?=h($req['phone'])?></div><?php endif; ?>
+        <div><a href="/contacts" class="text-accent hover:underline">Полные реквизиты и контакты</a></div>
       </div>
     </div>
     <div class="border-t border-[#EBEEF2] pt-5 flex flex-wrap justify-between gap-3 text-xs text-[#9AAAB8]">
@@ -53,5 +65,6 @@ if ('serviceWorker' in navigator) {
   });
 }
 </script>
+<?php require_once __DIR__ . '/cookie_consent.php'; ?>
 <?php require_once __DIR__ . '/metrics_counter.php'; ?>
 </div></body></html>

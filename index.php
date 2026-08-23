@@ -202,6 +202,9 @@ switch ($page) {
   case 'terms':
     require __DIR__ . '/pages/terms.php';
     break;
+  case 'contacts':
+    require __DIR__ . '/pages/contacts.php';
+    break;
   default:
     http_response_code(404);
     $page_title = '404 — Страница не найдена — СахGO';

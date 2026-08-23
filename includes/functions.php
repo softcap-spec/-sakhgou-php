@@ -31,6 +31,28 @@ function h(string $s): string {
 }
 
 /**
+ * Реквизиты оператора (футер, страница «Контакты», Политика конфиденциальности).
+ * Переопределяются константой REQUISITES в config.php (массив).
+ */
+function get_requisites(): array {
+  $defaults = [
+    'name' => 'ООО «СахТур»',
+    'ogrn' => '',
+    'inn' => '6500000001',
+    'kpp' => '',
+    'legal_address' => '',
+    'postal_address' => '',
+    'work_hours' => '',
+    'phone' => '',
+    'email' => 'support@sakh.su',
+  ];
+  if (defined('REQUISITES') && is_array(REQUISITES)) {
+    return array_merge($defaults, REQUISITES);
+  }
+  return $defaults;
+}
+
+/**
  * S5 fix: sanitize banner HTML — strip scripts, iframes, event handlers, javascript: URLs.
  * Whitelist of safe tags only. Admin-entered HTML banners can no longer inject XSS.
  */
@@ -492,7 +514,12 @@ function render_banners(string $placement): void {
           echo '<div class="listing-img"><img src="' . h($b['content']) . '" alt="' . h($b['title']) . '" loading="lazy"></div>';
           echo '<span class="absolute top-2 left-2 bg-amber-500 text-white text-[10px] px-1.5 py-0.5 rounded font-medium z-10">Реклама</span>';
           echo '<div class="listing-body"><div class="listing-title">' . h($b['title']) . '</div>';
-          if (!empty($b['advertiser'])) echo '<div class="text-[10px] text-[#7A8A9A] mt-1">' . h($b['advertiser']) . '</div>';
+          if (!empty($b['advertiser'])) {
+            $adv = h($b['advertiser']);
+            if (!empty($b['advertiser_ogrn'])) $adv .= ' · ОГРН ' . h($b['advertiser_ogrn']);
+            if (!empty($b['advertiser_address'])) $adv .= ' · ' . h($b['advertiser_address']);
+            echo '<div class="text-[10px] text-[#7A8A9A] mt-1">' . $adv . '</div>';
+          }
           echo '</div>' . $close;
         } else {
           echo '<div class="listing-card">' . sanitize_banner_html($b['content']) . '</div>';
@@ -514,10 +541,12 @@ function render_banners(string $placement): void {
       
       echo '<div class="my-4 max-w-7xl mx-auto relative">' . $html;
       if (!empty($b['is_ad'])) {
-        $adText = 'Реклама';
-        if (!empty($b['advertiser'])) $adText .= '. ' . h($b['advertiser']);
-        if (!empty($b['erid'])) $adText .= '. erid: ' . h($b['erid']);
-        echo '<div class="text-[10px] text-[#7A8A9A] mt-1 text-center">' . $adText . '</div>';
+        $adParts = ['Реклама'];
+        if (!empty($b['advertiser'])) $adParts[] = h($b['advertiser']);
+        if (!empty($b['advertiser_ogrn'])) $adParts[] = 'ОГРН ' . h($b['advertiser_ogrn']);
+        if (!empty($b['advertiser_address'])) $adParts[] = h($b['advertiser_address']);
+        if (!empty($b['erid'])) $adParts[] = 'erid: ' . h($b['erid']);
+        echo '<div class="text-[10px] text-[#7A8A9A] mt-1 text-center">' . implode(' · ', $adParts) . '</div>';
       }
       echo '</div>';
     }

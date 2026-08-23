@@ -31,10 +31,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $errors[] = 'Неверный ответ на проверочный вопрос';
     $captcha_question = captcha_generate(); // regenerate
   }
+  if (empty($_POST['consent'])) {
+    $errors[] = 'Для регистрации необходимо согласие на обработку персональных данных';
+  }
 
   if (empty($errors)) {
     $result = auth_register($email, $password, $name, $phone);
     if ($result['ok']) {
+      // Журнал согласия (ст. 9 ФЗ № 152-ФЗ): дата, время, редакция политики
+      try {
+        $_pdo->prepare('INSERT INTO consents (user_id, consent_type, policy_version, ip, user_agent, created_at) VALUES (?,?,?,?,?,NOW())')
+          ->execute([$result['user_id'], 'pd_processing', '23.08.2026', $_SERVER['REMOTE_ADDR'] ?? null, $_SERVER['HTTP_USER_AGENT'] ?? null]);
+      } catch (\Throwable $e) { /* таблица consents недоступна — регистрацию не блокируем */ }
       header('Location: /');
       exit;
     }
@@ -196,6 +204,11 @@ $page_title = 'Регистрация — СахGO';
           </div>
         </div>
 
+        <label class="flex items-start gap-2.5 text-xs text-[#7A8A9A] leading-relaxed cursor-pointer">
+          <input type="checkbox" name="consent" value="1" class="mt-0.5 shrink-0" style="width:1rem;height:1rem;accent-color:#1B6B8A" <?= isset($_POST['consent']) ? 'checked' : '' ?>>
+          <span>Я даю согласие на обработку моих персональных данных (имя, адрес электронной почты, номер телефона) оператором ООО «СахТур» в целях регистрации и авторизации на сайте, размещения и модерации объявлений, обмена сообщениями между пользователями и направления сервисных уведомлений, в соответствии с Федеральным законом от 27.07.2006 № 152-ФЗ «О персональных данных» и <a href="/privacy" class="text-accent hover:underline">Политикой конфиденциальности</a>. Согласие действует до момента его отзыва. Я ознакомлен(а) с Политикой конфиденциальности.</span>
+        </label>
+
         <button type="submit" class="w-full bg-accent text-white rounded-lg h-11 text-sm font-semibold hover:bg-accent/90 transition-colors">
           Зарегистрироваться
         </button>
@@ -297,5 +310,6 @@ document.getElementById('carouselViewport').addEventListener('wheel',function(e)
   else if(e.deltaX < -20 || e.deltaY < -20) goTo(cIdx-1, false);
 },{passive:false});
 </script>
+<?php require_once __DIR__ . '/../includes/cookie_consent.php'; ?>
 <?php require_once __DIR__ . '/../includes/metrics_counter.php'; ?>
 </body></html>

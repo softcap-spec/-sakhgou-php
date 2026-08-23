@@ -174,15 +174,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 
   // Banner: add
   if ($_POST['action'] === 'add_banner') {
-    $pdo->prepare("INSERT INTO banners (title, type, content, link, placement, sort_order, is_active, is_ad, advertiser, erid) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
-      ->execute([$_POST['title'], $_POST['type'], $_POST['content'], $_POST['link'] ?: null, $_POST['placement'], (int)$_POST['sort_order'], isset($_POST['is_active']) ? 1 : 0, isset($_POST['is_ad']) ? 1 : 0, $_POST['advertiser'] ?: null, $_POST['erid'] ?: null]);
+    $pdo->prepare("INSERT INTO banners (title, type, content, link, placement, sort_order, is_active, is_ad, advertiser, advertiser_ogrn, advertiser_address, erid) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
+      ->execute([$_POST['title'], $_POST['type'], $_POST['content'], $_POST['link'] ?: null, $_POST['placement'], (int)$_POST['sort_order'], isset($_POST['is_active']) ? 1 : 0, isset($_POST['is_ad']) ? 1 : 0, $_POST['advertiser'] ?: null, $_POST['advertiser_ogrn'] ?: null, $_POST['advertiser_address'] ?: null, $_POST['erid'] ?: null]);
     header('Location: /admin?tab=banners&ok=1');
     exit;
   }
   // Banner: edit
   if ($_POST['action'] === 'edit_banner') {
-    $pdo->prepare("UPDATE banners SET title=?, type=?, content=?, link=?, placement=?, sort_order=?, is_active=?, is_ad=?, advertiser=?, erid=? WHERE id=?")
-      ->execute([$_POST['title'], $_POST['type'], $_POST['content'], $_POST['link'] ?: null, $_POST['placement'], (int)$_POST['sort_order'], isset($_POST['is_active']) ? 1 : 0, isset($_POST['is_ad']) ? 1 : 0, $_POST['advertiser'] ?: null, $_POST['erid'] ?: null, (int)$_POST['id']]);
+    $pdo->prepare("UPDATE banners SET title=?, type=?, content=?, link=?, placement=?, sort_order=?, is_active=?, is_ad=?, advertiser=?, advertiser_ogrn=?, advertiser_address=?, erid=? WHERE id=?")
+      ->execute([$_POST['title'], $_POST['type'], $_POST['content'], $_POST['link'] ?: null, $_POST['placement'], (int)$_POST['sort_order'], isset($_POST['is_active']) ? 1 : 0, isset($_POST['is_ad']) ? 1 : 0, $_POST['advertiser'] ?: null, $_POST['advertiser_ogrn'] ?: null, $_POST['advertiser_address'] ?: null, $_POST['erid'] ?: null, (int)$_POST['id']]);
     header('Location: /admin?tab=banners&ok=1');
     exit;
   }
@@ -809,7 +809,9 @@ elseif ($tab === 'banners'):
             <label class="flex items-center gap-2 text-sm">
               <input type="checkbox" name="is_ad" <?= ($edit_banner && $edit_banner['is_ad']) ? 'checked' : '' ?> class="rounded"> Это реклама
             </label>
-            <input name="advertiser" value="<?= $edit_banner ? h($edit_banner['advertiser'] ?? '') : '' ?>" placeholder="Рекламодатель (название / ИНН)" class="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-accent">
+            <input name="advertiser" value="<?= $edit_banner ? h($edit_banner['advertiser'] ?? '') : '' ?>" placeholder="Рекламодатель (название)" class="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-accent">
+            <input name="advertiser_ogrn" value="<?= $edit_banner ? h($edit_banner['advertiser_ogrn'] ?? '') : '' ?>" placeholder="ОГРН рекламодателя" class="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-accent">
+            <input name="advertiser_address" value="<?= $edit_banner ? h($edit_banner['advertiser_address'] ?? '') : '' ?>" placeholder="Место нахождения" class="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-accent">
             <input name="erid" value="<?= $edit_banner ? h($edit_banner['erid'] ?? '') : '' ?>" placeholder="erid (токен)" class="border rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:border-accent">
           </div>
         </div>
