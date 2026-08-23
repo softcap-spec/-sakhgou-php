@@ -22,11 +22,9 @@ $li = 'font-size:0.8125rem;color:#3A4A5C;line-height:1.7;margin:0 0 0.5rem';
       <div style="display:grid;grid-template-columns:auto 1fr;gap:0.5rem 1.5rem;margin:0 0 1.5rem">
         <?php
         $rows = [
-          'ОГРН' => $req['ogrn'],
+          'Статус' => 'Самозанятый (плательщик налога на профессиональный доход)',
           'ИНН' => $req['inn'],
-          'КПП' => $req['kpp'],
-          'Юридический адрес' => $req['legal_address'],
-          'Почтовый адрес' => $req['postal_address'],
+          'Адрес' => $req['legal_address'],
           'Режим работы' => $req['work_hours'],
           'Телефон' => $req['phone'],
         ];

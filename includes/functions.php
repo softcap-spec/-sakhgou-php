@@ -36,9 +36,9 @@ function h(string $s): string {
  */
 function get_requisites(): array {
   $defaults = [
-    'name' => 'ООО «СахТур»',
+    'name' => 'Шаров А.А., самозанятый',
     'ogrn' => '',
-    'inn' => '6500000001',
+    'inn' => '',
     'kpp' => '',
     'legal_address' => '',
     'postal_address' => '',
