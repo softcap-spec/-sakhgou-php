@@ -1,7 +1,7 @@
 <?php
 // contacts.php — реквизиты и контакты оператора (ст. 9, 10 Закона «О защите прав потребителей»; ст. 8 ФЗ «О рекламе»)
 $page_title = 'Контакты и реквизиты — СахGO';
-$page_description = 'Реквизиты и контакты оператора СахGO: наименование, ОГРН, ИНН, юридический адрес, режим работы, телефон, e-mail.';
+$page_description = 'Реквизиты и контакты оператора СахGO: наименование, ИНН, статус, режим работы, e-mail.';
 require __DIR__ . '/../includes/header.php';
 $req = get_requisites();
 
@@ -24,9 +24,7 @@ $li = 'font-size:0.8125rem;color:#3A4A5C;line-height:1.7;margin:0 0 0.5rem';
         $rows = [
           'Статус' => 'Самозанятый (плательщик налога на профессиональный доход)',
           'ИНН' => $req['inn'],
-          'Адрес' => $req['legal_address'],
           'Режим работы' => $req['work_hours'],
-          'Телефон' => $req['phone'],
         ];
         foreach ($rows as $label => $value):
         ?>
@@ -34,14 +32,19 @@ $li = 'font-size:0.8125rem;color:#3A4A5C;line-height:1.7;margin:0 0 0.5rem';
         <div style="font-size:0.8125rem;color:#121E2B;padding:0.375rem 0"><?= $value !== '' ? h($value) : '<span style="color:#B8C2CC">—</span>' ?></div>
         <?php endforeach; ?>
         <div style="font-size:0.8125rem;color:#7A8A9A;padding:0.375rem 0">E-mail</div>
-        <div style="font-size:0.8125rem;padding:0.375rem 0"><a href="mailto:<?=h($req['email'])?>" style="color:#0A7BBA;text-decoration:none"><?=h($req['email'])?></a></div>
+        <div style="font-size:0.8125rem;padding:0.375rem 0">
+          <details>
+            <summary style="cursor:pointer;color:#0A7BBA;font-size:0.8125rem;list-style:none">Показать e-mail</summary>
+            <div style="margin-top:0.375rem"><a href="mailto:<?=h($req['email'])?>" style="color:#0A7BBA;text-decoration:none;font-size:0.8125rem"><?=h($req['email'])?></a></div>
+          </details>
+        </div>
       </div>
 
       <h2 style="<?=$h2?>">Обращения субъектов персональных данных</h2>
-      <p style="<?=$p?>">Для реализации прав, предусмотренных ст. 14, 15, 22 Федерального закона от 27.07.2006 № 152-ФЗ «О персональных данных» (получение сведений об обработке, уточнение, блокирование, уничтожение, отзыв согласия), направьте обращение на e-mail <a href="mailto:<?=h($req['email'])?>" style="color:#0A7BBA;text-decoration:none"><?=h($req['email'])?></a>.</p>
+      <p style="<?=$p?>">Для реализации прав, предусмотренных ст. 14, 15, 22 Федерального закона от 27.07.2006 № 152-ФЗ «О персональных данных» (получение сведений об обработке, уточнение, блокирование, уничтожение, отзыв согласия), направьте обращение на <a href="mailto:<?=h($req['email'])?>" style="color:#0A7BBA;text-decoration:none">e-mail оператора</a> (см. выше).</p>
 
       <h2 style="<?=$h2?>">Уведомления о противоправном контенте</h2>
-      <p style="<?=$p?>">Любое лицо вправе направить администрации уведомление о противоправном контенте на e-mail <a href="mailto:<?=h($req['email'])?>" style="color:#0A7BBA;text-decoration:none"><?=h($req['email'])?></a> с указанием конкретной страницы (URL) и описанием нарушения. Порядок рассмотрения — в <a href="/terms" style="color:#0A7BBA;text-decoration:none">Пользовательском соглашении</a> (раздел 5).</p>
+      <p style="<?=$p?>">Любое лицо вправе направить администрации уведомление о противоправном контенте на <a href="mailto:<?=h($req['email'])?>" style="color:#0A7BBA;text-decoration:none">e-mail оператора</a> с указанием конкретной страницы (URL) и описанием нарушения. Порядок рассмотрения — в <a href="/terms" style="color:#0A7BBA;text-decoration:none">Пользовательском соглашении</a> (раздел 5).</p>
     </div>
   </div>
 </section>

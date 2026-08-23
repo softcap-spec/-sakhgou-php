@@ -38,18 +38,8 @@
       </div>
     </div>
     <?php $req = get_requisites(); ?>
-    <div class="border-t border-[#EBEEF2] pt-5 mb-5 text-xs text-[#7A8A9A]">
-      <div class="font-semibold text-[#3A4A5C] mb-1.5"><?=h($req['name'])?></div>
-      <div class="space-y-0.5 leading-relaxed">
-        <?php if ($req['ogrn'] !== ''): ?><div>ОГРН: <?=h($req['ogrn'])?></div><?php endif; ?>
-        <?php if ($req['inn'] !== ''): ?><div>ИНН: <?=h($req['inn'])?></div><?php endif; ?>
-        <?php if ($req['legal_address'] !== ''): ?><div><?=h($req['legal_address'])?></div><?php endif; ?>
-        <?php if ($req['phone'] !== ''): ?><div>Телефон: <?=h($req['phone'])?></div><?php endif; ?>
-        <div><a href="/contacts" class="text-accent hover:underline">Полные реквизиты и контакты</a></div>
-      </div>
-    </div>
     <div class="border-t border-[#EBEEF2] pt-5 flex flex-wrap justify-between gap-3 text-xs text-[#9AAAB8]">
-      <span>© <?=date('Y')?> SakhGo · Сделано на Сахалине</span>
+      <span>© <?=date('Y')?> SakhGo · Сделано на Сахалине · <?=h($req['name'])?></span>
       <span class="flex gap-3">
         <a href="/privacy" class="hover:text-foreground transition-colors">Конфиденциальность</a>
         <a href="/terms" class="hover:text-foreground transition-colors">Условия</a>
