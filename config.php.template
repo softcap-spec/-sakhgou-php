@@ -30,7 +30,7 @@ define('YANDEX_METRIKA_ID', '');
 define('REQUISITES', [
   'name' => 'Шаров А.А., самозанятый',
   'ogrn' => '',
-  'inn' => '',
+  'inn' => '650112988764',
   'kpp' => '',
   'legal_address' => '',
   'postal_address' => '',

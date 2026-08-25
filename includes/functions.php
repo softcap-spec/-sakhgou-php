@@ -38,7 +38,7 @@ function get_requisites(): array {
   $defaults = [
     'name' => 'Шаров А.А., самозанятый',
     'ogrn' => '',
-    'inn' => '',
+    'inn' => '650112988764',
     'kpp' => '',
     'legal_address' => '',
     'postal_address' => '',
