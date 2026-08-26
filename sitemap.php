@@ -1,7 +1,7 @@
 <?php
 // sitemap.php — динамический sitemap.xml
 header('Content-Type: application/xml; charset=utf-8');
-require_once __DIR__ . '/includes/config.php';
+require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/includes/db.php';
 
 $base = 'https://сахгоу.рф';
