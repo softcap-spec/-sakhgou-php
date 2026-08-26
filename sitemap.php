@@ -30,9 +30,9 @@ foreach ($cats as $cat) {
 }
 
 // Активные объявления
-$listings = db()->query("SELECT id, updated_at FROM listings WHERE status='active' ORDER BY id DESC LIMIT 500")->fetchAll();
+$listings = db()->query("SELECT id, created_at FROM listings WHERE status='active' ORDER BY id DESC LIMIT 500")->fetchAll();
 foreach ($listings as $l) {
-  $lastmod = date('c', strtotime($l['updated_at']));
+  $lastmod = date('c', strtotime($l['created_at']));
   echo "  <url>\n    <loc>{$base}/listing/{$l['id']}</loc>\n    <lastmod>{$lastmod}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.7</priority>\n  </url>\n";
 }
 
