@@ -125,6 +125,7 @@ CREATE TABLE `listings` (
   `title` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
   `description` text COLLATE utf8mb4_unicode_ci,
   `price` decimal(12,2) DEFAULT '0.00',
+  `price_type` enum('fixed','from','negotiable') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'fixed',
   `location` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `status` enum('active','draft','archived') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'active',
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,

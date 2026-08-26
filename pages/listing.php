@@ -82,7 +82,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['book'])) {
     $check_out = $_POST['check_out'] ?? '';
     $guests = max(1, (int)($_POST['guests'] ?? 1));
     $bmsg = trim($_POST['guest_message'] ?? '');
-    if (!$check_in || !$check_out) {
+    if (($item['price_type'] ?? 'fixed') === 'negotiable') {
+      $book_error = 'Стоимость по договорённости — уточните условия у автора';
+    } elseif (!$check_in || !$check_out) {
       $book_error = 'Укажите даты заезда и выезда';
     } elseif (strtotime($check_out) <= strtotime($check_in)) {
       $book_error = 'Дата выезда должна быть позже даты заезда';
@@ -170,7 +172,7 @@ require __DIR__ . '/../includes/header.php';
 
       <!-- Price (mobile) -->
       <div class="lg:hidden flex items-center justify-between bg-white border border-[#EBEEF2] rounded-xl p-4">
-        <div class="font-display text-2xl"><?=number_format((float)$item['price'],0,'.',' ')?> <span class="text-sm font-normal text-[#6B7B8D]"><?=price_label($item['listing_type'])?></span></div>
+        <div class="font-display text-2xl"><?=price_text($item)?><?php if (!price_is_negotiable($item) && (float)$item['price'] > 0): ?> <span class="text-sm font-normal text-[#6B7B8D]"><?=price_label($item['listing_type'])?></span><?php endif; ?></div>
         <?php if(!empty($item['host_phone'])): ?>
         <button onclick="revealPhone()" class="inline-flex items-center gap-1.5 rounded-lg bg-accent text-white h-9 px-4 text-sm font-medium">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
@@ -299,7 +301,7 @@ require __DIR__ . '/../includes/header.php';
 
         <!-- Price card -->
         <div class="bg-white border border-[#EBEEF2] rounded-xl p-5">
-          <div class="font-display text-3xl text-foreground"><?=number_format((float)$item['price'],0,'.',' ')?> <span class="text-sm font-normal text-[#6B7B8D]"><?=price_label($item['listing_type'])?></span></div>
+          <div class="font-display text-3xl text-foreground"><?=price_text($item)?><?php if (!price_is_negotiable($item) && (float)$item['price'] > 0): ?> <span class="text-sm font-normal text-[#6B7B8D]"><?=price_label($item['listing_type'])?></span><?php endif; ?></div>
           <?php if (!empty($item['location'])): ?>
           <div class="text-xs text-[#5A6B7D] mt-1.5 flex items-center gap-1">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
@@ -322,7 +324,7 @@ require __DIR__ . '/../includes/header.php';
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
               Написать сообщение
             </button>
-            <?php if (in_array($lt, ['property','tour','fishing','car_rental','rental_gear'])): ?>
+            <?php if (in_array($lt, ['property','tour','fishing','car_rental','rental_gear']) && !price_is_negotiable($item)): ?>
             <button onclick="toggleBookForm()" class="w-full inline-flex items-center justify-center gap-1.5 rounded-lg bg-accent text-white hover:bg-accent/90 h-11 px-4 text-sm font-semibold transition-colors">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
               Забронировать
@@ -404,7 +406,7 @@ require __DIR__ . '/../includes/header.php';
         $cross = ['property'=>['car_rental','tour','fishing','rental_gear'],'tour'=>['car_rental','property','fishing','rental_gear'],'fishing'=>['car_rental','tour','rental_gear','property'],'rental_gear'=>['car_rental','tour','fishing','property'],'car_rental'=>['tour','fishing','rental_gear','property']];
         $ct = $cross[$lt] ?? ['tour','property','fishing','rental_gear'];
         $ct_placeholders = implode(',', array_fill(0, count($ct), '?'));
-        $ct_items = $pdo->prepare("SELECT l.id, l.title, l.price, l.listing_type, (SELECT filename FROM listing_images WHERE listing_id=l.id ORDER BY sort_order LIMIT 1) AS img, c.name AS cat_name, c.slug AS cat_slug FROM listings l JOIN categories c ON l.category_id=c.id LEFT JOIN promotions promo ON l.id = promo.listing_id AND promo.status = 'active' AND promo.expires_at > NOW() WHERE l.status='active' AND l.id!=? AND c.slug IN ($ct_placeholders) ORDER BY CASE WHEN promo.id IS NOT NULL THEN 0 ELSE 1 END, RAND() LIMIT 4");
+        $ct_items = $pdo->prepare("SELECT l.id, l.title, l.price, l.price_type, l.listing_type, (SELECT filename FROM listing_images WHERE listing_id=l.id ORDER BY sort_order LIMIT 1) AS img, c.name AS cat_name, c.slug AS cat_slug FROM listings l JOIN categories c ON l.category_id=c.id LEFT JOIN promotions promo ON l.id = promo.listing_id AND promo.status = 'active' AND promo.expires_at > NOW() WHERE l.status='active' AND l.id!=? AND c.slug IN ($ct_placeholders) ORDER BY CASE WHEN promo.id IS NOT NULL THEN 0 ELSE 1 END, RAND() LIMIT 4");
         $ct_items->execute(array_merge([$lid], $ct));
         $crossItems = $ct_items->fetchAll();
         ?>
@@ -424,7 +426,7 @@ require __DIR__ . '/../includes/header.php';
               <div class="min-w-0 flex-1">
                 <div class="text-xs text-[#5A6B7D]"><?=h($ci['cat_name'])?></div>
                 <div class="text-sm font-medium text-[#3A4A5C] truncate group-hover:text-accent transition-colors leading-snug"><?=h($ci['title'])?></div>
-                <div class="text-sm font-semibold text-foreground mt-0.5"><?=number_format((float)$ci['price'],0,'.',' ')?> <span class="text-[0.625rem] font-normal text-[#6B7B8D]"><?=price_label($ci['listing_type'])?></span></div>
+                <div class="text-sm font-semibold text-foreground mt-0.5"><?=price_text($ci)?><?php if (!price_is_negotiable($ci) && (float)$ci['price'] > 0): ?> <span class="text-[0.625rem] font-normal text-[#6B7B8D]"><?=price_label($ci['listing_type'])?></span><?php endif; ?></div>
               </div>
             </a>
             <?php endforeach; ?>
@@ -462,7 +464,7 @@ require __DIR__ . '/../includes/header.php';
           <?php if($simg): ?><img src="/uploads/<?=h($simg)?>" alt="<?=h($s['title'])?>" loading="lazy"><?php endif; ?>
         </div>
         <div class="listing-body">
-          <div class="listing-price"><?=number_format((float)$s['price'],0,'.',' ')?> <span class="text-[0.625rem] font-normal text-[#6B7B8D]"><?=price_label($s['listing_type'])?></span></div>
+          <div class="listing-price"><?=price_text($s)?><?php if (!price_is_negotiable($s) && (float)$s['price'] > 0): ?> <span class="text-[0.625rem] font-normal text-[#6B7B8D]"><?=price_label($s['listing_type'])?></span><?php endif; ?></div>
           <div class="listing-title"><?=h($s['title'])?></div>
           <div class="listing-meta"><span><?=h($s['location'])?></span></div>
         </div>
@@ -653,7 +655,7 @@ function cmDelete(mid){
 <?php
 // JSON-LD Product markup
 $ld_image = !empty($images) ? 'https://сахгоу.рф/uploads/'.h($images[0]) : '';
-$ld_price = number_format((float)$item['price'], 0, '.', '');
+$ld_price = price_is_negotiable($item) ? '0' : number_format((float)$item['price'], 0, '.', '');
 $ld_currency = 'RUB';
 $ld_avail = 'https://schema.org/InStock';
 ?>

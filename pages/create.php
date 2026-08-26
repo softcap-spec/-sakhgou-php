@@ -63,7 +63,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['finish'])) {
   $cat = $_POST['category'] ?? '';
   $title = trim($_POST['title'] ?? '');
   $desc = trim($_POST['description'] ?? '');
+  $priceType = in_array($_POST['price_type'] ?? 'fixed', ['fixed','from','negotiable'], true) ? $_POST['price_type'] : 'fixed';
   $price = (float)($_POST['price'] ?? 0);
+  if ($priceType === 'negotiable') $price = 0;
   $loc = $_POST['location'] ?? '';
   $guests = (int)($_POST['max_guests'] ?? 0);
   $tourOrgType = $_POST['tour_organizer_type'] ?? '';
@@ -71,7 +73,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['finish'])) {
   $tourOpRegno = trim($_POST['tour_operator_regno'] ?? '');
 
   if (empty($title)) $errors[] = ['field'=>'title', 'text'=>'Введите название'];
-  if ($price <= 0) $errors[] = ['field'=>'price', 'text'=>'Укажите цену'];
+  if ($priceType !== 'negotiable' && $price <= 0) $errors[] = ['field'=>'price', 'text'=>'Укажите цену'];
   if (empty($desc)) $errors[] = ['field'=>'description', 'text'=>'Добавьте описание'];
   if (empty($loc)) $errors[] = ['field'=>'location', 'text'=>'Укажите локацию'];
   if (empty($lt) || !isset($LISTING_LABELS[$lt])) $errors[] = ['field'=>'listing_type', 'text'=>'Выберите тип объявления'];
@@ -91,7 +93,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['finish'])) {
       $slug = $baseSlug . '-' . ($n++);
     }
 
-    $stmt = $pdo->prepare("INSERT INTO listings (user_id,category_id,listing_type,subcategory,tour_organizer_type,tour_operator_name,tour_operator_regno,title,slug,description,price,currency,max_guests,location,
+    $stmt = $pdo->prepare("INSERT INTO listings (user_id,category_id,listing_type,subcategory,tour_organizer_type,tour_operator_name,tour_operator_regno,title,slug,description,price,price_type,currency,max_guests,location,
       rooms_count,beds_count,bathrooms_count,area_sqm,amenities,check_in_time,check_out_time,deposit_amount,
       tour_duration_hours,tour_duration_days,difficulty_level,group_size_min,group_size_max,start_point,
       requires_border_permit,depends_on_weather,transport_included,transport_type,
@@ -99,7 +101,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['finish'])) {
       meals_included,season,cancellation_policy,status)
       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
     $stmt->execute([
-      $cu['id'], $real_cid, $lt, $cat, $tourOrgType, $tourOpName, $tourOpRegno, $title, $slug, $desc, $price, 'RUB',
+      $cu['id'], $real_cid, $lt, $cat, $tourOrgType, $tourOpName, $tourOpRegno, $title, $slug, $desc, $price, $priceType, 'RUB',
       $guests, $loc,
       (int)($_POST['rooms_count']??0), (int)($_POST['beds_count']??0), (int)($_POST['bathrooms_count']??1), (int)($_POST['area_sqm']??0),
       json_encode($_POST['amenities']??[], JSON_UNESCAPED_UNICODE),
@@ -256,7 +258,14 @@ require __DIR__ . '/../includes/header.php';
       <div class="form-group"><label>Название объявления <span style="color:#DC2626">*</span></label><input type="text" name="title" value="<?=h($_POST['title']??'')?>" style="width:100%;box-sizing:border-box" placeholder="Напр. «Уютная квартира с видом на море»" required></div>
       <div class="form-group"><label>Описание <span style="color:#DC2626">*</span></label><textarea name="description" rows="5" style="width:100%;box-sizing:border-box" placeholder="Опишите ваше предложение подробно..." required><?=h($_POST['description']??'')?></textarea></div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
-        <div class="form-group"><label>Цена (<?=price_label($_POST['listing_type']??'')?>) <span style="color:#DC2626">*</span></label><input type="number" name="price" value="<?=h($_POST['price']??'')?>" style="width:100%;box-sizing:border-box" min="1" step="1" required></div>
+        <div class="form-group"><label>Цена <span style="color:#DC2626">*</span></label>
+          <select name="price_type" id="price_type" onchange="priceTypeChange()" style="width:100%;box-sizing:border-box;margin-bottom:0.5rem">
+            <option value="fixed" <?=($_POST['price_type']??'fixed')==='fixed'?'selected':''?>>Точная цена</option>
+            <option value="from" <?=($_POST['price_type']??'')==='from'?'selected':''?>>От (цена от …)</option>
+            <option value="negotiable" <?=($_POST['price_type']??'')==='negotiable'?'selected':''?>>По договорённости</option>
+          </select>
+          <input type="number" name="price" id="price_input" value="<?=h($_POST['price']??'')?>" style="width:100%;box-sizing:border-box" min="1" step="1" required>
+        </div>
         <div class="form-group"><label>Локация <span style="color:#DC2626">*</span></label>
           <select name="location" required style="width:100%;box-sizing:border-box"><option value="">Выберите...</option>
             <?php foreach($LOCATIONS as $l): ?><option value="<?=$l?>" <?=($_POST['location']??'')===$l?'selected':''?>><?=$l?></option><?php endforeach; ?>
@@ -270,7 +279,7 @@ require __DIR__ . '/../includes/header.php';
     <?php elseif ($step === 3): ?>
       <!-- Step 3: Type-specific fields -->
       <h2 style="font-family:Manrope,sans-serif;font-weight:700;font-size:1.25rem;margin:0 0 1.5rem">Характеристики</h2>
-      <?php foreach(['listing_type','category','title','description','price','location','max_guests'] as $f): ?>
+      <?php foreach(['listing_type','category','title','description','price','price_type','location','max_guests'] as $f): ?>
       <input type="hidden" name="<?=$f?>" value="<?=h($_POST[$f]??'')?>">
       <?php endforeach; ?>
       <?php $lt = $_POST['listing_type'] ?? ''; ?>
@@ -363,7 +372,7 @@ require __DIR__ . '/../includes/header.php';
     <?php elseif ($step === 4): ?>
       <!-- Step 4: Photos -->
       <h2 style="font-family:Manrope,sans-serif;font-weight:700;font-size:1.25rem;margin:0 0 1.5rem">Фотографии</h2>
-      <?php foreach(['listing_type','category','title','description','price','location','max_guests','rooms_count','beds_count','bathrooms_count','area_sqm','check_in','check_out','deposit','tour_hours','tour_days','difficulty','group_min','group_max','start_point','transport_inc','border_permit','weather_dep','meals','transport_type','gear_condition','fishing_type','fishing_method','gear_inc','catch_g','license','boat','tour_organizer_type','tour_operator_name','tour_operator_regno','season'] as $f): ?>
+      <?php foreach(['listing_type','category','title','description','price','price_type','location','max_guests','rooms_count','beds_count','bathrooms_count','area_sqm','check_in','check_out','deposit','tour_hours','tour_days','difficulty','group_min','group_max','start_point','transport_inc','border_permit','weather_dep','meals','transport_type','gear_condition','fishing_type','fishing_method','gear_inc','catch_g','license','boat','tour_organizer_type','tour_operator_name','tour_operator_regno','season'] as $f): ?>
       <input type="hidden" name="<?=$f?>" value="<?=h($_POST[$f]??'')?>">
       <?php endforeach; ?>
       <?php if (isset($_POST['amenities'])): foreach($_POST['amenities'] as $a): ?><input type="hidden" name="amenities[]" value="<?=h($a)?>"><?php endforeach; endif; ?>
@@ -381,6 +390,15 @@ require __DIR__ . '/../includes/header.php';
       <p id="imgCount" style="font-size:0.75rem;color:#7A8A9A;margin:0.5rem 0 0;display:none"></p>
 
 <script>
+function priceTypeChange(){
+  var sel = document.getElementById('price_type');
+  var inp = document.getElementById('price_input');
+  if (sel && inp) {
+    if (sel.value === 'negotiable') { inp.disabled = true; inp.required = false; inp.value = ''; }
+    else { inp.disabled = false; inp.required = true; }
+  }
+}
+document.addEventListener('DOMContentLoaded', priceTypeChange);
 function previewImages(e) {
   var MAX = 2 * 1024 * 1024; // 2MB
   var files = Array.from(e.target.files).slice(0,10);
@@ -439,7 +457,7 @@ function removeImage(idx) {
           'Тип' => $LISTING_LABELS[$_POST['listing_type']??''] ?? '',
           'Категория' => $_POST['category'] ?? '',
           'Название' => $_POST['title'] ?? '',
-          'Цена' => number_format((float)($_POST['price']??0),0,'.',' ').' '.price_label($_POST['listing_type']??''),
+          'Цена' => ($_POST['price_type']??'fixed') === 'negotiable' ? 'По договорённости' : ((($_POST['price_type']??'fixed') === 'from' ? 'от ' : '').number_format((float)($_POST['price']??0),0,'.',' ').' '.price_label($_POST['listing_type']??'')),
           'Локация' => $_POST['location'] ?? '',
           'Фото' => empty($_SESSION['tmp_images'])?'Нет':count($_SESSION['tmp_images']).' фото',
         ];

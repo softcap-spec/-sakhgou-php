@@ -41,7 +41,7 @@ require __DIR__ . '/../includes/header.php';
         <?php foreach ($my_listings as $item): ?>
         <a href="/listing/<?= $item['id'] ?>" class="listing-card">
           <div class="listing-body">
-            <div class="listing-price"><?= format_price((float)$item['price']) ?></div>
+            <div class="listing-price"><?=price_text($item)?><?php if (!price_is_negotiable($item) && (float)$item['price'] > 0): ?> ₽<?php endif; ?></div>
             <div class="listing-title"><?= h($item['title']) ?></div>
             <div class="listing-meta">
               <span><?= h($item['category_name'] ?? '') ?></span>

@@ -73,7 +73,7 @@ $page_title = 'Вход — СахGO';
             <div class="w-full aspect-[4/3] bg-[#D5DEE6]"></div>
             <?php endif; ?>
             <div class="p-2.5">
-              <div class="font-semibold text-sm text-[#121E2B] leading-tight"><?=number_format((float)$r['price'],0,'.',' ')?> <span class="font-normal text-[10px] text-[#9AAAB8]"><?=price_label($r['listing_type'])?></span></div>
+              <div class="font-semibold text-sm text-[#121E2B] leading-tight"><?=price_text($r)?><?php if (!price_is_negotiable($r) && (float)$r['price'] > 0): ?> <span class="font-normal text-[10px] text-[#9AAAB8]"><?=price_label($r['listing_type'])?></span><?php endif; ?></div>
               <div class="text-[11px] text-[#54677A] mt-0.5 truncate"><?=h($r['title'])?></div>
               <div class="text-[10px] text-[#9AAAB8] mt-0.5 truncate"><?=h($r['location'])?></div>
             </div>

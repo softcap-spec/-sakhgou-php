@@ -91,6 +91,25 @@ function format_price(float $price): string {
   return number_format($price, 0, ',', ' ') . ' ₽';
 }
 
+/**
+ * Текст цены с учётом типа: фиксированная, «от …», «По договорённости».
+ * Без символа валюты — единицу измерения добавляет price_label() на месте вывода.
+ */
+function price_text(array $item): string {
+  $pt = $item['price_type'] ?? 'fixed';
+  if ($pt === 'negotiable') return 'По договорённости';
+  $p = (float)($item['price'] ?? 0);
+  $num = $p > 0 ? number_format($p, 0, ',', ' ') : 'Бесплатно';
+  return ($pt === 'from' && $p > 0) ? 'от ' . $num : $num;
+}
+
+/**
+ * true, если цена указана как «По договорённости» (числовая цена отсутствует).
+ */
+function price_is_negotiable(array $item): bool {
+  return ($item['price_type'] ?? 'fixed') === 'negotiable';
+}
+
 function time_ago(string $date): string {
   $diff = time() - strtotime($date);
   if ($diff < 60) return 'только что';

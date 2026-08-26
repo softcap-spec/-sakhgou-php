@@ -92,18 +92,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   csrf_check();
   $title = trim($_POST['title'] ?? '');
   $description = trim($_POST['description'] ?? '');
+  $priceType = in_array($_POST['price_type'] ?? 'fixed', ['fixed','from','negotiable'], true) ? $_POST['price_type'] : 'fixed';
   $price = (float)($_POST['price'] ?? 0);
+  if ($priceType === 'negotiable') $price = 0;
   $location = trim($_POST['location'] ?? '');
   $type = $_POST['listing_type'] ?? 'property';
   $cat_id = (int)($_POST['category_id'] ?? 0);
 
   if (empty($title)) $errors[] = 'Введите название';
-  if ($price <= 0) $errors[] = 'Укажите цену';
+  if ($priceType !== 'negotiable' && $price <= 0) $errors[] = 'Укажите цену';
   if (empty($description)) $errors[] = 'Добавьте описание';
 
   if (empty($errors)) {
-    $fields = ['title', 'description', 'price', 'location', 'listing_type', 'category_id'];
-    $values = [$title, $description, $price, $location, $type, $cat_id];
+    $fields = ['title', 'description', 'price', 'price_type', 'location', 'listing_type', 'category_id'];
+    $values = [$title, $description, $price, $priceType, $location, $type, $cat_id];
 
     $typeFields = [
       'property' => ['max_guests', 'rooms_count', 'beds_count', 'amenities', 'check_in_time', 'check_out_time', 'rules'],
@@ -191,8 +193,13 @@ require __DIR__ . '/../includes/header.php';
             <input type="text" name="title" value="<?= h($item['title']) ?>" required style="width:100%;box-sizing:border-box">
           </div>
           <div>
-            <label>Цена (<?=price_label($item['listing_type'])?>)</label>
-            <input type="number" name="price" value="<?= (int)$item['price'] ?>" min="0" step="1" required style="width:100%;box-sizing:border-box">
+            <label>Цена</label>
+            <select name="price_type" id="price_type" onchange="priceTypeChange()" style="width:100%;box-sizing:border-box;margin-bottom:0.5rem">
+              <option value="fixed" <?=($item['price_type']??'fixed')==='fixed'?'selected':''?>>Точная цена</option>
+              <option value="from" <?=($item['price_type']??'')==='from'?'selected':''?>>От (цена от …)</option>
+              <option value="negotiable" <?=($item['price_type']??'')==='negotiable'?'selected':''?>>По договорённости</option>
+            </select>
+            <input type="number" name="price" id="price_input" value="<?= (int)$item['price'] ?>" min="0" step="1" required style="width:100%;box-sizing:border-box">
           </div>
           <div>
             <label>Тип</label>
@@ -395,6 +402,15 @@ require __DIR__ . '/../includes/header.php';
 </section>
 
 <script>
+function priceTypeChange(){
+  var sel = document.getElementById('price_type');
+  var inp = document.getElementById('price_input');
+  if (sel && inp) {
+    if (sel.value === 'negotiable') { inp.disabled = true; inp.required = false; inp.value = ''; }
+    else { inp.disabled = false; inp.required = true; }
+  }
+}
+document.addEventListener('DOMContentLoaded', priceTypeChange);
 document.getElementById('listing_type').addEventListener('change', function() {
   ['prop','tour','fish','gear','car'].forEach(function(p){
     var el = document.getElementById(p + '-fields');

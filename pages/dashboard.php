@@ -155,7 +155,7 @@ require __DIR__ . '/../includes/header.php';
               <span class="badge" style="<?=$item['status']==='active'?'color:#166534;border-color:#BBF7D0;background:#F0FDF4':''?>"><?=$item['status']==='active'?'Активно':$item['status']?></span>
               <span style="color:#5A6B7D"><?=h($item['category_name'])?></span>
             </div>
-            <div class="listing-price"><?=number_format((float)$item['price'],0,'.',' ')?> <?=price_label($item['listing_type'])?></div>
+            <div class="listing-price"><?=price_text($item)?><?php if (!price_is_negotiable($item) && (float)$item['price'] > 0): ?> <?=price_label($item['listing_type'])?><?php endif; ?></div>
             <div class="listing-title"><?=h($item['title'])?></div>
             <div class="listing-meta">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
@@ -477,7 +477,7 @@ require __DIR__ . '/../includes/header.php';
             <?php endif;?>
           </div>
           <div class="listing-body">
-            <div class="listing-price"><?=number_format((float)$item['price'],0,'.',' ')?> <?=price_label($item['listing_type'])?></div>
+            <div class="listing-price"><?=price_text($item)?><?php if (!price_is_negotiable($item) && (float)$item['price'] > 0): ?> <?=price_label($item['listing_type'])?><?php endif; ?></div>
             <div class="listing-title"><?=h($item['title'])?></div>
             <div class="listing-meta"><span><?=h($item['category_name']??'')?></span></div>
           </div>

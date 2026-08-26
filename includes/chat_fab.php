@@ -17,7 +17,7 @@ $stmt->execute([$cu['id']]);
 $notifs = $stmt->fetchAll();
 
 $stmt = $pdo->prepare("
-  SELECT m.*, l.title AS listing_title, l.id AS lid, l.price AS listing_price, l.listing_type AS listing_type,
+  SELECT m.*, l.title AS listing_title, l.id AS lid, l.price AS listing_price, l.price_type AS price_type, l.listing_type AS listing_type,
     u.name AS other_name, u.avatar_url AS other_avatar
   FROM messages m
   JOIN listings l ON m.listing_id = l.id
@@ -217,7 +217,7 @@ $myId = (int)$cu['id'];
               <span class="chat-list-time"><?=time_ago($ch['created_at'])?></span>
             </div>
             <div class="chat-list-preview"><?=h($preview)?></div>
-            <div class="chat-list-meta"><?=h($ch['listing_title'])?> · <?=number_format((float)$ch['listing_price'],0,'.',' ')?> ₽</div>
+            <div class="chat-list-meta"><?=h($ch['listing_title'])?> · <?=price_text(['price_type'=>$ch['price_type']??'fixed','price'=>(float)$ch['listing_price']])?><?php if(($ch['price_type']??'fixed')!=='negotiable' && (float)$ch['listing_price']>0): ?> ₽<?php endif; ?></div>
           </div>
           <?php if($unr>0):?><span class="chat-list-unread"><?=$unr?></span><?php endif;?>
         </div>
