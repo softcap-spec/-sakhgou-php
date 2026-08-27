@@ -198,6 +198,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     header('Location: /admin?tab=banners&ok=1');
     exit;
   }
+  // Promo prices: save (пустое/некорректное поле не затирает прежнюю цену)
+  if ($_POST['action'] === 'save_prices') {
+    foreach (['top','highlight','urgent'] as $t) {
+      foreach (['7','14','30'] as $d) {
+        $raw = trim((string)($_POST['price_' . $t . '_' . $d] ?? ''));
+        if ($raw === '') continue;
+        if (!ctype_digit($raw) || (int)$raw < 1) continue;
+        $pdo->prepare("UPDATE settings SET setting_value = ? WHERE setting_key = ?")->execute([(int)$raw, 'promo_' . $t . '_' . $d]);
+      }
+    }
+    header('Location: /admin?tab=payments&ok=prices');
+    exit;
+  }
 }
 
 // ── Data loaders ──
@@ -536,18 +549,6 @@ elseif ($tab === 'users'):
 <?php
 // ── PAYMENTS ──
 elseif ($tab === 'payments'):
-  // Handle price save
-  if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'save_prices') {
-    foreach (['top','highlight','urgent'] as $t) {
-      foreach (['7','14','30'] as $d) {
-        $raw = trim((string)($_POST['price_' . $t . '_' . $d] ?? ''));
-        if ($raw === '') continue; // пустое поле — оставляем прежнюю цену
-        if (!ctype_digit($raw) || (int)$raw < 1) continue; // некорректное значение — не перезаписываем
-        $pdo->prepare("UPDATE settings SET setting_value = ? WHERE setting_key = ?")->execute([(int)$raw, 'promo_' . $t . '_' . $d]);
-      }
-    }
-    header('Location: /admin?tab=payments&ok=prices'); exit;
-  }
   $promoPrices = get_promo_prices();
   $promos = $pdo->query("SELECT p.*, u.name AS host_name, l.title AS listing_title FROM promotions p JOIN users u ON p.host_id = u.id JOIN listings l ON p.listing_id = l.id ORDER BY p.created_at DESC LIMIT 200");
 ?>
