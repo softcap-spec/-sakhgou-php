@@ -538,6 +538,9 @@ require __DIR__ . '/../includes/header.php';
               <?php if (!empty($b['check_in_date'])): ?>
               <div style="font-size:0.8125rem;color:#5A6B7D;margin-top:0.25rem"><?=date('d.m.Y', strtotime($b['check_in_date']))?> — <?=date('d.m.Y', strtotime($b['check_out_date']))?> · <?=(int)$b['guests_count']?> гост.</div>
               <?php endif; ?>
+              <?php if ($bs === 'confirmed' && !empty($b['host_phone'])): ?>
+              <div style="font-size:0.8125rem;color:#2E7D32;margin-top:0.25rem">Телефон хозяина: <a href="tel:<?=h($b['host_phone'])?>" style="color:#2E7D32;font-weight:600"><?=h($b['host_phone'])?></a></div>
+              <?php endif; ?>
             </div>
             <div style="text-align:right">
               <span style="font-size:0.6875rem;font-weight:600;padding:0.1875rem 0.5rem;border-radius:999px;<?=$badge?>"><?=$blabel?></span>
@@ -587,8 +590,12 @@ require __DIR__ . '/../includes/header.php';
             <div style="text-align:right;flex-shrink:0">
               <div style="font-family:Manrope,sans-serif;font-weight:700;font-size:1.0625rem"><?=number_format((float)$b['total_price'],0,'.',' ')?> ₽</div>
               <div style="font-size:0.6875rem;color:#5A6B7D;margin-top:0.25rem"><?=$b['created_at']?></div>
-              <?php if ($bs === 'pending'): ?>
-              <div style="display:flex;gap:0.375rem;margin-top:0.625rem;justify-content:flex-end">
+              <?php if ($bs === 'confirmed' && !empty($b['guest_phone'])): ?>
+              <div style="font-size:0.8125rem;color:#2E7D32;margin-top:0.5rem">Телефон гостя: <a href="tel:<?=h($b['guest_phone'])?>" style="color:#2E7D32;font-weight:600"><?=h($b['guest_phone'])?></a></div>
+              <?php endif; ?>
+              <div style="display:flex;gap:0.375rem;margin-top:0.625rem;justify-content:flex-end;flex-wrap:wrap">
+                <button type="button" onclick="openChatThread(<?=(int)$b['listing_id']?>,<?=(int)$b['guest_id']?>,<?=h(json_encode($b['guest_name']))?>,<?=h(json_encode($b['listing_title']))?>,<?=h(json_encode($b['guest_avatar'] ?? ''))?>,<?=(float)$b['price']?>,<?=h(json_encode($b['listing_type'] ?? ''))?>)" style="background:#0A7BBA;color:#fff;border:0;border-radius:8px;padding:0.4375rem 0.875rem;font-size:0.75rem;font-weight:600;cursor:pointer">Открыть чат</button>
+                <?php if ($bs === 'pending'): ?>
                 <form method="post" style="display:inline"><?= csrf_field() ?>
                   <input type="hidden" name="bid" value="<?=$b['id']?>">
                   <button type="submit" name="booking_action" value="confirm" style="background:#16A34A;color:#fff;border:0;border-radius:8px;padding:0.4375rem 0.875rem;font-size:0.75rem;font-weight:600;cursor:pointer">Подтвердить</button>
@@ -597,8 +604,8 @@ require __DIR__ . '/../includes/header.php';
                   <input type="hidden" name="bid" value="<?=$b['id']?>">
                   <button type="submit" name="booking_action" value="decline" style="background:#fff;color:#DC2626;border:1px solid #F3C1C1;border-radius:8px;padding:0.4375rem 0.875rem;font-size:0.75rem;font-weight:600;cursor:pointer">Отклонить</button>
                 </form>
+                <?php endif; ?>
               </div>
-              <?php endif; ?>
             </div>
           </div>
         </div>

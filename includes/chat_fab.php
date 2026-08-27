@@ -297,6 +297,16 @@ function formatPrice(p,type){
 }
 function numberFmt(n){return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g,' ')}
 
+function openChatThread(lid,uid,name,listing,avatar,price,ltype){
+ var w=document.getElementById('chatWidget');
+ if(!w)return;
+ if(!w.classList.contains('open')){
+  var n=document.getElementById('notifPanel');if(n)n.classList.remove('open');
+  w.classList.add('open');
+ }
+ openThread(lid,uid,name,listing,avatar,price,ltype);
+}
+
 function backToList(){
  document.getElementById('chatThreadView').classList.remove('active');
  document.getElementById('chatListView').classList.add('active');

@@ -437,14 +437,14 @@ function get_user_favorites(int $user_id): array {
 
 function get_user_bookings(int $user_id): array {
   $pdo = db();
-  $stmt = $pdo->prepare("SELECT b.*, l.title AS listing_title, l.listing_type, l.location, u.name AS host_name FROM bookings b JOIN listings l ON b.listing_id = l.id JOIN users u ON b.host_id = u.id WHERE b.guest_id = ? ORDER BY b.created_at DESC LIMIT 20");
+  $stmt = $pdo->prepare("SELECT b.*, l.title AS listing_title, l.listing_type, l.location, u.name AS host_name, u.phone AS host_phone FROM bookings b JOIN listings l ON b.listing_id = l.id JOIN users u ON b.host_id = u.id WHERE b.guest_id = ? ORDER BY b.created_at DESC LIMIT 20");
   $stmt->execute([$user_id]);
   return $stmt->fetchAll();
 }
 
 function get_host_bookings(int $user_id): array {
   $pdo = db();
-  $stmt = $pdo->prepare("SELECT b.*, l.title AS listing_title, u.name AS guest_name FROM bookings b JOIN listings l ON b.listing_id = l.id JOIN users u ON b.guest_id = u.id WHERE b.host_id = ? ORDER BY b.created_at DESC LIMIT 20");
+  $stmt = $pdo->prepare("SELECT b.*, l.title AS listing_title, l.price, l.price_type, l.listing_type, u.name AS guest_name, u.phone AS guest_phone, u.avatar_url AS guest_avatar FROM bookings b JOIN listings l ON b.listing_id = l.id JOIN users u ON b.guest_id = u.id WHERE b.host_id = ? ORDER BY b.created_at DESC LIMIT 20");
   $stmt->execute([$user_id]);
   return $stmt->fetchAll();
 }
