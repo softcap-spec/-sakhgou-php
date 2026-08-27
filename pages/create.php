@@ -239,7 +239,7 @@ require __DIR__ . '/../includes/header.php';
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.625rem">
           <?php foreach($CATEGORY_OPTIONS[$slt] as $c): $sel = ($_POST['category']??'')===$c[0]; ?>
           <label style="position:relative;border-radius:8px;border:1px solid <?=$sel?'#121E2B':'#DFE4EA'?>;padding:0.75rem 1rem;cursor:pointer;transition:all 0.15s ease;<?=$sel?'background:rgba(27,107,138,0.04)':''?>" onmouseover="if(!this.querySelector('input:checked')){this.style.borderColor='#C8D0DA'}" onmouseout="if(!this.querySelector('input:checked')){this.style.borderColor='#DFE4EA'}">
-            <input type="radio" name="category" value="<?=$c[0]?>" style="position:absolute;opacity:0" <?=$sel?'checked':''?>>
+            <input type="radio" name="category" value="<?=$c[0]?>" style="position:absolute;opacity:0" <?=$sel?'checked':''?> onchange="this.form.step.value=1;this.form.submit()">>
             <div style="font-size:0.8125rem;font-weight:500;display:flex;align-items:center;gap:0.5rem">
               <?php if($sel): ?><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1B6B8A" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg><?php endif; ?>
               <?=$c[1]?>
@@ -272,6 +272,17 @@ require __DIR__ . '/../includes/header.php';
           </select>
         </div>
       </div>
+      <script>
+      function priceTypeChange(){
+        var sel = document.getElementById('price_type');
+        var inp = document.getElementById('price_input');
+        if (sel && inp) {
+          if (sel.value === 'negotiable') { inp.disabled = true; inp.required = false; inp.value = ''; }
+          else { inp.disabled = false; inp.required = true; }
+        }
+      }
+      document.addEventListener('DOMContentLoaded', priceTypeChange);
+      </script>
       <?php $lt = $_POST['listing_type'] ?? ''; if ($lt === 'property' || $lt === 'tour' || $lt === 'fishing'): ?>
       <div class="form-group"><label>Максимум гостей</label><input type="number" name="max_guests" value="<?=h($_POST['max_guests']??'2')?>" style="width:100%;box-sizing:border-box" min="1"></div>
       <?php endif; ?>
@@ -390,15 +401,6 @@ require __DIR__ . '/../includes/header.php';
       <p id="imgCount" style="font-size:0.75rem;color:#7A8A9A;margin:0.5rem 0 0;display:none"></p>
 
 <script>
-function priceTypeChange(){
-  var sel = document.getElementById('price_type');
-  var inp = document.getElementById('price_input');
-  if (sel && inp) {
-    if (sel.value === 'negotiable') { inp.disabled = true; inp.required = false; inp.value = ''; }
-    else { inp.disabled = false; inp.required = true; }
-  }
-}
-document.addEventListener('DOMContentLoaded', priceTypeChange);
 function previewImages(e) {
   var MAX = 2 * 1024 * 1024; // 2MB
   var files = Array.from(e.target.files).slice(0,10);
