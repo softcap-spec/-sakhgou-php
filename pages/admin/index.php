@@ -540,8 +540,10 @@ elseif ($tab === 'payments'):
   if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'save_prices') {
     foreach (['top','highlight','urgent'] as $t) {
       foreach (['7','14','30'] as $d) {
-        $val = max(1, (int)($_POST['price_' . $t . '_' . $d] ?? 100));
-        $pdo->prepare("UPDATE settings SET setting_value = ? WHERE setting_key = ?")->execute([$val, 'promo_' . $t . '_' . $d]);
+        $raw = trim((string)($_POST['price_' . $t . '_' . $d] ?? ''));
+        if ($raw === '') continue; // пустое поле — оставляем прежнюю цену
+        if (!ctype_digit($raw) || (int)$raw < 1) continue; // некорректное значение — не перезаписываем
+        $pdo->prepare("UPDATE settings SET setting_value = ? WHERE setting_key = ?")->execute([(int)$raw, 'promo_' . $t . '_' . $d]);
       }
     }
     header('Location: /admin?tab=payments&ok=prices'); exit;
