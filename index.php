@@ -112,16 +112,22 @@ switch ($page) {
     try {
       // дебаг-лог последнего события (в БД, не в открытый файл)
       set_setting('max_webhook_debug', mb_substr($raw, 0, 2000));
-      // привязка оператора: только по сообщению со словом «сахгоу» (чтобы случайный
-      // пользователь бота «На волне 65» не стал оператором)
+      // Привязка пользователя по персональному коду: сообщение вида «сахгоу <код>»
       // Реальная структура Update: message.sender.user_id, message.body.text
       $uid = (int)($data['user_id'] ?? $data['message']['sender']['user_id'] ?? $data['sender']['user_id'] ?? 0);
-      $mtext = $data['message']['body']['text'] ?? $data['message']['text'] ?? $data['message']['body'] ?? '';
+      $mtext = $data['message']['body']['text'] ?? $data['message']['text'] ?? '';
       if (is_array($mtext)) $mtext = '';
       $mtext = (string)$mtext;
-      $isBind = (mb_stripos($mtext, 'сахгоу') !== false);
-      if ($uid > 0 && $isBind && max_operator_user_id() === 0) {
-        set_setting('max_operator_user_id', (string)$uid);
+      if ($uid > 0 && preg_match('/сахгоу\s+(\d{4,8})/iu', $mtext, $mm)) {
+        $code = $mm[1];
+        $su = db()->prepare('SELECT id FROM users WHERE max_bind_code = ?');
+        $su->execute([$code]);
+        $siteUser = (int)$su->fetchColumn();
+        if ($siteUser > 0) {
+          // убираем прежнюю привязку этого Макс-аккаунта, затем привязываем к текущему юзеру
+          db()->prepare('UPDATE users SET max_user_id = NULL WHERE max_user_id = ? AND id != ?')->execute([$uid, $siteUser]);
+          db()->prepare('UPDATE users SET max_user_id = ? WHERE id = ?')->execute([$uid, $siteUser]);
+        }
       }
     } catch (\Throwable $e) { /* тихо */ }
     header('Content-Type: application/json');
@@ -210,7 +216,7 @@ switch ($page) {
           // Email notification (throttled: one per conversation per hour)
           notify_new_message($cu['id'], $receiver, $lid, $listing['title']);
           // Уведомление в «Макс» (MVP — оператору)
-          try { max_notify_message($listing['title'], $cu['name'] ?? 'пользователь', $text); } catch (\Throwable $e) {}
+          try { max_notify_message($receiver, $listing['title'], $cu['name'] ?? 'пользователь', $text); } catch (\Throwable $e) {}
           echo json_encode(['ok'=>true]);
           exit;
         }

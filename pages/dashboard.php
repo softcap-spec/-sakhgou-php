@@ -90,6 +90,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete'])) {
   header('Location: /dashboard'); exit;
 }
 
+// POST: отвязать уведомления «Макс»
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['unbind_max'])) {
+  csrf_check();
+  $pdo->prepare('UPDATE users SET max_user_id = NULL WHERE id = ?')->execute([$user['id']]);
+  $user['max_user_id'] = null;
+  header('Location: /dashboard?sub=profile&maxok=1'); exit;
+}
+
 // POST: подтвердить / отклонить бронь (только хозяин объявления, только для pending)
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['booking_action'])) {
   csrf_check();
@@ -107,6 +115,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['booking_action'])) {
         ->execute([$bk['guest_id'], 'booking', 'Ваша бронь «' . $bk['listing_title'] . '» ' . $statusText, '/dashboard?sub=bookings']);
       // Дубль в чат — гость видит решение в «Сообщениях»
       send_message($user['id'], $bk['guest_id'], $bk['listing_id'], 'Бронь «' . $bk['listing_title'] . '» ' . $statusText . '.');
+      // Уведомление в «Макс» — гостю (если привязан)
+      try { max_notify_decision($bk['guest_id'], $bk['listing_title'], $statusText); } catch (\Throwable $e) {}
       header('Location: /dashboard?sub=host_bookings&bok=1'); exit;
     }
   }
@@ -651,6 +661,19 @@ require __DIR__ . '/../includes/header.php';
           Сохранить
         </button>
       </form>
+
+      <!-- Уведомления в «Макс» -->
+      <div style="background:#fff;border:1px solid #EEF2F6;border-radius:12px;padding:2rem;box-shadow:0 4px 12px rgba(15,23,32,0.06);margin-top:1.5rem">
+        <h3 style="font-family:Manrope,sans-serif;font-size:1rem;margin:0 0 0.75rem">Уведомления в «Макс»</h3>
+        <?php if (!empty($user['max_user_id'])): ?>
+          <p style="font-size:0.8125rem;color:#2E7D32;margin:0 0 0.75rem">✅ Привязано. Новые брони и сообщения будут приходить вам в «Макс».</p>
+          <form method="post"><?= csrf_field() ?><input type="hidden" name="unbind_max" value="1"><button type="submit" style="background:#fff;color:#DC2626;border:1px solid #F3C1C1;border-radius:8px;padding:0.5rem 1rem;font-size:0.8125rem;font-weight:600;cursor:pointer">Отвязать</button></form>
+        <?php else: ?>
+          <p style="font-size:0.8125rem;color:#3A4A5C;margin:0 0 0.75rem">Откройте приложение «Макс», найдите бота <b>«На волне 65»</b> и отправьте ему сообщение:</p>
+          <div style="background:#F7F9FB;border:1px dashed #C8D0DA;border-radius:8px;padding:0.625rem 1rem;font-family:Consolas,monospace;font-size:0.9375rem;color:#0A1A2A">сахгоу <?=h(max_bind_code($user['id']))?></div>
+          <p style="font-size:0.75rem;color:#5A6B7D;margin:0.625rem 0 0">После этого уведомления о ваших бронях и сообщениях начнут приходить в «Макс».</p>
+        <?php endif; ?>
+      </div>
 
       <!-- Change Password -->
       <form method="post" style="background:#fff;border:1px solid #EEF2F6;border-radius:12px;padding:2rem;box-shadow:0 4px 12px rgba(15,23,32,0.06);margin-top:1.5rem">
