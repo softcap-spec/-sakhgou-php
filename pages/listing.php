@@ -402,7 +402,7 @@ require __DIR__ . '/../includes/header.php';
 
         <!-- Author card -->
         <div class="bg-white border border-[#EBEEF2] rounded-xl p-5">
-          <a href="#reviews" class="flex items-center gap-3 hover:bg-[#F7F9FB] -mx-2 -mt-2 p-2 rounded-lg transition-colors">
+          <a href="/seller/<?=(int)$item['user_id']?>" class="flex items-center gap-3 hover:bg-[#F7F9FB] -mx-2 -mt-2 p-2 rounded-lg transition-colors">
             <?= avatar_html(['name' => $item['host_name'], 'avatar_url' => $item['host_avatar']], 'w-11 h-11', 'text-sm') ?>
             <div class="min-w-0">
               <div class="font-semibold text-sm truncate"><?=h($item['host_name'])?></div>
@@ -498,7 +498,9 @@ require __DIR__ . '/../includes/header.php';
 <?php if (!empty($sellerMore)): ?>
 <section class="py-10 bg-white border-t border-[#EBEEF2]">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <h2 class="font-display text-xl mb-6">Ещё предложения продавца</h2>
+    <h2 class="font-display text-xl mb-6 flex items-center justify-between gap-3">Ещё предложения продавца
+        <a href="/seller/<?=(int)$item['user_id']?>" class="text-sm font-medium text-accent hover:underline whitespace-nowrap">Все объявления →</a>
+      </h2>
     <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
       <?php foreach($sellerMore as $s2): ?>
       <a href="/listing/<?=$s2['id']?>" class="listing-card">

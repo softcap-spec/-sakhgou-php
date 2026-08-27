@@ -20,8 +20,8 @@ $parts = $url ? explode('/', $url) : [];
 $page = $parts[0] ?? 'home';
 $sub = $parts[1] ?? null;
 $id = $parts[2] ?? null;
-// Fix: listing/edit/promote use /listing/N format (id in parts[1])
-if (in_array($page, ['listing', 'edit', 'promote']) && empty($id)) { $id = $sub; $sub = null; }
+// Fix: listing/edit/promote/seller use /listing/N format (id in parts[1])
+if (in_array($page, ['listing', 'edit', 'promote', 'seller']) && empty($id)) { $id = $sub; $sub = null; }
 
 // Maintenance mode check
 if ($page !== 'admin' && $page !== 'login' && $page !== 'register' && $page !== 'api') {
@@ -55,6 +55,9 @@ switch ($page) {
     break;
   case 'listing':
     require __DIR__ . '/pages/listing.php';
+    break;
+  case 'seller':
+    require __DIR__ . '/pages/seller.php';
     break;
   case 'search':
     require __DIR__ . '/pages/search.php';
