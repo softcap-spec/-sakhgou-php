@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>СахGO — календарь продавца и свободные даты: дизайн-предложение</title>
+<style>
+  :root{--card:#16283a;--line:#24384c;--txt:#e8f0f6;--mut:#8fa7ba;--accent:#38bdf8;--green:#34d399;--amber:#fbbf24;--red:#f87171;--violet:#a78bfa}
+  *{box-sizing:border-box}
+  body{margin:0;background:linear-gradient(160deg,#0d1822,#10202e 60%,#0f1c28);color:var(--txt);font-family:'Manrope',-apple-system,'Segoe UI',Arial,sans-serif;line-height:1.65;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1000px;margin:0 auto;padding:40px 22px 80px}
+  h1{font-size:1.85rem;letter-spacing:-.02em;margin:0 0 6px}
+  .sub{color:var(--mut);margin:0 0 28px;font-size:.95rem}
+  h2{font-size:1.18rem;margin:38px 0 12px;padding-bottom:8px;border-bottom:1px solid var(--line)}
+  h2 .num{color:var(--accent);margin-right:8px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin:14px 0}
+  table{width:100%;border-collapse:collapse;font-size:.9rem}
+  th,td{padding:10px 12px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--mut);font-weight:600;font-size:.78rem;text-transform:uppercase;letter-spacing:.05em}
+  .ok{color:var(--green);font-weight:600}.no{color:var(--mut)}.warn{color:var(--amber)}
+  .rec{display:inline-block;padding:3px 12px;border-radius:999px;font-size:.75rem;font-weight:700;background:rgba(52,211,153,.15);color:var(--green);border:1px solid rgba(52,211,153,.4)}
+  .badge{display:inline-block;padding:2px 10px;border-radius:999px;font-size:.72rem;font-weight:700}
+  .b-green{background:rgba(52,211,153,.14);color:var(--green);border:1px solid rgba(52,211,153,.35)}
+  .b-amber{background:rgba(251,191,36,.13);color:var(--amber);border:1px solid rgba(251,191,36,.35)}
+  .b-gray{background:rgba(160,174,192,.13);color:#aebccd;border:1px solid rgba(160,174,192,.3)}
+  .b-red{background:rgba(248,113,113,.13);color:var(--red);border:1px solid rgba(248,113,113,.35)}
+  code{background:#0d1822;border:1px solid var(--line);border-radius:6px;padding:2px 6px;font-family:Consolas,monospace;font-size:.85em}
+  .note{border-left:3px solid var(--amber);background:rgba(251,191,36,.06);border-radius:0 10px 10px 0;padding:12px 16px;margin:16px 0;font-size:.9rem}
+  .note.blue{border-left-color:var(--accent);background:rgba(56,189,248,.06)}
+  .cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:14px;margin:14px 0}
+  ul{margin:8px 0;padding-left:20px}
+  li{margin:5px 0}
+  .muted{color:var(--mut)}
+  .stage{display:flex;gap:12px;margin:10px 0;align-items:flex-start}
+  .stage .n{flex-shrink:0;width:28px;height:28px;border-radius:50%;background:rgba(56,189,248,.15);border:1px solid rgba(56,189,248,.4);color:var(--accent);font-weight:700;font-size:.8rem;display:flex;align-items:center;justify-content:center}
+  .stage .b{flex:1}
+  .stage .b b{display:block}
+  .stage .b span{color:var(--mut);font-size:.87rem}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>Календарь продавца + свободные даты в объявлении</h1>
+  <p class="sub">Дизайн-предложение · СахGO · август 2026</p>
+
+  <h2><span class="num">1</span>Общая идея</h2>
+  <div class="card">
+    <p>Брони — <b>единственный источник занятости</b>. Календарь — это просто удобный вид поверх существующей таблицы <code>bookings</code>. Ручные записи (оффлайн-клиенты, «занято лично») — это те же записи в <code>bookings</code>, но с новым статусом <code>blocked</code> и <code>source = manual</code>. Тогда:</p>
+    <ul>
+      <li>календарь, «Ко мне», «Мои брони» и проверка занятости на объявлении читают <b>одни и те же данные</b> — ничего не разъедется;</li>
+      <li>оффлайн-клиент, добавленный вручную, автоматически <b>блокирует даты</b> для онлайн-бронирования;</li>
+      <li>подтверждённая онлайн-бронь появляется в календаре сама.</li>
+    </ul>
+    <p class="muted">Изменения в БД минимальные: <code>status</code> + <code>'blocked'</code> (varchar — уже совместим), колонки <code>source</code>, <code>guest_name</code> (для ручных записей), <code>guest_id</code> становится nullable.</p>
+  </div>
+
+  <h2><span class="num">2</span>Где живёт календарь — варианты</h2>
+  <div class="cols">
+    <div class="card">
+      <p><span class="badge b-green">A</span> <b>Вкладка «Календарь» в кабинете</b></p>
+      <p class="muted">Новая вкладка рядом с «Ко мне». Сетка месяца на всю ширину, клик по дню — детали, кнопка «Добавить».</p>
+      <p><span class="rec">Рекомендую для v1</span></p>
+    </div>
+    <div class="card">
+      <p><span class="badge b-gray">B</span> Мини-календарь внутри «Ко мне»</p>
+      <p class="muted">Список заявок остаётся главным, календарь сбоку как виджет. Меньше места, cramped на мобильных.</p>
+      <p><span class="no">компромисс</span></p>
+    </div>
+    <div class="card">
+      <p><span class="badge b-gray">C</span> Отдельная страница /calendar</p>
+      <p class="muted">Полноценный ежедневник с неделями/днями. Максимальный простор, но отдельный маршрут и больше работы.</p>
+      <p class="warn">v2, если v1 понравится</p>
+    </div>
+  </div>
+
+  <h2><span class="num">3</span>Функционал ежедневника (v1)</h2>
+  <div class="card">
+    <ul>
+      <li><b>Сетка месяца</b>: навигация ← месяц →, кнопка «Сегодня»; дни с событиями помечены цветными чипами;</li>
+      <li><b>Цвета статусов</b>: <span class="badge b-green">подтверждена</span> <span class="badge b-amber">ожидает</span> <span class="badge b-gray">занято вручную</span> — легенда рядом;</li>
+      <li><b>Фильтр по объявлению</b>: «Все объявления» или конкретное (селект сверху);</li>
+      <li><b>Клик по дню</b>: панель со списком броней этого дня (гость, объявление, статус) + кнопка «Добавить занятие»;</li>
+      <li><b>Ручное добавление</b>: модалка — даты (с/по), объявление, имя клиента (текстом, «клиент с авито»), телефон, цена (или «без цены»), заметка;</li>
+      <li><b>Редактирование/удаление</b>: клик по брони в календаре → модалка правки (даты, статус, имя, цена) / удалить. Ручные правки не трогают гостя (у ручных нет guest_id);</li>
+      <li><b>Конфликты</b>: при добавлении пересекающегося занятия — предупреждение «эти даты уже заняты: …» + кнопка «Отклонить ожидающую и занять»;</li>
+      <li><b>Прошлое</b>: дни до сегодня приглушены; правки прошлого разрешены (для истории), новое вручную — только с сегодня.</li>
+    </ul>
+  </div>
+
+  <h2><span class="num">4</span>Свободные даты в объявлении — варианты</h2>
+  <div class="cols">
+    <div class="card">
+      <p><span class="badge b-green">1</span> Мини-календарь + блокировка в поле дат</p>
+      <p class="muted">Под формой брони — календарик на 2 месяца: занятые дни зачёркнуты/затемнены. В полях дат — валидация: нельзя выбрать занятый диапазон. Данные — API <code>/api/availability</code>.</p>
+      <p><span class="rec">Рекомендую</span></p>
+    </div>
+    <div class="card">
+      <p><span class="badge b-gray">2</span> Список занятых диапазонов текстом</p>
+      <p class="muted">«Занято: 10–13 сентября, 20–25 сентября». Минимум кода, но UX слабее — гость сам сопоставляет.</p>
+      <p class="warn">быстрый костыль</p>
+    </div>
+    <div class="card">
+      <p><span class="badge b-gray">3</span> Только валидация на отправке</p>
+      <p class="muted">Гость не видит занятость, но при пересечении получает ошибку «эти даты заняты». Самое простое и уже почти есть.</p>
+      <p class="no">база, без неё никак</p>
+    </div>
+  </div>
+  <div class="note blue">Рекомендация: <b>3 как фундамент</b> (проверка уже работает), <b>1 поверх</b> — календарик + валидация в полях. Вариант 2 — как запасной, если календарик захочется отложить.</div>
+
+  <h2><span class="num">5</span>Правила, которые нужно решить</h2>
+  <div class="card">
+    <table>
+      <tr><th>Вопрос</th><th>Моё предложение</th></tr>
+      <tr><td>Блокируют ли даты брони со статусом «ожидает»?</td><td>Да, но с таймером: <b>pending живёт 48 часов</b>, потом автоматически отклоняется («не подтвердил вовремя»). Иначе один гость заморозит даты навсегда.</td></tr>
+      <tr><td>Продавец вручную занял даты, а там чужая «ожидает»</td><td>Предупреждение + выбор: «Отклонить ожидающую» или «Отмена».</td></tr>
+      <tr><td>Кто видит детали ручных записей в объявлении?</td><td>Только «даты заняты». Имя/телефон оффлайн-клиента — приватно, только продавцу.</td></tr>
+      <tr><td>Туры: одна дата или диапазон?</td><td>Диапазон (многодневные туры есть). Однодневный тур = вых = дата выхода.</td></tr>
+      <tr><td>Уведомления в «Макс»?</td><td>Онлайн-бронь → продавцу (уже есть). Ручную запись в «Макс» не шлём — продавец сам её внёс.</td></tr>
+    </table>
+  </div>
+
+  <h2><span class="num">6</span>План по этапам</h2>
+  <div class="card">
+    <div class="stage"><div class="n">1</div><div class="b"><b>База + ручные записи</b><span>Миграция (status+blocked, source, guest_name, guest_id nullable), форма ручного добавления/редактирования/удаления в кабинете. ~1–2 часа.</span></div></div>
+    <div class="stage"><div class="n">2</div><div class="b"><b>Календарь-сетка</b><span>Вкладка «Календарь»: месяц, цвета, фильтр по объявлению, клик по дню, модалки правки. ~2–3 часа.</span></div></div>
+    <div class="stage"><span class="n">3</span><div class="b"><b>Свободные даты в объявлении</b><span>API занятости + мини-календарь + валидация полей дат. ~1–2 часа.</span></div></div>
+    <div class="stage"><span class="n">4</span><div class="b"><b>Правила</b><span>Auto-expire pending 48ч (лениво, при проверках), предупреждения конфликтов. ~1 час.</span></div></div>
+    <div class="stage"><span class="n">5</span><div class="b"><b>Позже (v2)</b><span>Повторяющиеся блоки («каждые выходные»), экспорт iCal, мин/макс ночей, цены по сезонам, неделя/день в календаре.</span></div></div>
+  </div>
+
+  <h2><span class="num">7</span>Что жду от тебя</h2>
+  <div class="card">
+    <ul>
+      <li>Вариант календаря: <b>A</b> (вкладка) или <b>C</b> (отдельная страница)?</li>
+      <li>Свободные даты: сразу делаем <b>1</b> (мини-календарь + валидация) или начнём с <b>2</b> (текстом)?</li>
+      <li>Pending истекает через 48ч — ок?</li>
+      <li>Ручная запись: показывать имя/телефон оффлайн-клиента только продавцу — ок?</li>
+    </ul>
+  </div>
+
+</div>
+</body>
+</html>
