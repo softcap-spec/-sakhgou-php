@@ -112,9 +112,12 @@ switch ($page) {
     try {
       // дебаг-лог последнего события (в БД, не в открытый файл)
       set_setting('max_webhook_debug', mb_substr($raw, 0, 2000));
-      // привязка оператора: первый приславший сообщение пользователь
+      // привязка оператора: только по сообщению со словом «сахгоу» (чтобы случайный
+      // пользователь бота «На волне 65» не стал оператором)
       $uid = (int)($data['user_id'] ?? $data['message']['user_id'] ?? $data['sender']['user_id'] ?? 0);
-      if ($uid > 0 && max_operator_user_id() === 0) {
+      $mtext = (string)($data['message']['text'] ?? $data['message']['body'] ?? $data['message']['content'] ?? '');
+      $isBind = (mb_stripos($mtext, 'сахгоу') !== false);
+      if ($uid > 0 && $isBind && max_operator_user_id() === 0) {
         set_setting('max_operator_user_id', (string)$uid);
       }
     } catch (\Throwable $e) { /* тихо */ }
