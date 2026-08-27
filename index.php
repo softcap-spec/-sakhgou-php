@@ -114,8 +114,11 @@ switch ($page) {
       set_setting('max_webhook_debug', mb_substr($raw, 0, 2000));
       // привязка оператора: только по сообщению со словом «сахгоу» (чтобы случайный
       // пользователь бота «На волне 65» не стал оператором)
-      $uid = (int)($data['user_id'] ?? $data['message']['user_id'] ?? $data['sender']['user_id'] ?? 0);
-      $mtext = (string)($data['message']['text'] ?? $data['message']['body'] ?? $data['message']['content'] ?? '');
+      // Реальная структура Update: message.sender.user_id, message.body.text
+      $uid = (int)($data['user_id'] ?? $data['message']['sender']['user_id'] ?? $data['sender']['user_id'] ?? 0);
+      $mtext = $data['message']['body']['text'] ?? $data['message']['text'] ?? $data['message']['body'] ?? '';
+      if (is_array($mtext)) $mtext = '';
+      $mtext = (string)$mtext;
       $isBind = (mb_stripos($mtext, 'сахгоу') !== false);
       if ($uid > 0 && $isBind && max_operator_user_id() === 0) {
         set_setting('max_operator_user_id', (string)$uid);
