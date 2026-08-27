@@ -271,7 +271,16 @@ function captcha_generate(): string {
   $a = random_int(1, 10);
   $b = random_int(1, 10);
   $_SESSION['captcha_answer'] = $a + $b;
-  return "Сколько будет $a + $b?";
+  $_SESSION['captcha_question'] = "Сколько будет $a + $b?";
+  return $_SESSION['captcha_question'];
+}
+
+/** Вопрос капчи без перегенерации ответа (для модальных форм). */
+function captcha_current_question(): string {
+  if (empty($_SESSION['captcha_question'])) {
+    return captcha_generate();
+  }
+  return $_SESSION['captcha_question'];
 }
 
 function captcha_validate(string $answer): bool {

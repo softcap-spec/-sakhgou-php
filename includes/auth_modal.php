@@ -3,6 +3,7 @@
 // Подключается перед </body> в footer.php
 $current_user = auth_user();
 if ($current_user) return; // не показываем модалку если уже залогинен
+$auth_captcha_question = captcha_current_question();
 ?>
 <style>
 .auth-overlay {
@@ -89,8 +90,20 @@ if ($current_user) return; // не показываем модалку если 
         </div>
         <div class="form-group">
           <label>Пароль</label>
-          <input type="password" id="regPass" name="password" placeholder="Минимум 6 символов" required>
+          <input type="password" id="regPass" name="password" placeholder="Минимум 6 символов" autocomplete="new-password" required>
         </div>
+        <div class="form-group">
+          <label>Повтор пароля</label>
+          <input type="password" id="regPass2" name="password2" placeholder="Повторите пароль" autocomplete="new-password" required>
+        </div>
+        <div class="form-group">
+          <label><?= h($auth_captcha_question) ?> <span style="color:#DC2626">*</span></label>
+          <input type="text" id="regCaptcha" name="captcha" placeholder="Введите число" autocomplete="off" required>
+        </div>
+        <label style="display:flex;align-items:flex-start;gap:8px;font-size:.78rem;color:var(--muted-fg);margin-bottom:1rem;cursor:pointer">
+          <input type="checkbox" name="consent" value="1" style="margin-top:2px" required>
+          <span>Я даю согласие на обработку персональных данных (имя, email, телефон) согласно <a href="/privacy" target="_blank" style="color:var(--accent)">Политике конфиденциальности</a> (ФЗ № 152-ФЗ)</span>
+        </label>
         <button type="submit" class="cta-btn">Зарегистрироваться</button>
       </form>
       <div class="auth-switch">
@@ -173,16 +186,19 @@ function doRegister(e) {
   var email = document.getElementById('regEmail').value;
   var phone = document.getElementById('regPhone').value;
   var pass = document.getElementById('regPass').value;
+  var pass2 = document.getElementById('regPass2').value;
+  var captcha = document.getElementById('regCaptcha').value;
   if (pass.length < 6) { showErr('regError', 'Пароль должен быть не менее 6 символов'); return false; }
+  if (pass !== pass2) { showErr('regError', 'Пароли не совпадают'); return false; }
   var phoneDigits = phone.replace(/\D/g, '');
   if (!/^7\d{10}$/.test(phoneDigits)) { showErr('regError', 'Укажите корректный номер телефона'); return false; }
   fetch('/register', {
     method: 'POST',
     headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-    body: 'name=' + encodeURIComponent(name) + '&email=' + encodeURIComponent(email) + '&phone=' + encodeURIComponent(phone) + '&password=' + encodeURIComponent(pass) + '&password2=' + encodeURIComponent(pass) + '&_csrf=' + encodeURIComponent(authRegCsrf)
+    body: 'name=' + encodeURIComponent(name) + '&email=' + encodeURIComponent(email) + '&phone=' + encodeURIComponent(phone) + '&password=' + encodeURIComponent(pass) + '&password2=' + encodeURIComponent(pass2) + '&captcha=' + encodeURIComponent(captcha) + '&consent=1&_csrf=' + encodeURIComponent(authRegCsrf)
   }).then(function(r) { return r.text(); }).then(function(html) {
-    if (html.includes('flash error')) {
-      var match = html.match(/flash error">([^<]+)/);
+    if (html.indexOf('Создать аккаунт') !== -1) {
+      var match = html.match(/text-red-700[\s\S]*?<span>([^<]+)<\/span>/);
       showErr('regError', match ? match[1] : 'Ошибка регистрации');
     } else {
       window.location.reload();

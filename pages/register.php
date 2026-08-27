@@ -3,7 +3,6 @@
 if (isset($_SESSION['user_id'])) { header('Location: /'); exit; }
 
 $errors = [];
-$captcha_question = captcha_generate();
 $_pdo = db();
 $_recent = $_pdo->query('SELECT l.id, l.title, l.price, l.listing_type, l.location,
   (SELECT filename FROM listing_images WHERE listing_id = l.id ORDER BY sort_order LIMIT 1) AS image,
@@ -29,7 +28,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   if ($password !== $password2) $errors[] = 'Пароли не совпадают';
   if (!captcha_validate($_POST['captcha'] ?? '')) {
     $errors[] = 'Неверный ответ на проверочный вопрос';
-    $captcha_question = captcha_generate(); // regenerate
   }
   if (empty($_POST['consent'])) {
     $errors[] = 'Для регистрации необходимо согласие на обработку персональных данных';
@@ -49,6 +47,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $errors[] = $result['error'];
   }
 }
+
+// Свежий вопрос для формы — строго после обработки POST: если генерировать до проверки,
+// ответ в сессии перезаписывается и валидация всегда падает («Неверный ответ на проверочный вопрос»).
+$captcha_question = captcha_generate();
 
 $page_title = 'Регистрация — СахGO';
 ?>
@@ -184,14 +186,14 @@ $page_title = 'Регистрация — СахGO';
             <label>Пароль</label>
             <div class="relative">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="absolute left-3 top-1/2 -translate-y-1/2 text-[#9AAAB8]"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-              <input type="password" name="password" id="pwField" required class="w-full" style="padding-left:2.25rem;padding-right:2rem">
+              <input type="password" name="password" id="pwField" required autocomplete="new-password" class="w-full" style="padding-left:2.25rem;padding-right:2rem">
             </div>
           </div>
           <div>
             <label>Повтор</label>
             <div class="relative">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="absolute left-3 top-1/2 -translate-y-1/2 text-[#9AAAB8]"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-              <input type="password" name="password2" required class="w-full" style="padding-left:2.25rem;padding-right:2rem">
+              <input type="password" name="password2" required autocomplete="new-password" class="w-full" style="padding-left:2.25rem;padding-right:2rem">
             </div>
           </div>
         </div>
