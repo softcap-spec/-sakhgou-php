@@ -40,6 +40,12 @@ $stmt = $pdo->prepare("SELECT l.*, c.slug AS cat_slug,
 $stmt->execute([$item['user_id'], $lid]);
 $sellerMore = $stmt->fetchAll();
 
+// Рейтинг продавца — по отзывам на все его объявления
+$stmt = $pdo->prepare("SELECT AVG(r.rating) AS seller_rating, COUNT(r.id) AS seller_reviews FROM reviews r JOIN listings l ON r.listing_id = l.id WHERE l.user_id = ? AND r.moderated = 1");
+$stmt->execute([$item['user_id']]);
+$sellerStats = $stmt->fetch();
+$sellerIsOrg = in_array($item['tour_organizer_type'] ?? '', ['tour_operator', 'travel_agent'], true);
+
 $stmt = $pdo->prepare('SELECT r.*, u.name AS author_name, u.avatar_url AS author_avatar FROM reviews r JOIN users u ON r.user_id = u.id WHERE r.listing_id = ? AND r.moderated = 1 ORDER BY r.created_at DESC LIMIT 10');
 $stmt->execute([$lid]);
 $reviews = $stmt->fetchAll();
@@ -396,17 +402,20 @@ require __DIR__ . '/../includes/header.php';
 
         <!-- Author card -->
         <div class="bg-white border border-[#EBEEF2] rounded-xl p-5">
-          <a href="#" class="flex items-center gap-3 hover:bg-[#F7F9FB] -mx-2 -mt-2 p-2 rounded-lg transition-colors">
+          <a href="#reviews" class="flex items-center gap-3 hover:bg-[#F7F9FB] -mx-2 -mt-2 p-2 rounded-lg transition-colors">
             <?= avatar_html(['name' => $item['host_name'], 'avatar_url' => $item['host_avatar']], 'w-11 h-11', 'text-sm') ?>
             <div class="min-w-0">
               <div class="font-semibold text-sm truncate"><?=h($item['host_name'])?></div>
-              <div class="text-xs text-[#6B7B8D]">На сайте с <?=date('m.Y',strtotime($item['created_at']))?></div>
+              <div class="text-xs text-[#6B7B8D] truncate"><?=$sellerIsOrg ? 'Организация' : 'Частное лицо'?> · На сайте с <?=date('m.Y',strtotime($item['created_at']))?></div>
             </div>
           </a>
-          <?php if($item['reviews_count']>0): ?>
-          <div class="mt-3 pt-3 border-t border-[#F0F3F7] flex items-center justify-between text-sm">
+          <?php if ((int)($sellerStats['seller_reviews'] ?? 0) > 0): $rc = (int)$sellerStats['seller_reviews']; $rv_plural = $rc % 10 == 1 && $rc % 100 != 11 ? 'отзыв' : ($rc % 10 >= 2 && $rc % 10 <= 4 && ($rc % 100 < 12 || $rc % 100 > 14) ? 'отзыва' : 'отзывов'); ?>
+          <div class="mt-3 pt-3 border-t border-[#F0F3F7] flex items-center justify-between text-sm gap-2">
             <span class="text-[#5A6B7D]">Рейтинг</span>
-            <span><span class="text-amber-500">★</span> <?=round($item['avg_rating'],1)?> (<?=$item['reviews_count']?>)</span>
+            <span class="flex items-center gap-1.5">
+              <span style="position:relative;display:inline-block;font-size:0.875rem;line-height:1;color:#D5DCE5;letter-spacing:0.08em">★★★★★<span style="position:absolute;top:0;left:0;overflow:hidden;white-space:nowrap;color:#F59E0B;width:<?=round((float)$sellerStats['seller_rating']/5*100)?>%">★★★★★</span></span>
+              <a href="#reviews" class="text-accent hover:underline whitespace-nowrap"><?=$rc?> <?=$rv_plural?></a>
+            </span>
           </div>
           <?php endif; ?>
         </div>
