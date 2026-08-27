@@ -114,8 +114,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['book'])) {
       $days = max(1, (int)((strtotime($check_out) - strtotime($check_in)) / 86400));
       $total = $days * (float)$item['price'];
       $pdo->prepare('INSERT INTO bookings (listing_id, guest_id, host_id, check_in_date, check_out_date, guests_count, status, total_price, guest_message, created_at) VALUES (?,?,?,?,?,?,?,?,?,NOW())')->execute([$lid, $cu['id'], $item['user_id'], $check_in, $check_out, $guests, 'pending', $total, $bmsg]);
-      // Notify host
+      // Notify host (колокольчик)
       $pdo->prepare('INSERT INTO notifications (user_id, type, text, link, is_read, created_at) VALUES (?,?,?,?,0,NOW())')->execute([$item['user_id'], 'booking', 'Новая заявка на бронирование: '.$item['title'], '/dashboard?sub=host_bookings']);
+      // Дублирование брони в чат — продавец видит заявку в «Сообщениях» и может ответить гостю
+      $dates = date('d.m.Y', strtotime($check_in)) . ' — ' . date('d.m.Y', strtotime($check_out));
+      $bookMsg = 'Новая бронь: ' . $item['title'] . "\n"
+        . 'Даты: ' . $dates . ' · Гостей: ' . $guests . "\n"
+        . 'Итого: ' . number_format($total, 0, '.', ' ') . ' ₽';
+      if ($bmsg !== '') $bookMsg .= "\n\nСообщение гостя: " . $bmsg;
+      send_message($cu['id'], $item['user_id'], $lid, $bookMsg);
       $book_sent = true;
       }
     }

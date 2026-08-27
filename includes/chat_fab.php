@@ -99,7 +99,7 @@ $myId = (int)$cu['id'];
 .chat-msg-row.in .chat-msg-col{align-items:flex-start}
 
 /* Bubble */
-.chat-msg-bubble{padding:.5rem .875rem;border-radius:16px;font-size:.875rem;line-height:1.4;word-wrap:break-word;position:relative;max-width:100%;transition:box-shadow .15s}
+.chat-msg-bubble{padding:.5rem .875rem;border-radius:16px;font-size:.875rem;line-height:1.4;word-wrap:break-word;position:relative;max-width:100%;transition:box-shadow .15s;white-space:pre-wrap}
 .chat-msg-row.out .chat-msg-bubble{background:#EAF6FF;color:#0A1A2A;border-bottom-right-radius:5px;box-shadow:0 1px 2px rgba(10,123,186,0.08)}
 .chat-msg-row.in .chat-msg-bubble{background:#F4F6F8;color:#0A1A2A;border-bottom-left-radius:5px;box-shadow:0 1px 2px rgba(10,26,42,0.04)}
 .chat-msg-row.continues.out .chat-msg-bubble{border-bottom-right-radius:16px}
