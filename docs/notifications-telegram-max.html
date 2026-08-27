@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>СахGO — уведомления в Telegram и «Макс» (VK): дизайн</title>
+<style>
+  :root{--bg:#0f1c28;--card:#16283a;--line:#24384c;--txt:#e8f0f6;--mut:#8fa7ba;--accent:#38bdf8;--green:#34d399;--amber:#fbbf24;--red:#f87171}
+  *{box-sizing:border-box}
+  body{margin:0;background:linear-gradient(160deg,#0d1822,#10202e 60%,#0f1c28);color:var(--txt);font-family:'Manrope',-apple-system,'Segoe UI',Arial,sans-serif;line-height:1.6;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:980px;margin:0 auto;padding:40px 22px 80px}
+  h1{font-size:1.9rem;letter-spacing:-.02em;margin:0 0 6px}
+  .sub{color:var(--mut);margin:0 0 30px;font-size:.95rem}
+  h2{font-size:1.2rem;margin:36px 0 12px;padding-bottom:8px;border-bottom:1px solid var(--line)}
+  h2 .num{color:var(--accent);margin-right:8px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin:14px 0}
+  .grid{display:grid;gap:14px}
+  .grid2{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+  table{width:100%;border-collapse:collapse;font-size:.9rem}
+  th,td{padding:10px 12px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--mut);font-weight:600;font-size:.8rem;text-transform:uppercase;letter-spacing:.05em}
+  .ok{color:var(--green);font-weight:600}.no{color:var(--mut)}.warn{color:var(--amber)}
+  .badge{display:inline-block;padding:2px 9px;border-radius:999px;font-size:.72rem;font-weight:700;letter-spacing:.02em}
+  .b-tg{background:rgba(56,189,248,.15);color:var(--accent);border:1px solid rgba(56,189,248,.35)}
+  .b-vk{background:rgba(124,164,255,.13);color:#9ec1ff;border:1px solid rgba(124,164,255,.3)}
+  .b-mail{background:rgba(251,191,36,.13);color:var(--amber);border:1px solid rgba(251,191,36,.3)}
+  code{background:#0d1822;border:1px solid var(--line);border-radius:6px;padding:2px 6px;font-family:Consolas,monospace;font-size:.85em}
+  pre{background:#0d1822;border:1px solid var(--line);border-radius:10px;padding:14px;overflow:auto;font-size:.82rem}
+  pre code{background:none;border:0;padding:0}
+  .flow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:12px 0}
+  .flow .step{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:8px 12px;font-size:.82rem}
+  .flow .arr{color:var(--mut)}
+  .note{border-left:3px solid var(--amber);background:rgba(251,191,36,.06);border-radius:0 10px 10px 0;padding:12px 16px;margin:16px 0;font-size:.9rem}
+  .note.blue{border-left-color:var(--accent);background:rgba(56,189,248,.06)}
+  ul{margin:8px 0;padding-left:20px}
+  li{margin:5px 0}
+  .muted{color:var(--mut)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>Уведомления в Telegram и «Макс» (VK)</h1>
+  <p class="sub">Дизайн-документ · СахGO (сахгоу.рф, PHP/MySQL на Timeweb) · август 2026</p>
+
+  <h2><span class="num">1</span>Что уже есть</h2>
+  <div class="card">
+    <table>
+      <tr><th>Канал</th><th>Реализация</th><th>Статус</th></tr>
+      <tr><td>In-app (колокольчик)</td><td>таблица <code>notifications</code> + виджет чата</td><td><span class="ok">работает</span></td></tr>
+      <tr><td>Email</td><td><code>send_mail_smtp()</code> (SMTP/mail) + <code>notify_new_message()</code> (троттлинг 1/час)</td><td><span class="ok">работает</span></td></tr>
+      <tr><td>Telegram</td><td>—</td><td><span class="no">нет</span></td></tr>
+      <tr><td>«Макс» / VK</td><td>—</td><td><span class="no">нет</span></td></tr>
+    </table>
+  </div>
+  <p class="muted">События, которые уже «стреляют»: новая бронь → продавцу; подтверждение/отклонение брони → гостю; новое сообщение в чате → получателю (email, троттл).</p>
+
+  <h2><span class="num">2</span>Целевая матрица «событие → канал»</h2>
+  <div class="card">
+    <table>
+      <tr><th>Событие</th><th>Кому</th><th>In-app</th><th>Email</th><th>Telegram</th><th>Макс/VK</th></tr>
+      <tr><td>Новая бронь</td><td>продавец</td><td class="ok">✓</td><td class="muted">—</td><td class="ok">✓</td><td class="ok">✓</td></tr>
+      <tr><td>Бронь подтверждена / отклонена</td><td>гость</td><td class="ok">✓</td><td class="muted">—</td><td class="ok">✓</td><td class="ok">✓</td></tr>
+      <tr><td>Новое сообщение</td><td>получатель</td><td class="ok">✓</td><td class="ok">✓ (троттл)</td><td class="ok">✓</td><td class="ok">✓</td></tr>
+      <tr><td>Новое объявление на модерации</td><td>админ</td><td class="ok">✓</td><td class="muted">—</td><td class="warn">опц.</td><td class="warn">опц.</td></tr>
+    </table>
+  </div>
+
+  <h2><span class="num">3</span>Архитектура: единый диспетчер</h2>
+  <p>Вместо того чтобы дёргать Telegram/VK в каждом обработчике — один центральный хелпер, который рассылает по всем включённым каналам пользователя:</p>
+  <div class="flow">
+    <span class="step">Событие (бронь/сообщение)</span><span class="arr">→</span>
+    <span class="step"><code>notify_dispatch($user_id, $event, $data)</code></span><span class="arr">→</span>
+    <span class="step">определяет каналы юзера</span><span class="arr">→</span>
+    <span class="step">In-app</span><span class="step">Email</span><span class="step">Telegram</span><span class="step">Макс/VK</span>
+  </div>
+  <div class="card">
+    <ul>
+      <li><b>Новый файл</b> <code>includes/notify.php</code> — диспетчер + сендеры каналов (всё в <code>try/catch</code>, сбой бота не ломает бронь/чат).</li>
+      <li>Сендеры: <code>tg_send($chat_id, $text)</code>, <code>vk_send($peer_id, $text)</code> — обёртки над HTTP API.</li>
+      <li>Поля привязки в <code>users</code>: <code>telegram_chat_id</code>, <code>vk_peer_id</code> + <code>notify_prefs</code> (JSON: какие события в какие каналы).</li>
+    </ul>
+  </div>
+
+  <h2><span class="num">4</span>Telegram — как прикрутить</h2>
+  <div class="card">
+    <ol>
+      <li><b>Бот</b>: создаётся у <code>@BotFather</code> → выдаётся <code>token</code>.</li>
+      <li><b>Привязка пользователя</b>: в профиле кнопка «Привязать Telegram» → ссылка <code>t.me/&lt;bot&gt;?start=link_&lt;секрет&gt;</code>; юзер жмёт <code>/start</code>, бот по deep-link-параметру мапит секрет → <code>user_id</code> и сохраняет <code>chat_id</code>.</li>
+      <li><b>Приём сообщений ботом</b>: вебхук на <code>/api/tg-webhook</code> (секрет в URL) — проще всего на Timeweb.</li>
+      <li><b>Отправка</b>: <code>POST https://api.telegram.org/bot&lt;token&gt;/sendMessage</code> с <code>chat_id</code> + <code>text</code>.</li>
+    </ol>
+  </div>
+
+  <h2><span class="num">5</span>«Макс» / VK — как прикрутить</h2>
+  <div class="note">Тут нужно уточнение: под «Макс» подразумевается VK-бот (сообщество ВКонтакте) или что-то ещё? Ниже — вариант для VK Bot API.</div>
+  <div class="card">
+    <ol>
+      <li><b>Сообщество ВКонтакте</b> → в настройках включить <code>Callback API / Long Poll</code> → <code>access_token</code> группы.</li>
+      <li><b>Привязка</b>: юзер пишет боту сообщества → получаем его <code>peer_id</code> (id диалога) → сохраняем в <code>vk_peer_id</code>.</li>
+      <li><b>Отправка</b>: <code>messages.send</code> с <code>peer_id</code> + <code>random_id</code> + текст.</li>
+      <li><b>Публикация в «Макс»</b>: того же бота можно добавить в каталог «Макс» (vk.com/max) — API тот же, сценарии те же.</li>
+    </ol>
+  </div>
+
+  <h2><span class="num">6</span>Доставка: синхронно или очередь</h2>
+  <div class="grid grid2">
+    <div class="card">
+      <b>Синхронно (проще)</b>
+      <p class="muted">Слать прямо в обработчике события, с таймаутом ~3с и try/catch. Для текущих объёмов (десятки заявок/день) достаточно. Минус: при зависшем API бота страница слегка притормаживает.</p>
+    </div>
+    <div class="card">
+      <b>Очередь + cron (надёжнее)</b>
+      <p class="muted">Писать в таблицу <code>notification_queue</code>, а cron раз в минуту разбирает её и шлёт (с ретраями). Страница не блокируется, уведомления не теряются при сбое бота. Рекомендую как целевой вариант.</p>
+    </div>
+  </div>
+
+  <h2><span class="num">7</span>Рекомендуемый план внедрения</h2>
+  <div class="card">
+    <ol>
+      <li><b>MVP (30–60 мин)</b>: Telegram без привязки — один бот, один <code>chat_id</code> (ваш/оператора) получает «новая бронь» и «новое сообщение». Мгновенная польза.</li>
+      <li><b>Этап 2</b>: привязка Telegram в профиле (deep-link) — каждый продавец получает свои уведомления.</li>
+      <li><b>Этап 3</b>: VK-бот / «Макс» по той же схеме.</li>
+      <li><b>Этап 4</b>: очередь + cron, настройки «какие события в какие каналы» на юзера.</li>
+    </ol>
+  </div>
+
+  <h2><span class="num">8</span>Что нужно от тебя</h2>
+  <div class="card">
+    <ul>
+      <li><b>Уточнить «Макс»</b> — это VK-бот/«Макс» (ВКонтакте) или что-то другое?</li>
+      <li><b>Telegram-бот</b>: прислать <code>token</code> от @BotFather (или дай команду — дам пошаговую инструкцию).</li>
+      <li><b>Какие события первыми</b>: брони + сообщения, или что-то ещё (отзывы, модерация).</li>
+      <li><b>Кому слать на MVP</b>: один общий чат или сразу привязка по пользователям.</li>
+    </ul>
+  </div>
+
+</div>
+</body>
+</html>
