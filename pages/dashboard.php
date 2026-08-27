@@ -539,7 +539,7 @@ require __DIR__ . '/../includes/header.php';
               <div style="font-size:0.8125rem;color:#5A6B7D;margin-top:0.25rem"><?=date('d.m.Y', strtotime($b['check_in_date']))?> — <?=date('d.m.Y', strtotime($b['check_out_date']))?> · <?=(int)$b['guests_count']?> гост.</div>
               <?php endif; ?>
               <?php if ($bs === 'confirmed' && !empty($b['host_phone'])): ?>
-              <div style="font-size:0.8125rem;color:#2E7D32;margin-top:0.25rem">Телефон хозяина: <a href="tel:<?=h($b['host_phone'])?>" style="color:#2E7D32;font-weight:600"><?=h($b['host_phone'])?></a></div>
+              <div style="font-size:0.8125rem;color:#2E7D32;margin-top:0.25rem">Телефон хозяина: <a href="tel:<?=h(phone_display($b['host_phone']))?>" style="color:#2E7D32;font-weight:600"><?=h(phone_display($b['host_phone']))?></a></div>
               <?php endif; ?>
             </div>
             <div style="text-align:right">
@@ -591,7 +591,7 @@ require __DIR__ . '/../includes/header.php';
               <div style="font-family:Manrope,sans-serif;font-weight:700;font-size:1.0625rem"><?=number_format((float)$b['total_price'],0,'.',' ')?> ₽</div>
               <div style="font-size:0.6875rem;color:#5A6B7D;margin-top:0.25rem"><?=$b['created_at']?></div>
               <?php if ($bs === 'confirmed' && !empty($b['guest_phone'])): ?>
-              <div style="font-size:0.8125rem;color:#2E7D32;margin-top:0.5rem">Телефон гостя: <a href="tel:<?=h($b['guest_phone'])?>" style="color:#2E7D32;font-weight:600"><?=h($b['guest_phone'])?></a></div>
+              <div style="font-size:0.8125rem;color:#2E7D32;margin-top:0.5rem">Телефон гостя: <a href="tel:<?=h(phone_display($b['guest_phone']))?>" style="color:#2E7D32;font-weight:600"><?=h(phone_display($b['guest_phone']))?></a></div>
               <?php endif; ?>
               <div style="display:flex;gap:0.375rem;margin-top:0.625rem;justify-content:flex-end;flex-wrap:wrap">
                 <button type="button" onclick="openChatThread(<?=(int)$b['listing_id']?>,<?=(int)$b['guest_id']?>,<?=h(json_encode($b['guest_name']))?>,<?=h(json_encode($b['listing_title']))?>,<?=h(json_encode($b['guest_avatar'] ?? ''))?>,<?=(float)$b['price']?>,<?=h(json_encode($b['listing_type'] ?? ''))?>)" style="background:#0A7BBA;color:#fff;border:0;border-radius:8px;padding:0.4375rem 0.875rem;font-size:0.75rem;font-weight:600;cursor:pointer">Открыть чат</button>

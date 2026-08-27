@@ -24,7 +24,7 @@ require __DIR__ . '/../includes/header.php';
     <div class="bg-white border rounded-xl p-6 mb-8">
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
         <div><span class="text-muted-foreground">Email:</span> <?= h($user['email']) ?></div>
-        <div><span class="text-muted-foreground">Телефон:</span> <?= h($user['phone'] ?? '—') ?></div>
+        <div><span class="text-muted-foreground">Телефон:</span> <?= !empty($user['phone']) ? h(phone_display($user['phone'])) : '—' ?></div>
         <div><span class="text-muted-foreground">Регистрация:</span> <?= h($user['created_at'] ?? '') ?></div>
         <div><span class="text-muted-foreground">Объявлений:</span> <?= count($my_listings) ?></div>
       </div>

@@ -14,6 +14,15 @@ function normalize_phone(string $phone): string {
   return $d;
 }
 
+/** Телефон для отображения: в БД хранится без «+», а пользователю показываем с «+». */
+function phone_display(string $phone): string {
+  $d = preg_replace('/\D/', '', $phone);
+  if ($d === '') return $phone;
+  if (strlen($d) === 11 && $d[0] === '8') $d = '7' . substr($d, 1);
+  if (strlen($d) === 10) $d = '7' . $d;
+  return '+' . $d;
+}
+
 /**
  * Проверка: корректный российский номер (+7/8 + 10 цифр)
  */
