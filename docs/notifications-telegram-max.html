@@ -3,9 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>СахGO — уведомления в Telegram и «Макс» (VK): дизайн</title>
+<title>СахGO — уведомления в Telegram и «Макс» (max.ru): дизайн</title>
 <style>
-  :root{--bg:#0f1c28;--card:#16283a;--line:#24384c;--txt:#e8f0f6;--mut:#8fa7ba;--accent:#38bdf8;--green:#34d399;--amber:#fbbf24;--red:#f87171}
+  :root{--bg:#0f1c28;--card:#16283a;--line:#24384c;--txt:#e8f0f6;--mut:#8fa7ba;--accent:#38bdf8;--green:#34d399;--amber:#fbbf24;--red:#f87171;--max:#8b5cf6}
   *{box-sizing:border-box}
   body{margin:0;background:linear-gradient(160deg,#0d1822,#10202e 60%,#0f1c28);color:var(--txt);font-family:'Manrope',-apple-system,'Segoe UI',Arial,sans-serif;line-height:1.6;-webkit-font-smoothing:antialiased}
   .wrap{max-width:980px;margin:0 auto;padding:40px 22px 80px}
@@ -22,7 +22,7 @@
   .ok{color:var(--green);font-weight:600}.no{color:var(--mut)}.warn{color:var(--amber)}
   .badge{display:inline-block;padding:2px 9px;border-radius:999px;font-size:.72rem;font-weight:700;letter-spacing:.02em}
   .b-tg{background:rgba(56,189,248,.15);color:var(--accent);border:1px solid rgba(56,189,248,.35)}
-  .b-vk{background:rgba(124,164,255,.13);color:#9ec1ff;border:1px solid rgba(124,164,255,.3)}
+  .b-max{background:rgba(139,92,246,.16);color:#b79cff;border:1px solid rgba(139,92,246,.35)}
   .b-mail{background:rgba(251,191,36,.13);color:var(--amber);border:1px solid rgba(251,191,36,.3)}
   code{background:#0d1822;border:1px solid var(--line);border-radius:6px;padding:2px 6px;font-family:Consolas,monospace;font-size:.85em}
   pre{background:#0d1822;border:1px solid var(--line);border-radius:10px;padding:14px;overflow:auto;font-size:.82rem}
@@ -40,7 +40,7 @@
 <body>
 <div class="wrap">
 
-  <h1>Уведомления в Telegram и «Макс» (VK)</h1>
+  <h1>Уведомления в Telegram и «Макс» (max.ru)</h1>
   <p class="sub">Дизайн-документ · СахGO (сахгоу.рф, PHP/MySQL на Timeweb) · август 2026</p>
 
   <h2><span class="num">1</span>Что уже есть</h2>
@@ -50,7 +50,7 @@
       <tr><td>In-app (колокольчик)</td><td>таблица <code>notifications</code> + виджет чата</td><td><span class="ok">работает</span></td></tr>
       <tr><td>Email</td><td><code>send_mail_smtp()</code> (SMTP/mail) + <code>notify_new_message()</code> (троттлинг 1/час)</td><td><span class="ok">работает</span></td></tr>
       <tr><td>Telegram</td><td>—</td><td><span class="no">нет</span></td></tr>
-      <tr><td>«Макс» / VK</td><td>—</td><td><span class="no">нет</span></td></tr>
+      <tr><td>«Макс» (max.ru)</td><td>—</td><td><span class="no">нет</span></td></tr>
     </table>
   </div>
   <p class="muted">События, которые уже «стреляют»: новая бронь → продавцу; подтверждение/отклонение брони → гостю; новое сообщение в чате → получателю (email, троттл).</p>
@@ -58,7 +58,7 @@
   <h2><span class="num">2</span>Целевая матрица «событие → канал»</h2>
   <div class="card">
     <table>
-      <tr><th>Событие</th><th>Кому</th><th>In-app</th><th>Email</th><th>Telegram</th><th>Макс/VK</th></tr>
+      <tr><th>Событие</th><th>Кому</th><th>In-app</th><th>Email</th><th>Telegram</th><th>Макс</th></tr>
       <tr><td>Новая бронь</td><td>продавец</td><td class="ok">✓</td><td class="muted">—</td><td class="ok">✓</td><td class="ok">✓</td></tr>
       <tr><td>Бронь подтверждена / отклонена</td><td>гость</td><td class="ok">✓</td><td class="muted">—</td><td class="ok">✓</td><td class="ok">✓</td></tr>
       <tr><td>Новое сообщение</td><td>получатель</td><td class="ok">✓</td><td class="ok">✓ (троттл)</td><td class="ok">✓</td><td class="ok">✓</td></tr>
@@ -67,18 +67,18 @@
   </div>
 
   <h2><span class="num">3</span>Архитектура: единый диспетчер</h2>
-  <p>Вместо того чтобы дёргать Telegram/VK в каждом обработчике — один центральный хелпер, который рассылает по всем включённым каналам пользователя:</p>
+  <p>Вместо того чтобы дёргать Telegram/Макс в каждом обработчике — один центральный хелпер, который рассылает по всем включённым каналам пользователя:</p>
   <div class="flow">
     <span class="step">Событие (бронь/сообщение)</span><span class="arr">→</span>
     <span class="step"><code>notify_dispatch($user_id, $event, $data)</code></span><span class="arr">→</span>
     <span class="step">определяет каналы юзера</span><span class="arr">→</span>
-    <span class="step">In-app</span><span class="step">Email</span><span class="step">Telegram</span><span class="step">Макс/VK</span>
+    <span class="step">In-app</span><span class="step">Email</span><span class="step">Telegram</span><span class="step">Макс</span>
   </div>
   <div class="card">
     <ul>
       <li><b>Новый файл</b> <code>includes/notify.php</code> — диспетчер + сендеры каналов (всё в <code>try/catch</code>, сбой бота не ломает бронь/чат).</li>
-      <li>Сендеры: <code>tg_send($chat_id, $text)</code>, <code>vk_send($peer_id, $text)</code> — обёртки над HTTP API.</li>
-      <li>Поля привязки в <code>users</code>: <code>telegram_chat_id</code>, <code>vk_peer_id</code> + <code>notify_prefs</code> (JSON: какие события в какие каналы).</li>
+      <li>Сендеры: <code>tg_send($chat_id, $text)</code>, <code>max_send($dialog_id, $text)</code> — обёртки над HTTP API.</li>
+      <li>Поля привязки в <code>users</code>: <code>telegram_chat_id</code>, <code>max_dialog_id</code> + <code>notify_prefs</code> (JSON: какие события в какие каналы).</li>
     </ul>
   </div>
 
@@ -92,15 +92,16 @@
     </ol>
   </div>
 
-  <h2><span class="num">5</span>«Макс» / VK — как прикрутить</h2>
-  <div class="note">Тут нужно уточнение: под «Макс» подразумевается VK-бот (сообщество ВКонтакте) или что-то ещё? Ниже — вариант для VK Bot API.</div>
+  <h2><span class="num">5</span>«Макс» (max.ru) — как прикрутить</h2>
   <div class="card">
+    <p>«Макс» — мессенджер и платформа VK. Для разработчиков есть <b>Max Bot API</b> (документация на <code>dev.max.ru/docs-api</code>): бот получает токен, отправка сообщений — <code>POST /messages</code> в диалог/группу/канал.</p>
     <ol>
-      <li><b>Сообщество ВКонтакте</b> → в настройках включить <code>Callback API / Long Poll</code> → <code>access_token</code> группы.</li>
-      <li><b>Привязка</b>: юзер пишет боту сообщества → получаем его <code>peer_id</code> (id диалога) → сохраняем в <code>vk_peer_id</code>.</li>
-      <li><b>Отправка</b>: <code>messages.send</code> с <code>peer_id</code> + <code>random_id</code> + текст.</li>
-      <li><b>Публикация в «Макс»</b>: того же бота можно добавить в каталог «Макс» (vk.com/max) — API тот же, сценарии те же.</li>
+      <li><b>Бот</b>: создаётся в кабинете разработчика «Макс» → выдаётся <code>token</code>.</li>
+      <li><b>Привязка</b>: юзер пишет боту → получаем <code>dialog_id</code> (id диалога) → сохраняем в <code>max_dialog_id</code>.</li>
+      <li><b>Отправка</b>: <code>POST /messages</code> с <code>dialog_id</code> + текст (аналог Telegram <code>sendMessage</code>).</li>
+      <li><b>Приём</b>: вебхук или long poll (по аналогии с Telegram).</li>
     </ol>
+    <div class="note">⚠️ Публикация бота в каталог «Макс» — только через <b>верифицированное юрлицо РФ</b> (с 2026 ужесточение). Для рассылки уведомлений «своим» пользователям это не блокер — бот можно запустить для личного/рабочего аккаунта и слать уведомления в диалоги, кто его написал. Для публичного каталога — потребуется юрлицо (у вас есть самозанятый/ООО — проверим требования, когда дойдём).</div>
   </div>
 
   <h2><span class="num">6</span>Доставка: синхронно или очередь</h2>
@@ -120,7 +121,7 @@
     <ol>
       <li><b>MVP (30–60 мин)</b>: Telegram без привязки — один бот, один <code>chat_id</code> (ваш/оператора) получает «новая бронь» и «новое сообщение». Мгновенная польза.</li>
       <li><b>Этап 2</b>: привязка Telegram в профиле (deep-link) — каждый продавец получает свои уведомления.</li>
-      <li><b>Этап 3</b>: VK-бот / «Макс» по той же схеме.</li>
+      <li><b>Этап 3</b>: «Макс» (max.ru) по той же схеме — <code>POST /messages</code>.</li>
       <li><b>Этап 4</b>: очередь + cron, настройки «какие события в какие каналы» на юзера.</li>
     </ol>
   </div>
@@ -128,8 +129,8 @@
   <h2><span class="num">8</span>Что нужно от тебя</h2>
   <div class="card">
     <ul>
-      <li><b>Уточнить «Макс»</b> — это VK-бот/«Макс» (ВКонтакте) или что-то другое?</li>
       <li><b>Telegram-бот</b>: прислать <code>token</code> от @BotFather (или дай команду — дам пошаговую инструкцию).</li>
+      <li><b>«Макс»-бот</b>: токен из кабинета dev.max.ru (когда дойдём до этапа 3).</li>
       <li><b>Какие события первыми</b>: брони + сообщения, или что-то ещё (отзывы, модерация).</li>
       <li><b>Кому слать на MVP</b>: один общий чат или сразу привязка по пользователям.</li>
     </ul>
