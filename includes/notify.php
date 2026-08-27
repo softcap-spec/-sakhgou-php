@@ -26,6 +26,11 @@ function max_send(int $user_id, string $text): bool {
   return $code >= 200 && $code < 300;
 }
 
+/** Имя бота «Макс» для показа пользователям (берётся из MAX_BOT_NAME в config.php). */
+function max_bot_name(): string {
+  return defined('MAX_BOT_NAME') ? MAX_BOT_NAME : 'СахGO';
+}
+
 /** Сохранить значение настройки (INSERT OR UPDATE). */
 function set_setting(string $key, string $value): void {
   db()->prepare('INSERT INTO settings (setting_key, setting_value) VALUES (?, ?) ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value)')

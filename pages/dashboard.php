@@ -669,7 +669,7 @@ require __DIR__ . '/../includes/header.php';
           <p style="font-size:0.8125rem;color:#2E7D32;margin:0 0 0.75rem">✅ Привязано. Новые брони и сообщения будут приходить вам в «Макс».</p>
           <form method="post"><?= csrf_field() ?><input type="hidden" name="unbind_max" value="1"><button type="submit" style="background:#fff;color:#DC2626;border:1px solid #F3C1C1;border-radius:8px;padding:0.5rem 1rem;font-size:0.8125rem;font-weight:600;cursor:pointer">Отвязать</button></form>
         <?php else: ?>
-          <p style="font-size:0.8125rem;color:#3A4A5C;margin:0 0 0.75rem">Откройте приложение «Макс», найдите бота <b>«На волне 65»</b> и отправьте ему сообщение:</p>
+          <p style="font-size:0.8125rem;color:#3A4A5C;margin:0 0 0.75rem">Откройте приложение «Макс», найдите бота <b>«<?=h(max_bot_name())?>»</b> и отправьте ему сообщение:</p>
           <div style="background:#F7F9FB;border:1px dashed #C8D0DA;border-radius:8px;padding:0.625rem 1rem;font-family:Consolas,monospace;font-size:0.9375rem;color:#0A1A2A">сахгоу <?=h(max_bind_code($user['id']))?></div>
           <p style="font-size:0.75rem;color:#5A6B7D;margin:0.625rem 0 0">После этого уведомления о ваших бронях и сообщениях начнут приходить в «Макс».</p>
         <?php endif; ?>
