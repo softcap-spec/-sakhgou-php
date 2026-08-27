@@ -20,9 +20,9 @@ $rs = $r->fetch();
 $imgSub = '(SELECT filename FROM listing_images WHERE listing_id = l.id ORDER BY sort_order LIMIT 1)';
 $lst = $pdo->prepare("SELECT l.*, $imgSub AS img FROM listings l LEFT JOIN promotions promo ON l.id = promo.listing_id AND promo.status = 'active' AND promo.expires_at > NOW() WHERE l.user_id = ? AND l.status = ? ORDER BY CASE WHEN promo.id IS NOT NULL THEN 0 ELSE 1 END, l.created_at DESC");
 $lst->execute([$uid, 'active']);
-$active = $lst->fetchAll();
+$sellerActive = $lst->fetchAll();
 $lst->execute([$uid, 'archived']);
-$archived = $lst->fetchAll();
+$sellerArchived = $lst->fetchAll();
 
 $page_title = 'Продавец: ' . $seller['name'] . ' — СахGO';
 require __DIR__ . '/../includes/header.php';
@@ -42,7 +42,7 @@ require __DIR__ . '/../includes/header.php';
               <?=$sellerIsOrg ? 'Организация' : 'Частное лицо'?>
             </span>
             <span>на сайте с <?=date('m.Y', strtotime($seller['created_at']))?></span>
-            <span><?=count($active)?> активн. / <?=count($archived)?> заверш.</span>
+            <span><?=count($sellerActive)?> активн. / <?=count($sellerArchived)?> заверш.</span>
           </div>
         </div>
       </div>
@@ -59,17 +59,17 @@ require __DIR__ . '/../includes/header.php';
 
     <!-- Вкладки -->
     <div class="flex gap-1 border-b border-[#EBEEF2] mb-6">
-      <button type="button" onclick="sellerTab('active')" id="tab-active" class="px-4 py-2.5 text-sm font-medium rounded-t-lg border-b-2 transition-colors border-accent text-accent">Активные (<?=count($active)?>)</button>
-      <button type="button" onclick="sellerTab('archived')" id="tab-archived" class="px-4 py-2.5 text-sm font-medium rounded-t-lg border-b-2 transition-colors border-transparent text-[#7A8A9A] hover:text-foreground">Завершённые (<?=count($archived)?>)</button>
+      <button type="button" onclick="sellerTab('active')" id="tab-active" class="px-4 py-2.5 text-sm font-medium rounded-t-lg border-b-2 transition-colors border-accent text-accent">Активные (<?=count($sellerActive)?>)</button>
+      <button type="button" onclick="sellerTab('archived')" id="tab-archived" class="px-4 py-2.5 text-sm font-medium rounded-t-lg border-b-2 transition-colors border-transparent text-[#7A8A9A] hover:text-foreground">Завершённые (<?=count($sellerArchived)?>)</button>
     </div>
 
     <!-- Активные -->
     <div id="panel-active">
-      <?php if (empty($active)): ?>
+      <?php if (empty($sellerActive)): ?>
         <div class="text-center py-16 text-[#7A8A9A] text-sm">У продавца пока нет активных объявлений</div>
       <?php else: ?>
         <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-          <?php foreach ($active as $it): ?>
+          <?php foreach ($sellerActive as $it): ?>
           <a href="/listing/<?=$it['id']?>" class="listing-card">
             <div class="listing-img">
               <?php if ($it['img']): ?><img src="/uploads/<?=h($it['img'])?>" alt="<?=h($it['title'])?>" loading="lazy"><?php endif; ?>
@@ -87,11 +87,11 @@ require __DIR__ . '/../includes/header.php';
 
     <!-- Завершённые -->
     <div id="panel-archived" style="display:none">
-      <?php if (empty($archived)): ?>
+      <?php if (empty($sellerArchived)): ?>
         <div class="text-center py-16 text-[#7A8A9A] text-sm">Завершённых объявлений нет</div>
       <?php else: ?>
         <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-          <?php foreach ($archived as $it): ?>
+          <?php foreach ($sellerArchived as $it): ?>
           <a href="/listing/<?=$it['id']?>" class="listing-card">
             <div class="listing-img">
               <?php if ($it['img']): ?><img src="/uploads/<?=h($it['img'])?>" alt="<?=h($it['title'])?>" loading="lazy"><?php endif; ?>
