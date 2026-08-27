@@ -417,7 +417,7 @@ function deleteMessage(mid){
 }
 
 document.addEventListener('click',function(e){
- if(!e.target.closest('.chat-fab-container')&&!e.target.closest('.chat-widget')&&!e.target.closest('.notif-panel')){
+ if(!e.target.closest('.chat-fab-container')&&!e.target.closest('.chat-widget')&&!e.target.closest('.notif-panel')&&!e.target.closest('[data-open-chat]')){
   document.getElementById('chatWidget').classList.remove('open');
   document.getElementById('notifPanel').classList.remove('open');
   if(document.getElementById('chatThreadView').classList.contains('active'))backToList();

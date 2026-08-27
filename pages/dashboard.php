@@ -594,7 +594,7 @@ require __DIR__ . '/../includes/header.php';
               <div style="font-size:0.8125rem;color:#2E7D32;margin-top:0.5rem">Телефон гостя: <a href="tel:<?=h(phone_display($b['guest_phone']))?>" style="color:#2E7D32;font-weight:600"><?=h(phone_display($b['guest_phone']))?></a></div>
               <?php endif; ?>
               <div style="display:flex;gap:0.375rem;margin-top:0.625rem;justify-content:flex-end;flex-wrap:wrap">
-                <button type="button" onclick="openChatThread(<?=(int)$b['listing_id']?>,<?=(int)$b['guest_id']?>,<?=h(json_encode($b['guest_name']))?>,<?=h(json_encode($b['listing_title']))?>,<?=h(json_encode($b['guest_avatar'] ?? ''))?>,<?=(float)$b['price']?>,<?=h(json_encode($b['listing_type'] ?? ''))?>)" style="background:#0A7BBA;color:#fff;border:0;border-radius:8px;padding:0.4375rem 0.875rem;font-size:0.75rem;font-weight:600;cursor:pointer">Открыть чат</button>
+                <button type="button" data-open-chat onclick="openChatThread(<?=(int)$b['listing_id']?>,<?=(int)$b['guest_id']?>,<?=h(json_encode($b['guest_name']))?>,<?=h(json_encode($b['listing_title']))?>,<?=h(json_encode($b['guest_avatar'] ?? ''))?>,<?=(float)$b['price']?>,<?=h(json_encode($b['listing_type'] ?? ''))?>)" style="background:#0A7BBA;color:#fff;border:0;border-radius:8px;padding:0.4375rem 0.875rem;font-size:0.75rem;font-weight:600;cursor:pointer">Открыть чат</button>
                 <?php if ($bs === 'pending'): ?>
                 <form method="post" style="display:inline"><?= csrf_field() ?>
                   <input type="hidden" name="bid" value="<?=$b['id']?>">
