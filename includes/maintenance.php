@@ -19,7 +19,7 @@ header('Retry-After: 3600');
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="СахGO">
 <meta property="og:title" content="Технические работы — СахGO">
-<meta property="og:description" content="Туристический маркетплейс Сахалина и Курил: туры, жильё, рыбалка, прокат авто и снаряжения. Мы скоро вернёмся.">
+<meta property="og:description" content="Туристический маркетплейс путешествий по Сахалину и Курилам: туры, жильё, рыбалка, прокат авто и снаряжения. Мы скоро вернёмся.">
 <meta property="og:url" content="https://сахгоу.рф/">
 <meta property="og:image" content="https://сахгоу.рф/og-image.png">
 <meta property="og:image:width" content="1200">
@@ -27,7 +27,7 @@ header('Retry-After: 3600');
 <meta property="og:locale" content="ru_RU">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Технические работы — СахGO">
-<meta name="twitter:description" content="Туристический маркетплейс Сахалина и Курил. Мы скоро вернёмся.">
+<meta name="twitter:description" content="Туристический маркетплейс путешествий по Сахалину и Курилам. Мы скоро вернёмся.">
 <meta name="twitter:image" content="https://сахгоу.рф/og-image.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -106,7 +106,7 @@ header('Retry-After: 3600');
     <h1>СахGO</h1>
     <div class="badge"><span class="dot"></span> Технические работы</div>
     <p class="lead">Мы скоро вернёмся</p>
-    <p class="desc">СахGO — туристический маркетплейс Сахалина и Курил: туры, жильё, рыбалка, прокат авто и снаряжения. Прямые контакты с местными проводниками и владельцами — без посредников.</p>
+    <p class="desc">СахGO — туристический маркетплейс путешествий по Сахалину и Курилам: туры, жильё, рыбалка, прокат авто и снаряжения. Прямые контакты с местными проводниками и владельцами — без посредников.</p>
     <div class="progress"><i></i></div>
     <p class="hint">Прямо сейчас делаем сервис быстрее и удобнее. Загляните через несколько минут.</p>
   </main>
