@@ -643,7 +643,7 @@ require __DIR__ . '/../includes/header.php';
         </div>
         <div class="form-group">
           <label>Телефон</label>
-          <input type="text" name="phone" value="<?=h($user['phone']??'')?>" style="width:100%;box-sizing:border-box" <?php if ($user['role'] !== 'admin' && !empty($user['phone'])): ?>readonly onfocus="this.blur()" title="Телефон можно изменить только через администратора"<?php endif; ?>>
+          <input type="text" name="phone" value="<?=h($user['phone'] ? phone_display($user['phone']) : '')?>" style="width:100%;box-sizing:border-box" <?php if ($user['role'] !== 'admin' && !empty($user['phone'])): ?>readonly onfocus="this.blur()" title="Телефон можно изменить только через администратора"<?php endif; ?>>
           <?php if ($user['role'] !== 'admin' && !empty($user['phone'])): ?><p style="font-size:0.6875rem;color:#5A6B7D;margin:0.25rem 0 0">Телефон можно изменить только через администратора</p><?php endif; ?>
         </div>
         <button type="submit" name="update_profile" value="1" class="cta-btn" style="width:100%;gap:0.375rem;padding:0.625rem 1.25rem">
