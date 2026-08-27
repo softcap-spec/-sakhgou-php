@@ -84,8 +84,6 @@ header('Retry-After: 3600');
   @keyframes shimmer{0%{transform:translateX(-120%)}100%{transform:translateX(340px)}}
   .hint{margin-top:14px;font-size:.8rem;color:#7FA1B5}
   footer{position:absolute;bottom:22px;left:0;right:0;z-index:2;text-align:center;font-size:.78rem;color:#6E8CA0}
-  footer a{color:#8FB8CC;text-decoration:none;border-bottom:1px dotted rgba(143,184,204,.5);margin:0 6px}
-  footer a:hover{color:#D7ECF7}
 </style>
 </head>
 <body>
@@ -113,7 +111,7 @@ header('Retry-After: 3600');
     <p class="hint">Прямо сейчас делаем сервис быстрее и удобнее. Загляните через несколько минут.</p>
   </main>
 
-  <footer>© <span id="yr"></span> СахGO · Сахалинская область&nbsp;&nbsp;·&nbsp;&nbsp;<a href="/">На главную</a><a href="/admin">Вход для администратора</a></footer>
+  <footer>© <span id="yr"></span> СахGO · Сахалинская область</footer>
 
   <script>document.getElementById('yr').textContent = new Date().getFullYear();</script>
 </body>
