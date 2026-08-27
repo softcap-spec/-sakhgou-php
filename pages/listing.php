@@ -123,6 +123,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['book'])) {
         . 'Итого: ' . number_format($total, 0, '.', ' ') . ' ₽';
       if ($bmsg !== '') $bookMsg .= "\n\nСообщение гостя: " . $bmsg;
       send_message($cu['id'], $item['user_id'], $lid, $bookMsg);
+      // Уведомление в «Макс» (MVP — оператору)
+      try {
+        max_notify_booking($item['title'], $cu['name'] ?? 'гость', $dates, $guests, number_format($total, 0, '.', ' ') . ' ₽');
+      } catch (\Throwable $e) {}
       $book_sent = true;
       }
     }

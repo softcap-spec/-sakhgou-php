@@ -6,6 +6,7 @@ require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/includes/version.php';
 require_once __DIR__ . '/includes/functions.php';
 require_once __DIR__ . '/includes/auth.php';
+require_once __DIR__ . '/includes/notify.php';
 
 header('X-Frame-Options: SAMEORIGIN');
 header('X-Content-Type-Options: nosniff');
@@ -24,7 +25,7 @@ $id = $parts[2] ?? null;
 if (in_array($page, ['listing', 'edit', 'promote', 'seller']) && empty($id)) { $id = $sub; $sub = null; }
 
 // Maintenance mode check
-if ($page !== 'admin' && $page !== 'login' && $page !== 'register' && $page !== 'api') {
+if ($page !== 'admin' && $page !== 'login' && $page !== 'register' && $page !== 'api' && $page !== 'max-webhook') {
   $mcheck = db()->query("SELECT setting_value FROM settings WHERE setting_key = 'maintenance'")->fetchColumn();
   $user = auth_user();
   if ($mcheck === '1' && (!$user || $user['role'] !== 'admin')) {
@@ -96,6 +97,31 @@ switch ($page) {
   case 'help':
     require __DIR__ . '/pages/help.php';
     break;
+  case 'max-webhook':
+    // Вебхук «Макс» (Max Bot API): приём событий (message_created и др.)
+    // Без сессии; подлинность — по заголовку X-Max-Bot-Api-Secret.
+    $maxSecret = defined('MAX_WEBHOOK_SECRET') ? MAX_WEBHOOK_SECRET : '';
+    $gotSecret = $_SERVER['HTTP_X_MAX_BOT_API_SECRET'] ?? '';
+    if ($maxSecret === '' || !hash_equals($maxSecret, $gotSecret)) {
+      http_response_code(403);
+      echo 'forbidden';
+      exit;
+    }
+    $raw = file_get_contents('php://input') ?: '';
+    $data = json_decode($raw, true) ?: [];
+    try {
+      // дебаг-лог последнего события (в БД, не в открытый файл)
+      set_setting('max_webhook_debug', mb_substr($raw, 0, 2000));
+      // привязка оператора: первый приславший сообщение пользователь
+      $uid = (int)($data['user_id'] ?? $data['message']['user_id'] ?? $data['sender']['user_id'] ?? 0);
+      if ($uid > 0 && max_operator_user_id() === 0) {
+        set_setting('max_operator_user_id', (string)$uid);
+      }
+    } catch (\Throwable $e) { /* тихо */ }
+    header('Content-Type: application/json');
+    echo json_encode(['ok' => true]);
+    exit;
+
   case 'api':
     // AJAX API for chat
     header('Content-Type: application/json; charset=utf-8');
@@ -177,6 +203,8 @@ switch ($page) {
           $pdo->prepare('INSERT INTO notifications (user_id,type,text,link,is_read,created_at) VALUES (?,?,?,?,0,NOW())')->execute([$receiver,'message','Новое сообщение по объявлению «'.$listing['title'].'»','/listing/'.$lid]);
           // Email notification (throttled: one per conversation per hour)
           notify_new_message($cu['id'], $receiver, $lid, $listing['title']);
+          // Уведомление в «Макс» (MVP — оператору)
+          try { max_notify_message($listing['title'], $cu['name'] ?? 'пользователь', $text); } catch (\Throwable $e) {}
           echo json_encode(['ok'=>true]);
           exit;
         }
