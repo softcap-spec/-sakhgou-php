@@ -30,6 +30,16 @@ $stmt = $pdo->prepare('SELECT l.*, c.slug AS cat_slug FROM listings l JOIN categ
 $stmt->execute([$item['listing_type'] ?? 'tour', $lid, 'active']);
 $similar = $stmt->fetchAll();
 
+// Ещё предложения продавца (другие активные объявления этого же пользователя)
+$stmt = $pdo->prepare("SELECT l.*, c.slug AS cat_slug,
+  (SELECT filename FROM listing_images WHERE listing_id = l.id ORDER BY sort_order LIMIT 1) AS s_image
+  FROM listings l JOIN categories c ON l.category_id = c.id
+  LEFT JOIN promotions promo ON l.id = promo.listing_id AND promo.status = 'active' AND promo.expires_at > NOW()
+  WHERE l.user_id = ? AND l.id != ? AND l.status = 'active'
+  ORDER BY CASE WHEN promo.id IS NOT NULL THEN 0 ELSE 1 END, l.created_at DESC LIMIT 4");
+$stmt->execute([$item['user_id'], $lid]);
+$sellerMore = $stmt->fetchAll();
+
 $stmt = $pdo->prepare('SELECT r.*, u.name AS author_name, u.avatar_url AS author_avatar FROM reviews r JOIN users u ON r.user_id = u.id WHERE r.listing_id = ? AND r.moderated = 1 ORDER BY r.created_at DESC LIMIT 10');
 $stmt->execute([$lid]);
 $reviews = $stmt->fetchAll();
@@ -467,6 +477,29 @@ require __DIR__ . '/../includes/header.php';
           <div class="listing-price"><?=price_text($s)?><?php if (!price_is_negotiable($s) && (float)$s['price'] > 0): ?> <span class="text-[0.625rem] font-normal text-[#6B7B8D]"><?=price_label($s['listing_type'])?></span><?php endif; ?></div>
           <div class="listing-title"><?=h($s['title'])?></div>
           <div class="listing-meta"><span><?=h($s['location'])?></span></div>
+        </div>
+      </a>
+      <?php endforeach; ?>
+    </div>
+  </div>
+</section>
+<?php endif; ?>
+
+<!-- More from seller -->
+<?php if (!empty($sellerMore)): ?>
+<section class="py-10 bg-white border-t border-[#EBEEF2]">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <h2 class="font-display text-xl mb-6">Ещё предложения продавца</h2>
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+      <?php foreach($sellerMore as $s2): ?>
+      <a href="/listing/<?=$s2['id']?>" class="listing-card">
+        <div class="listing-img">
+          <?php if($s2['s_image']): ?><img src="/uploads/<?=h($s2['s_image'])?>" alt="<?=h($s2['title'])?>" loading="lazy"><?php endif; ?>
+        </div>
+        <div class="listing-body">
+          <div class="listing-price"><?=price_text($s2)?><?php if (!price_is_negotiable($s2) && (float)$s2['price'] > 0): ?> <span class="text-[0.625rem] font-normal text-[#6B7B8D]"><?=price_label($s2['listing_type'])?></span><?php endif; ?></div>
+          <div class="listing-title"><?=h($s2['title'])?></div>
+          <div class="listing-meta"><span><?=h($s2['location'])?></span></div>
         </div>
       </a>
       <?php endforeach; ?>
