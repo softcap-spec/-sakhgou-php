@@ -99,7 +99,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['finish'])) {
       requires_border_permit,depends_on_weather,transport_included,transport_type,
       gear_condition,fishing_type,fishing_method,gear_included,catch_guarantee,license_required,boat_included,
       meals_included,season,cancellation_policy,status)
-      VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+      VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
     $stmt->execute([
       $cu['id'], $real_cid, $lt, $cat, $tourOrgType, $tourOpName, $tourOpRegno, $title, $slug, $desc, $price, $priceType, 'RUB',
       $guests, $loc,
@@ -123,7 +123,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['finish'])) {
     }
 
     $tmpDir = UPLOAD_DIR . '/.tmp';
-    if (!empty($_SESSION['tmp_images'])) {
+    if ($success && !empty($_SESSION['tmp_images'])) {
       $pdo->beginTransaction();
       foreach ($_SESSION['tmp_images'] as $i => $img) {
         // S3 fix: use MIME-based extension, not original filename
