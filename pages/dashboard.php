@@ -20,10 +20,14 @@ $tabs = [
   'listings'   => 'Мои объявления',
   'messages'   => 'Сообщения',
   'favorites'  => 'Избранное',
-  'bookings'   => 'Бронирования',
+  'bookings'   => 'Мои брони',
   'host_bookings' => 'Ко мне',
   'profile'    => 'Профиль',
 ];
+// Брони: мои (гость) и входящие (хозяин) — считаем один раз, используем и в табах, и во вьюхах
+$myBookings = get_user_bookings($user['id']);
+$hb = get_host_bookings($user['id']);
+$pendingHostBookings = count(array_filter($hb, fn($x) => $x['status'] === 'pending'));
 
 // POST: update profile
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
@@ -86,6 +90,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete'])) {
   header('Location: /dashboard'); exit;
 }
 
+// POST: подтвердить / отклонить бронь (только хозяин объявления, только для pending)
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['booking_action'])) {
+  csrf_check();
+  $bid = (int)($_POST['bid'] ?? 0);
+  $action = $_POST['booking_action'] === 'confirm' ? 'confirmed' : ($_POST['booking_action'] === 'decline' ? 'declined' : '');
+  if ($bid > 0 && $action !== '') {
+    $bq = $pdo->prepare('SELECT b.*, l.title AS listing_title FROM bookings b JOIN listings l ON b.listing_id = l.id WHERE b.id = ? AND b.host_id = ?');
+    $bq->execute([$bid, $user['id']]);
+    $bk = $bq->fetch();
+    if ($bk && $bk['status'] === 'pending') {
+      $pdo->prepare('UPDATE bookings SET status = ? WHERE id = ?')->execute([$action, $bid]);
+      $statusText = $action === 'confirmed' ? 'подтверждена' : 'отклонена';
+      // Уведомление гостю (колокольчик)
+      $pdo->prepare('INSERT INTO notifications (user_id, type, text, link, is_read, created_at) VALUES (?,?,?,?,0,NOW())')
+        ->execute([$bk['guest_id'], 'booking', 'Ваша бронь «' . $bk['listing_title'] . '» ' . $statusText, '/dashboard?sub=bookings']);
+      // Дубль в чат — гость видит решение в «Сообщениях»
+      send_message($user['id'], $bk['guest_id'], $bk['listing_id'], 'Бронь «' . $bk['listing_title'] . '» ' . $statusText . '.');
+      header('Location: /dashboard?sub=host_bookings&bok=1'); exit;
+    }
+  }
+  header('Location: /dashboard?sub=host_bookings'); exit;
+}
+
 $page_title = 'Личный кабинет — СахGO';
 require __DIR__ . '/../includes/header.php';
 ?>
@@ -115,7 +142,7 @@ require __DIR__ . '/../includes/header.php';
        style="display:inline-flex;align-items:center;padding:0.5rem 1rem;font-size:0.8125rem;font-weight:500;border-radius:8px;text-decoration:none;transition:all 0.15s ease;<?=$active?'background:#0A1A2A;color:#F7F9FB':'color:#5A6B7D;background:transparent'?>"
        onmouseover="if(!this.classList.contains('active')){this.style.background='#EEF2F6';this.style.color='#0A1A2A'}"
        onmouseout="if(!this.classList.contains('active')){this.style.background='transparent';this.style.color='#5A6B7D'}"
-       class="<?=$active?'active':''?>"><?=$v?></a>
+       class="<?=$active?'active':''?>"><?=$v?><?php if ($k==='host_bookings' && $pendingHostBookings > 0): ?> <span style="background:#DC2626;color:#fff;border-radius:999px;padding:0.0625rem 0.4375rem;font-size:0.6875rem;font-weight:700;margin-left:0.25rem"><?=$pendingHostBookings?></span><?php endif; ?></a>
     <?php endforeach; ?>
   </div>
 
@@ -487,25 +514,34 @@ require __DIR__ . '/../includes/header.php';
     <?php endif; ?>
 
   <?php elseif ($sub === 'bookings'): ?>
-    <?php $bookings = get_user_bookings($user['id']); ?>
+    <?php $bookings = $myBookings; ?>
     <?php if (empty($bookings)): ?>
       <div style="text-align:center;padding:5rem 1rem">
         <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#C8D0DA" stroke-width="1.5" style="margin-bottom:1.25rem">
           <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
         </svg>
         <p style="font-size:1rem;font-weight:600;color:#0A1A2A;margin:0 0 0.25rem">Нет бронирований</p>
+        <p style="font-size:0.8125rem;color:#5A6B7D;margin:0">Когда вы забронируете жильё или тур, заявка появится здесь</p>
       </div>
     <?php else: ?>
       <div style="display:flex;flex-direction:column;gap:0.75rem">
-      <?php foreach ($bookings as $b): ?>
+      <?php foreach ($bookings as $b):
+        $bs = $b['status'];
+        $badge = $bs === 'confirmed' ? 'background:#E8F5E9;color:#2E7D32' : ($bs === 'declined' ? 'background:#FDECEC;color:#C62828' : 'background:#FFF8E1;color:#B26A00');
+        $blabel = $bs === 'confirmed' ? 'Подтверждена' : ($bs === 'declined' ? 'Отклонена' : 'Ожидает подтверждения');
+      ?>
         <div style="background:#fff;border:1px solid #EEF2F6;border-radius:12px;padding:1.25rem;box-shadow:0 4px 12px rgba(15,23,32,0.06)">
           <div style="display:flex;justify-content:space-between;align-items:flex-start">
             <div>
               <a href="/listing/<?=$b['listing_id']?>" style="font-family:Manrope,sans-serif;font-weight:700;font-size:1.0625rem;color:#0A1A2A;text-decoration:none"><?=h($b['listing_title'])?></a>
               <div style="font-size:0.8125rem;color:#5A6B7D;margin-top:0.25rem"><?=h($b['location']??'')?> &middot; хозяин: <?=h($b['host_name'])?></div>
+              <?php if (!empty($b['check_in_date'])): ?>
+              <div style="font-size:0.8125rem;color:#5A6B7D;margin-top:0.25rem"><?=date('d.m.Y', strtotime($b['check_in_date']))?> — <?=date('d.m.Y', strtotime($b['check_out_date']))?> · <?=(int)$b['guests_count']?> гост.</div>
+              <?php endif; ?>
             </div>
             <div style="text-align:right">
-              <div style="font-family:Manrope,sans-serif;font-weight:700;font-size:1.0625rem"><?=number_format((float)$b['total_price'],0,'.',' ')?> ₽</div>
+              <span style="font-size:0.6875rem;font-weight:600;padding:0.1875rem 0.5rem;border-radius:999px;<?=$badge?>"><?=$blabel?></span>
+              <div style="font-family:Manrope,sans-serif;font-weight:700;font-size:1.0625rem;margin-top:0.375rem"><?=number_format((float)$b['total_price'],0,'.',' ')?> ₽</div>
               <div style="font-size:0.6875rem;color:#5A6B7D;margin-top:0.25rem"><?=$b['created_at']?></div>
             </div>
           </div>
@@ -515,26 +551,54 @@ require __DIR__ . '/../includes/header.php';
     <?php endif; ?>
 
   <?php elseif ($sub === 'host_bookings'): ?>
-    <?php $hb = get_host_bookings($user['id']); ?>
+    <?php if (isset($_GET['bok'])): ?>
+    <div class="flash success">Статус брони обновлён</div>
+    <?php endif; ?>
     <?php if (empty($hb)): ?>
       <div style="text-align:center;padding:5rem 1rem">
         <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#C8D0DA" stroke-width="1.5" style="margin-bottom:1.25rem">
           <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
         </svg>
-        <p style="font-size:1rem;font-weight:600;color:#0A1A2A;margin:0 0 0.25rem">Нет бронирований у вас</p>
+        <p style="font-size:1rem;font-weight:600;color:#0A1A2A;margin:0 0 0.25rem">Нет бронирований</p>
+        <p style="font-size:0.8125rem;color:#5A6B7D;margin:0">Когда гость забронирует ваше объявление, заявка появится здесь</p>
       </div>
     <?php else: ?>
       <div style="display:flex;flex-direction:column;gap:0.75rem">
-      <?php foreach ($hb as $b): ?>
+      <?php foreach ($hb as $b):
+        $bs = $b['status'];
+        $badge = $bs === 'confirmed' ? 'background:#E8F5E9;color:#2E7D32' : ($bs === 'declined' ? 'background:#FDECEC;color:#C62828' : 'background:#FFF8E1;color:#B26A00');
+        $blabel = $bs === 'confirmed' ? 'Подтверждена' : ($bs === 'declined' ? 'Отклонена' : 'Ожидает подтверждения');
+      ?>
         <div style="background:#fff;border:1px solid #EEF2F6;border-radius:12px;padding:1.25rem;box-shadow:0 4px 12px rgba(15,23,32,0.06)">
-          <div style="display:flex;justify-content:space-between;align-items:flex-start">
-            <div>
-              <span style="font-size:0.8125rem;color:#5A6B7D">Гость: <?=h($b['guest_name'])?></span><br>
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:1rem">
+            <div style="min-width:0">
+              <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap">
+                <span style="font-size:0.8125rem;color:#5A6B7D">Гость: <?=h($b['guest_name'])?></span>
+                <span style="font-size:0.6875rem;font-weight:600;padding:0.1875rem 0.5rem;border-radius:999px;<?=$badge?>"><?=$blabel?></span>
+              </div>
               <a href="/listing/<?=$b['listing_id']?>" style="font-family:Manrope,sans-serif;font-weight:700;font-size:1.0625rem;color:#0A1A2A;text-decoration:none"><?=h($b['listing_title'])?></a>
+              <?php if (!empty($b['check_in_date'])): ?>
+              <div style="font-size:0.8125rem;color:#5A6B7D;margin-top:0.25rem"><?=date('d.m.Y', strtotime($b['check_in_date']))?> — <?=date('d.m.Y', strtotime($b['check_out_date']))?> · <?=(int)$b['guests_count']?> гост.</div>
+              <?php endif; ?>
+              <?php if (!empty($b['guest_message'])): ?>
+              <div style="font-size:0.8125rem;color:#5A6B7D;margin-top:0.5rem;background:#F7F9FB;border-radius:8px;padding:0.5rem 0.75rem">«<?=h($b['guest_message'])?>»</div>
+              <?php endif; ?>
             </div>
-            <div style="text-align:right">
+            <div style="text-align:right;flex-shrink:0">
               <div style="font-family:Manrope,sans-serif;font-weight:700;font-size:1.0625rem"><?=number_format((float)$b['total_price'],0,'.',' ')?> ₽</div>
               <div style="font-size:0.6875rem;color:#5A6B7D;margin-top:0.25rem"><?=$b['created_at']?></div>
+              <?php if ($bs === 'pending'): ?>
+              <div style="display:flex;gap:0.375rem;margin-top:0.625rem;justify-content:flex-end">
+                <form method="post" style="display:inline"><?= csrf_field() ?>
+                  <input type="hidden" name="bid" value="<?=$b['id']?>">
+                  <button type="submit" name="booking_action" value="confirm" style="background:#16A34A;color:#fff;border:0;border-radius:8px;padding:0.4375rem 0.875rem;font-size:0.75rem;font-weight:600;cursor:pointer">Подтвердить</button>
+                </form>
+                <form method="post" style="display:inline"><?= csrf_field() ?>
+                  <input type="hidden" name="bid" value="<?=$b['id']?>">
+                  <button type="submit" name="booking_action" value="decline" style="background:#fff;color:#DC2626;border:1px solid #F3C1C1;border-radius:8px;padding:0.4375rem 0.875rem;font-size:0.75rem;font-weight:600;cursor:pointer">Отклонить</button>
+                </form>
+              </div>
+              <?php endif; ?>
             </div>
           </div>
         </div>
