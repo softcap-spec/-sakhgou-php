@@ -2,7 +2,7 @@
 // seller.php — публичная страница продавца (как на Авито): активные и завершённые объявления
 $pdo = db();
 $uid = (int)($id ?? 0);
-$stmt = $pdo->prepare('SELECT id, name, avatar_url, phone, created_at, role FROM users WHERE id = ?');
+$stmt = $pdo->prepare('SELECT id, name, avatar_url, created_at, role FROM users WHERE id = ?');
 $stmt->execute([$uid]);
 $seller = $stmt->fetch();
 if (!$seller) { header('Location: /'); exit; }
