@@ -865,7 +865,7 @@ require __DIR__ . '/../includes/header.php';
 
   <script>
   var CAL_EVENTS = <?= json_encode(array_map(function ($e) {
-      return ['id'=>(int)$e['id'], 'lid'=>(int)$e['listing_id'], 'from'=>$e['check_in_date'], 'to'=>$e['check_out_date'],
+      return ['id'=>(int)$e['id'], 'lid'=>(int)$e['listing_id'], 'title'=>$e['listing_title'], 'from'=>$e['check_in_date'], 'to'=>$e['check_out_date'],
               'guests'=>(int)$e['guests_count'], 'name'=>$e['ev_name'], 'phone'=>(string)$e['guest_phone'],
               'price'=>(float)$e['total_price'], 'source'=>$e['source'], 'status'=>$e['status'],
               'gid'=>(int)($e['guest_id'] ?? 0), 'lprice'=>(float)($e['lprice'] ?? 0),
