@@ -174,15 +174,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 
   // Banner: add
   if ($_POST['action'] === 'add_banner') {
+    $bannerContent = $_POST['content'];
+    if ($_POST['type'] === 'image' && !empty($_FILES['banner_image']['name']) && $_FILES['banner_image']['error'] === UPLOAD_ERR_OK) {
+      $finfo = finfo_open(FILEINFO_MIME_TYPE);
+      $mime = finfo_file($finfo, $_FILES['banner_image']['tmp_name']);
+      finfo_close($finfo);
+      $extMap = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp', 'image/gif' => 'gif'];
+      if (isset($extMap[$mime])) {
+        $fn = 'banner_' . time() . '_' . random_int(100, 999) . '.' . $extMap[$mime];
+        if (move_uploaded_file($_FILES['banner_image']['tmp_name'], UPLOAD_DIR . '/' . $fn)) {
+          $bannerContent = '/uploads/' . $fn;
+        }
+      }
+    }
     $pdo->prepare("INSERT INTO banners (title, type, content, link, placement, sort_order, is_active, is_ad, advertiser, advertiser_ogrn, advertiser_address, erid) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
-      ->execute([$_POST['title'], $_POST['type'], $_POST['content'], $_POST['link'] ?: null, $_POST['placement'], (int)$_POST['sort_order'], isset($_POST['is_active']) ? 1 : 0, isset($_POST['is_ad']) ? 1 : 0, $_POST['advertiser'] ?: null, $_POST['advertiser_ogrn'] ?: null, $_POST['advertiser_address'] ?: null, $_POST['erid'] ?: null]);
+      ->execute([$_POST['title'], $_POST['type'], $bannerContent, $_POST['link'] ?: null, $_POST['placement'], (int)$_POST['sort_order'], isset($_POST['is_active']) ? 1 : 0, isset($_POST['is_ad']) ? 1 : 0, $_POST['advertiser'] ?: null, $_POST['advertiser_ogrn'] ?: null, $_POST['advertiser_address'] ?: null, $_POST['erid'] ?: null]);
     header('Location: /admin?tab=banners&ok=1');
     exit;
   }
   // Banner: edit
   if ($_POST['action'] === 'edit_banner') {
+    $bannerContent = $_POST['content'];
+    if ($_POST['type'] === 'image' && !empty($_FILES['banner_image']['name']) && $_FILES['banner_image']['error'] === UPLOAD_ERR_OK) {
+      $finfo = finfo_open(FILEINFO_MIME_TYPE);
+      $mime = finfo_file($finfo, $_FILES['banner_image']['tmp_name']);
+      finfo_close($finfo);
+      $extMap = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp', 'image/gif' => 'gif'];
+      if (isset($extMap[$mime])) {
+        $fn = 'banner_' . time() . '_' . random_int(100, 999) . '.' . $extMap[$mime];
+        if (move_uploaded_file($_FILES['banner_image']['tmp_name'], UPLOAD_DIR . '/' . $fn)) {
+          $bannerContent = '/uploads/' . $fn;
+        }
+      }
+    }
     $pdo->prepare("UPDATE banners SET title=?, type=?, content=?, link=?, placement=?, sort_order=?, is_active=?, is_ad=?, advertiser=?, advertiser_ogrn=?, advertiser_address=?, erid=? WHERE id=?")
-      ->execute([$_POST['title'], $_POST['type'], $_POST['content'], $_POST['link'] ?: null, $_POST['placement'], (int)$_POST['sort_order'], isset($_POST['is_active']) ? 1 : 0, isset($_POST['is_ad']) ? 1 : 0, $_POST['advertiser'] ?: null, $_POST['advertiser_ogrn'] ?: null, $_POST['advertiser_address'] ?: null, $_POST['erid'] ?: null, (int)$_POST['id']]);
+      ->execute([$_POST['title'], $_POST['type'], $bannerContent, $_POST['link'] ?: null, $_POST['placement'], (int)$_POST['sort_order'], isset($_POST['is_active']) ? 1 : 0, isset($_POST['is_ad']) ? 1 : 0, $_POST['advertiser'] ?: null, $_POST['advertiser_ogrn'] ?: null, $_POST['advertiser_address'] ?: null, $_POST['erid'] ?: null, (int)$_POST['id']]);
     header('Location: /admin?tab=banners&ok=1');
     exit;
   }
@@ -763,7 +789,7 @@ elseif ($tab === 'banners'):
     </div>
 
     <div id="bannerForm" class="<?= $edit_banner ? '' : 'hidden' ?> bg-white border rounded-xl p-6 mb-6">
-      <form method="post">
+      <form method="post" enctype="multipart/form-data">
         <?= csrf_field() ?>
         <input type="hidden" name="action" value="<?= $edit_banner ? 'edit_banner' : 'add_banner' ?>">
         <?php if ($edit_banner): ?><input type="hidden" name="id" value="<?= $edit_banner['id'] ?>"><?php endif; ?>
@@ -782,6 +808,13 @@ elseif ($tab === 'banners'):
           <div class="sm:col-span-2">
             <label class="block text-sm font-medium mb-1"><?= ($edit_banner && $edit_banner['type']==='code') ? 'HTML-код' : 'URL изображения' ?></label>
             <textarea name="content" rows="4" class="w-full border rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:border-accent" placeholder="<?= ($edit_banner && $edit_banner['type']==='code') ? '<div>...' : '/uploads/banner.jpg' ?>"><?= $edit_banner ? h($edit_banner['content']) : '' ?></textarea>
+          </div>
+          <div class="sm:col-span-2">
+            <label class="block text-sm font-medium mb-1">Или загрузить изображение (JPG, PNG, WebP, GIF)</label>
+            <input type="file" name="banner_image" accept="image/jpeg,image/png,image/webp,image/gif" class="w-full border rounded-lg px-3 py-2 text-sm">
+            <?php if ($edit_banner && $edit_banner['type'] === 'image' && !empty($edit_banner['content']) && $edit_banner['content'] !== 'code'): ?>
+            <img src="<?= h($edit_banner['content']) ?>" alt="" style="height:3.5rem;margin-top:0.5rem;border-radius:8px">
+            <?php endif; ?>
           </div>
           <div>
             <label class="block text-sm font-medium mb-1">Ссылка (необязательно)</label>
