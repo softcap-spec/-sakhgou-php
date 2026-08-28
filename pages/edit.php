@@ -245,7 +245,7 @@ require __DIR__ . '/../includes/header.php';
                   <option value="negotiable" <?=($item['price_type']??'')==='negotiable'?'selected':''?>>По договорённости</option>
                 </select>
               </div>
-              <div><input type="number" name="price" id="price_input" value="<?= (int)$item['price'] ?>" min="0" step="1" required class="ed-input" placeholder="₽"></div>
+              <div><input type="number" name="price" id="price_input" value="<?= (int)$item['price'] ?>" min="0" step="1" required class="ed-input" placeholder="<?= ['property'=>'Например: 3500 — за сутки','tour'=>'Например: 5000 — с человека','fishing'=>'Например: 8000 — с человека','rental_gear'=>'Например: 1200 — в сутки','car_rental'=>'Например: 4000 — в сутки'][$item['listing_type']] ?? 'Например: 3500' ?>"></div>
             </div>
             <label class="ed-label">Описание</label>
             <textarea name="description" rows="8" required class="ed-textarea"><?= h($item['description'] ?? '') ?></textarea>

@@ -279,7 +279,7 @@ require __DIR__ . '/../includes/header.php';
             <option value="from" <?=($_POST['price_type']??'')==='from'?'selected':''?>>От (цена от …)</option>
             <option value="negotiable" <?=($_POST['price_type']??'')==='negotiable'?'selected':''?>>По договорённости</option>
           </select>
-          <input type="number" name="price" id="price_input" value="<?=h($_POST['price']??'')?>" style="width:100%;box-sizing:border-box" min="1" step="1" required>
+          <input type="number" name="price" id="price_input" value="<?=h($_POST['price']??'')?>" style="width:100%;box-sizing:border-box" min="1" step="1" required placeholder="<?php $ph = ['property'=>'Например: 3500 — за сутки','tour'=>'Например: 5000 — с человека','fishing'=>'Например: 8000 — с человека','rental_gear'=>'Например: 1200 — в сутки','car_rental'=>'Например: 4000 — в сутки']; echo $ph[$_POST['listing_type'] ?? 'property'] ?? 'Например: 3500'; ?>">
         </div>
         <div class="form-group"><label>Локация <span style="color:#DC2626">*</span></label>
           <?php $__loc = $_POST['location'] ?? ''; $__isCustom = ($__loc !== '' && !in_array($__loc, $LOCATIONS, true)); ?>
