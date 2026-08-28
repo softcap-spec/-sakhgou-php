@@ -174,7 +174,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 
   // Banner: add
   if ($_POST['action'] === 'add_banner') {
-    $bannerContent = $_POST['content'];
+    $bannerContent = trim($_POST['content'] ?? '');
     if ($_POST['type'] === 'image' && !empty($_FILES['banner_image']['name']) && $_FILES['banner_image']['error'] === UPLOAD_ERR_OK) {
       $finfo = finfo_open(FILEINFO_MIME_TYPE);
       $mime = finfo_file($finfo, $_FILES['banner_image']['tmp_name']);
@@ -194,7 +194,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
   }
   // Banner: edit
   if ($_POST['action'] === 'edit_banner') {
-    $bannerContent = $_POST['content'];
+    $bannerContent = trim($_POST['content'] ?? '');
     if ($_POST['type'] === 'image' && !empty($_FILES['banner_image']['name']) && $_FILES['banner_image']['error'] === UPLOAD_ERR_OK) {
       $finfo = finfo_open(FILEINFO_MIME_TYPE);
       $mime = finfo_file($finfo, $_FILES['banner_image']['tmp_name']);
