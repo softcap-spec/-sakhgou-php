@@ -455,12 +455,22 @@ function edTypeChange(){
 </section>
 
 <script>
+var PRICE_HINTS = {property:'Например: 3500 — за сутки', tour:'Например: 5000 — с человека', fishing:'Например: 8000 — с человека', rental_gear:'Например: 1200 — в сутки', car_rental:'Например: 4000 — в сутки'};
 function priceTypeChange(){
   var sel = document.getElementById('price_type');
   var inp = document.getElementById('price_input');
-  if (sel && inp) {
-    if (sel.value === 'negotiable') { inp.disabled = true; inp.required = false; inp.value = ''; }
-    else { inp.disabled = false; inp.required = true; }
+  if (!sel || !inp) return;
+  var ltSel = document.getElementById('listing_type');
+  var lt = (ltSel && ltSel.value) ? ltSel.value : 'property';
+  if (sel.value === 'negotiable') {
+    inp.disabled = true; inp.required = false; inp.value = '';
+    inp.placeholder = 'Цена не нужна — договоритесь лично';
+  } else if (sel.value === 'from') {
+    inp.disabled = false; inp.required = true;
+    inp.placeholder = 'Минимальная цена, ₽';
+  } else {
+    inp.disabled = false; inp.required = true;
+    inp.placeholder = PRICE_HINTS[lt] || 'Например: 3500';
   }
 }
 document.addEventListener('DOMContentLoaded', priceTypeChange);

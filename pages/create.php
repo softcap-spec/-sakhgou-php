@@ -268,7 +268,7 @@ require __DIR__ . '/../includes/header.php';
     <?php elseif ($step === 2): ?>
       <!-- Step 2: Details -->
       <h2 style="font-family:Manrope,sans-serif;font-weight:700;font-size:1.25rem;margin:0 0 1.5rem">Основная информация</h2>
-      <input type="hidden" name="listing_type" value="<?=h($_POST['listing_type']??'')?>">
+      <input type="hidden" name="listing_type" id="listing_type" value="<?=h($_POST['listing_type']??'')?>">
       <input type="hidden" name="category" value="<?=h($_POST['category']??'')?>">
       <div class="form-group"><label>Название объявления <span style="color:#DC2626">*</span></label><input type="text" name="title" value="<?=h($_POST['title']??'')?>" style="width:100%;box-sizing:border-box" placeholder="Напр. «Уютная квартира с видом на море»" required></div>
       <div class="form-group"><label>Описание <span style="color:#DC2626">*</span></label><textarea name="description" rows="5" style="width:100%;box-sizing:border-box" placeholder="Опишите ваше предложение подробно..." required><?=h($_POST['description']??'')?></textarea></div>
@@ -303,14 +303,24 @@ require __DIR__ . '/../includes/header.php';
         </script>
       </div>
       <script>
-      function priceTypeChange(){
-        var sel = document.getElementById('price_type');
-        var inp = document.getElementById('price_input');
-        if (sel && inp) {
-          if (sel.value === 'negotiable') { inp.disabled = true; inp.required = false; inp.value = ''; }
-          else { inp.disabled = false; inp.required = true; }
-        }
-      }
+var PRICE_HINTS = {property:'Например: 3500 — за сутки', tour:'Например: 5000 — с человека', fishing:'Например: 8000 — с человека', rental_gear:'Например: 1200 — в сутки', car_rental:'Например: 4000 — в сутки'};
+function priceTypeChange(){
+  var sel = document.getElementById('price_type');
+  var inp = document.getElementById('price_input');
+  if (!sel || !inp) return;
+  var ltSel = document.getElementById('listing_type');
+  var lt = (ltSel && ltSel.value) ? ltSel.value : 'property';
+  if (sel.value === 'negotiable') {
+    inp.disabled = true; inp.required = false; inp.value = '';
+    inp.placeholder = 'Цена не нужна — договоритесь лично';
+  } else if (sel.value === 'from') {
+    inp.disabled = false; inp.required = true;
+    inp.placeholder = 'Минимальная цена, ₽';
+  } else {
+    inp.disabled = false; inp.required = true;
+    inp.placeholder = PRICE_HINTS[lt] || 'Например: 3500';
+  }
+}
       document.addEventListener('DOMContentLoaded', priceTypeChange);
       </script>
       <?php $lt = $_POST['listing_type'] ?? ''; if ($lt === 'property' || $lt === 'tour' || $lt === 'fishing'): ?>
