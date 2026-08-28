@@ -25,6 +25,7 @@ $li = 'font-size:0.8125rem;color:#3A4A5C;line-height:1.7;margin:0 0 0.5rem';
           'Статус' => 'Самозанятый (плательщик налога на профессиональный доход)',
           'ИНН' => $req['inn'],
           'Режим работы' => $req['work_hours'],
+          'Телефон' => '+7 900 662-44-00',
         ];
         foreach ($rows as $label => $value):
         ?>
