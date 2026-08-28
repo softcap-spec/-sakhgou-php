@@ -155,249 +155,301 @@ $page_title = 'Редактировать: ' . h($item['title']) . ' — Сах�
 require __DIR__ . '/../includes/header.php';
 ?>
 
-<section style="padding:2.5rem 0 4rem">
-  <div style="max-width:46rem;margin:0 auto;padding:0 1rem">
-
-    <!-- Breadcrumb -->
-    <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:1.5rem;font-size:0.8125rem">
-      <a href="/dashboard" style="color:#7A8A9A;text-decoration:none;transition:color 0.15s" onmouseover="this.style.color='#1B6B8A'" onmouseout="this.style.color='#7A8A9A'">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;margin-right:0.125rem"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
-        Кабинет
-      </a>
-      <span style="color:#DFE4EA">/</span>
-      <h1 style="font-family:Manrope,sans-serif;font-weight:700;font-size:1.25rem;margin:0;letter-spacing:-0.02em">Редактирование</h1>
+<style>
+  .ed-wrap{max-width:1080px;margin:0 auto;padding:1.5rem 1rem 5rem}
+  .ed-back{display:inline-flex;align-items:center;gap:0.375rem;color:#7A8A9A;text-decoration:none;font-size:0.8125rem;margin-bottom:0.875rem}
+  .ed-back:hover{color:#1B6B8A}
+  .ed-head{display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;flex-wrap:wrap;margin-bottom:1.25rem}
+  .ed-title{font-family:Manrope,sans-serif;font-weight:800;font-size:1.4rem;letter-spacing:-0.02em;margin:0;color:#121E2B;line-height:1.3}
+  .ed-title .ed-id{color:#9AAAB8;font-weight:600;font-size:0.95rem;white-space:nowrap}
+  .ed-sub{color:#7A8A9A;font-size:0.8125rem;margin:0.25rem 0 0}
+  .ed-head-actions{display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap}
+  .ed-btn-view{display:inline-flex;align-items:center;gap:0.375rem;padding:0.5625rem 1rem;border:1px solid #DFE4EA;border-radius:10px;background:#fff;color:#121E2B;font-size:0.8125rem;font-weight:600;text-decoration:none;transition:all 0.15s}
+  .ed-btn-view:hover{border-color:#C8D0DA;background:#F7F9FB}
+  .ed-btn-save{display:inline-flex;align-items:center;gap:0.375rem;padding:0.5625rem 1.125rem;border:0;border-radius:10px;background:#1B6B8A;color:#fff;font-size:0.8125rem;font-weight:700;cursor:pointer;transition:all 0.15s}
+  .ed-btn-save:hover{background:#155a75}
+  .ed-grid{display:grid;grid-template-columns:1fr;gap:1.25rem;align-items:start}
+  @media(min-width:1024px){.ed-grid{grid-template-columns:minmax(0,1fr) 320px}}
+  .ed-card{background:#fff;border:1px solid #EEF2F6;border-radius:16px;padding:1.5rem;box-shadow:0 4px 14px rgba(15,23,32,0.05);margin-bottom:1.25rem}
+  .ed-card:last-child{margin-bottom:0}
+  .ed-sect{display:flex;align-items:center;gap:0.625rem;margin-bottom:1.25rem}
+  .ed-sect .ic{width:2.25rem;height:2.25rem;border-radius:10px;background:#F0F6FA;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .ed-sect b{font-family:Manrope,sans-serif;font-size:1rem;color:#121E2B;display:block;line-height:1.2}
+  .ed-sect small{color:#7A8A9A;font-size:0.75rem;display:block}
+  .ed-label{display:block;font-size:0.8125rem;font-weight:600;color:#54677A;margin:0 0 0.375rem}
+  .ed-input,.ed-select,.ed-textarea{width:100%;box-sizing:border-box;padding:0.6875rem 0.875rem;border:1px solid #DFE4EA;border-radius:10px;font-size:0.9375rem;font-family:inherit;color:#121E2B;background:#fff;transition:border-color 0.15s, box-shadow 0.15s;outline:none}
+  .ed-input:focus,.ed-select:focus,.ed-textarea:focus{border-color:#1B6B8A;box-shadow:0 0 0 3px rgba(27,107,138,0.12)}
+  .ed-textarea{resize:vertical;line-height:1.55}
+  .ed-row2{display:grid;grid-template-columns:1fr 1fr;gap:0.875rem}
+  @media(max-width:560px){.ed-row2{grid-template-columns:1fr}}
+  .ed-grid3{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:0.875rem}
+  .ed-grid-a{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:0.375rem}
+  .ed-side{position:sticky;top:1rem}
+  .ed-side .ed-card{padding:1.25rem}
+  .ed-side-row{margin-bottom:0.875rem}
+  .ed-flash{border-radius:10px;padding:0.75rem 1rem;margin-bottom:1.25rem;font-size:0.8125rem}
+  .ed-flash.ok{background:#F0FDF4;border:1px solid #BBF7D0;color:#166534}
+  .ed-flash.ok a{color:#166534;font-weight:700}
+  .ed-flash.err{background:#FEF2F2;border:1px solid #FECACA;color:#991B1B}
+  .ed-savebar{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #EEF2F6;padding:0.75rem 1rem calc(0.75rem + env(safe-area-inset-bottom));display:flex;gap:0.75rem;z-index:80;box-shadow:0 -6px 20px rgba(15,23,32,0.08)}
+  @media(min-width:1024px){.ed-savebar{display:none}}
+  .ed-btn-primary{flex:1;display:inline-flex;align-items:center;justify-content:center;gap:0.375rem;padding:0.75rem 1.25rem;border:0;border-radius:10px;background:#1B6B8A;color:#fff;font-size:0.875rem;font-weight:700;cursor:pointer}
+  .ed-check{display:flex;align-items:center;gap:0.5rem;font-size:0.8125rem;cursor:pointer;padding:0.4375rem 0.5625rem;border-radius:8px;border:1px solid transparent}
+  .ed-check:hover{background:#F7F9FB;border-color:#EEF2F6}
+  .ed-check input{width:1rem;height:1rem;accent-color:#1B6B8A}
+  .ed-hint{font-size:0.75rem;color:#9AAAB8;margin:0.375rem 0 0}
+  .ed-block{margin-top:1rem}
+  .ed-block:first-child{margin-top:0}
+</style>
+<section>
+  <div class="ed-wrap">
+    <a class="ed-back" href="/dashboard"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg> Кабинет</a>
+    <div class="ed-head">
+      <div>
+        <h1 class="ed-title"><?= h($item['title']) ?> <span class="ed-id">№<?= (int)$item['id'] ?></span></h1>
+        <p class="ed-sub">Изменения появятся на сайте после сохранения</p>
+      </div>
+      <div class="ed-head-actions">
+        <a class="ed-btn-view" href="/listing/<?= (int)$item['id'] ?>"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> Просмотр</a>
+        <button type="submit" form="editForm" class="ed-btn-save"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Сохранить</button>
+      </div>
     </div>
 
     <?php if ($success): ?>
-      <div style="background:#F0FDF4;border:1px solid #BBF7D0;color:#166534;border-radius:8px;padding:0.75rem 1rem;margin-bottom:1.5rem;font-size:0.8125rem">
-        Объявление обновлено!
-        <a href="/listing/<?= $item['id'] ?>" style="font-weight:600;color:#166534;margin-left:0.5rem;text-decoration:underline">Посмотреть</a>
-      </div>
+      <div class="ed-flash ok">Объявление обновлено! <a href="/listing/<?= (int)$item['id'] ?>">Посмотреть</a></div>
     <?php endif; ?>
     <?php foreach ($errors as $e): ?>
-    <div style="background:#FEF2F2;border:1px solid #FECACA;color:#991B1B;border-radius:8px;padding:0.625rem 1rem;margin-bottom:1rem;font-size:0.8125rem"><?= h($e) ?></div>
+    <div class="ed-flash err"><?= h($e) ?></div>
     <?php endforeach; ?>
 
-    <form method="post" style="background:#fff;border:1px solid #EEF2F6;border-radius:12px;padding:2rem;box-shadow:0 4px 12px rgba(15,23,32,0.06)">
+    <form id="editForm" method="post">
       <?= csrf_field() ?>
+      <div class="ed-grid">
 
-      <!-- Basic Info -->
-      <div style="margin-bottom:2rem">
-        <h2 style="font-family:Manrope,sans-serif;font-weight:700;font-size:1rem;margin:0 0 1rem;padding-bottom:0.75rem;border-bottom:1px solid #EEF2F6;display:flex;align-items:center;gap:0.5rem">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7A8A9A" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-          Основное
-        </h2>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
-          <div style="grid-column:1/-1">
-            <label>Название</label>
-            <input type="text" name="title" value="<?= h($item['title']) ?>" required style="width:100%;box-sizing:border-box">
-          </div>
-          <div>
-            <label>Цена</label>
-            <select name="price_type" id="price_type" onchange="priceTypeChange()" style="width:100%;box-sizing:border-box;margin-bottom:0.5rem">
-              <option value="fixed" <?=($item['price_type']??'fixed')==='fixed'?'selected':''?>>Точная цена</option>
-              <option value="from" <?=($item['price_type']??'')==='from'?'selected':''?>>От (цена от …)</option>
-              <option value="negotiable" <?=($item['price_type']??'')==='negotiable'?'selected':''?>>По договорённости</option>
-            </select>
-            <input type="number" name="price" id="price_input" value="<?= (int)$item['price'] ?>" min="0" step="1" required style="width:100%;box-sizing:border-box">
-          </div>
-          <div>
-            <label>Тип</label>
-            <select name="listing_type" id="listing_type" style="width:100%;box-sizing:border-box">
-              <?php foreach (['property'=>'Жильё','tour'=>'Туры','fishing'=>'Рыбалка','rental_gear'=>'Снаряжение','car_rental'=>'Прокат авто'] as $k=>$v): ?>
-                <option value="<?=$k?>" <?=$item['listing_type']===$k?'selected':''?>><?=$v?></option>
-              <?php endforeach; ?>
-            </select>
-          </div>
-          <div>
-            <label>Категория</label>
-            <select name="category_id" style="width:100%;box-sizing:border-box">
-              <?php
-              $cats = $pdo->query("SELECT id, name, slug FROM categories ORDER BY id")->fetchAll();
-              foreach ($cats as $c): ?>
-                <option value="<?=$c['id']?>" <?=$item['category_id']==$c['id']?'selected':''?>><?=h($c['name'])?></option>
-              <?php endforeach; ?>
-            </select>
-          </div>
-          <div style="grid-column:1/-1">
-            <label>Локация</label>
-            <input type="text" name="location" value="<?= h($item['location'] ?? '') ?>" style="width:100%;box-sizing:border-box">
-          </div>
-          <div style="grid-column:1/-1">
-            <label>Описание</label>
-            <textarea name="description" rows="6" required style="width:100%;box-sizing:border-box"><?= h($item['description'] ?? '') ?></textarea>
-          </div>
-        </div>
-      </div>
-
-      <!-- Property Fields -->
-      <div id="prop-fields" style="margin-bottom:2rem;<?=$item['listing_type']!=='property'?'display:none':''?>">
-        <h2 style="font-family:Manrope,sans-serif;font-weight:700;font-size:1rem;margin:0 0 1rem;padding-bottom:0.75rem;border-bottom:1px solid #EEF2F6;display:flex;align-items:center;gap:0.5rem">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7A8A9A" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-          Параметры жилья
-        </h2>
-        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:1rem">
-          <div><label>Гостей</label><input type="number" name="max_guests" value="<?=(int)($item['max_guests']??1)?>" min="1" style="width:100%;box-sizing:border-box"></div>
-          <div><label>Комнат</label><input type="number" name="rooms_count" value="<?=(int)($item['rooms_count']??1)?>" min="0" style="width:100%;box-sizing:border-box"></div>
-          <div><label>Кроватей</label><input type="number" name="beds_count" value="<?=(int)($item['beds_count']??1)?>" min="0" style="width:100%;box-sizing:border-box"></div>
-          <div><label>Заезд</label><input type="text" name="check_in_time" value="<?=h($item['check_in_time']??'14:00')?>" style="width:100%;box-sizing:border-box"></div>
-          <div><label>Выезд</label><input type="text" name="check_out_time" value="<?=h($item['check_out_time']??'12:00')?>" style="width:100%;box-sizing:border-box"></div>
-        </div>
-        <div style="margin-top:1rem">
-          <label>Удобства</label>
-          <?php $am = json_decode($item['amenities']??'[]',true)?:[]; ?>
-          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:0.375rem">
-            <?php foreach (['Wi-Fi','Кухня','Парковка','Стиральная машина','Кондиционер','Телевизор','Балкон','Отопление','Фен','Утюг','Посуда','Полотенца'] as $a): ?>
-              <label style="display:flex;align-items:center;gap:0.5rem;font-size:0.8125rem;cursor:pointer;padding:0.375rem 0.5rem;border-radius:6px;transition:background 0.15s" onmouseover="this.style.background='#F7F9FB'" onmouseout="this.style.background='transparent'">
-                <input type="checkbox" name="amenities[]" value="<?=$a?>" <?=in_array($a,$am)?'checked':''?> style="width:1rem;height:1rem;accent-color:#121E2B"> <?=$a?>
-              </label>
-            <?php endforeach; ?>
-          </div>
-        </div>
-        <div style="margin-top:1rem">
-          <label>Правила</label>
-          <textarea name="rules" rows="3" style="width:100%;box-sizing:border-box"><?=h($item['rules']??'')?></textarea>
-        </div>
-      </div>
-
-      <!-- Tour Fields -->
-      <div id="tour-fields" style="margin-bottom:2rem;<?=$item['listing_type']!=='tour'?'display:none':''?>">
-        <h2 style="font-family:Manrope,sans-serif;font-weight:700;font-size:1rem;margin:0 0 1rem;padding-bottom:0.75rem;border-bottom:1px solid #EEF2F6;display:flex;align-items:center;gap:0.5rem">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7A8A9A" stroke-width="2"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
-          Параметры тура
-        </h2>
-        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:1rem">
-          <div><label>Длит. (часов)</label><input type="number" name="tour_duration_hours" value="<?=(int)($item['tour_duration_hours']??0)?>" min="0" style="width:100%;box-sizing:border-box"></div>
-          <div><label>Длит. (дней)</label><input type="number" name="tour_duration_days" value="<?=(int)($item['tour_duration_days']??0)?>" min="0" style="width:100%;box-sizing:border-box"></div>
-          <div><label>Группа (чел.)</label><input type="number" name="max_guests" value="<?=(int)($item['max_guests']??1)?>" min="1" style="width:100%;box-sizing:border-box"></div>
-          <div>
-            <label>Сложность</label>
-            <select name="difficulty" style="width:100%;box-sizing:border-box">
-              <?php foreach (['easy'=>'Лёгкий','medium'=>'Средний','hard'=>'Сложный','extreme'=>'Экстремальный'] as $k=>$v): ?>
-                <option value="<?=$k?>" <?=($item['difficulty_level']??'')===$k?'selected':''?>><?=$v?></option>
-              <?php endforeach; ?>
-            </select>
-          </div>
-        </div>
-        <div style="margin-top:1rem"><label>Что включено</label><input type="text" name="includes" value="<?=h($item['includes']??'')?>" style="width:100%;box-sizing:border-box"></div>
-        <div style="margin-top:1rem"><label>Что взять с собой</label><input type="text" name="what_to_bring" value="<?=h($item['what_to_bring']??'')?>" style="width:100%;box-sizing:border-box"></div>
-        <div style="margin-top:1rem"><label>Место встречи</label><input type="text" name="meeting_point" value="<?=h($item['meeting_point']??'')?>" style="width:100%;box-sizing:border-box"></div>
-      </div>
-
-      <!-- Fishing Fields -->
-      <div id="fish-fields" style="margin-bottom:2rem;<?=$item['listing_type']!=='fishing'?'display:none':''?>">
-        <h2 style="font-family:Manrope,sans-serif;font-weight:700;font-size:1rem;margin:0 0 1rem;padding-bottom:0.75rem;border-bottom:1px solid #EEF2F6;display:flex;align-items:center;gap:0.5rem">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7A8A9A" stroke-width="2"><path d="M18 4L3 17l4 4L22 6l-4-4z"/><line x1="4" y1="20" x2="6" y2="22"/></svg>
-          Параметры рыбалки
-        </h2>
-        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:1rem">
-          <div><label>Длит. (часов)</label><input type="number" name="tour_duration_hours" value="<?=(int)($item['tour_duration_hours']??0)?>" min="0" style="width:100%;box-sizing:border-box"></div>
-          <div><label>Группа (чел.)</label><input type="number" name="max_guests" value="<?=(int)($item['max_guests']??1)?>" min="1" style="width:100%;box-sizing:border-box"></div>
-          <div>
-            <label>Вид ловли</label>
-            <select name="fishing_method" style="width:100%;box-sizing:border-box">
-              <?php foreach (['spin'=>'Спиннинг','fly'=>'Нахлыст','troll'=>'Троллинг','ice'=>'Зимняя','float'=>'Поплавочная'] as $k=>$v): ?>
-                <option value="<?=$k?>" <?=($item['fishing_method']??'')===$k?'selected':''?>><?=$v?></option>
-              <?php endforeach; ?>
-            </select>
-          </div>
-          <div><label>Рыба</label><input type="text" name="fish_types" value="<?=h($item['fish_species']??'')?>" placeholder="Кунджа, горбуша, таймень" style="width:100%;box-sizing:border-box"></div>
-          <div><label>Тип лодки</label><input type="text" name="boat_type" value="<?=h($item['boat_type']??'')?>" style="width:100%;box-sizing:border-box"></div>
-          <div style="display:flex;align-items:center;padding-top:1.5rem">
-            <label style="display:flex;align-items:center;gap:0.5rem;font-size:0.8125rem;cursor:pointer">
-              <input type="checkbox" name="license_required" value="1" <?=$item['license_required']?'checked':''?> style="width:1rem;height:1rem;accent-color:#121E2B"> Нужна лицензия
-            </label>
-          </div>
-        </div>
-        <div style="margin-top:1rem"><label>Что включено</label><input type="text" name="includes" value="<?=h($item['includes']??'')?>" style="width:100%;box-sizing:border-box"></div>
-        <div style="margin-top:1rem"><label>Что взять</label><input type="text" name="what_to_bring" value="<?=h($item['what_to_bring']??'')?>" style="width:100%;box-sizing:border-box"></div>
-        <div style="margin-top:1rem"><label>Место встречи</label><input type="text" name="meeting_point" value="<?=h($item['meeting_point']??'')?>" style="width:100%;box-sizing:border-box"></div>
-      </div>
-
-      <!-- Gear Fields -->
-      <div id="gear-fields" style="margin-bottom:2rem;<?=$item['listing_type']!=='rental_gear'?'display:none':''?>">
-        <h2 style="font-family:Manrope,sans-serif;font-weight:700;font-size:1rem;margin:0 0 1rem;padding-bottom:0.75rem;border-bottom:1px solid #EEF2F6;display:flex;align-items:center;gap:0.5rem">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7A8A9A" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-          Параметры снаряжения
-        </h2>
-        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:1rem">
-          <div><label>Тип снаряжения</label><input type="text" name="gear_type" value="<?=h($item['gear_type']??'')?>" style="width:100%;box-sizing:border-box"></div>
-          <div><label>Состояние</label><input type="text" name="condition" value="<?=h($item['gear_condition']??'')?>" style="width:100%;box-sizing:border-box"></div>
-          <div><label>Размеры</label><input type="text" name="sizes" value="<?=h($item['sizes']??'')?>" style="width:100%;box-sizing:border-box"></div>
-          <div><label>Доступно (шт.)</label><input type="number" name="max_guests" value="<?=(int)($item['max_guests']??1)?>" min="1" style="width:100%;box-sizing:border-box"></div>
-          <div><label>Залог (₽)</label><input type="number" name="deposit" value="<?=(int)($item['deposit_amount']??0)?>" min="0" style="width:100%;box-sizing:border-box"></div>
-        </div>
-        <div style="margin-top:1rem"><label>Что включено</label><input type="text" name="includes" value="<?=h($item['includes']??'')?>" style="width:100%;box-sizing:border-box"></div>
-      </div>
-
-      <!-- Car Fields -->
-      <div id="car-fields" style="margin-bottom:2rem;<?=$item['listing_type']!=='car_rental'?'display:none':''?>">
-        <h2 style="font-family:Manrope,sans-serif;font-weight:700;font-size:1rem;margin:0 0 1rem;padding-bottom:0.75rem;border-bottom:1px solid #EEF2F6;display:flex;align-items:center;gap:0.5rem">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7A8A9A" stroke-width="2"><path d="M5 17h14M5 17l-.6-1.5A2 2 0 0 1 4 13V9a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3v4a2 2 0 0 1-.4 2.5L19 17"/><circle cx="7.5" cy="17.5" r="2.5"/><circle cx="16.5" cy="17.5" r="2.5"/></svg>
-          Параметры авто
-        </h2>
-        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:1rem">
-          <div><label>Марка/модель</label><input type="text" name="car_type" value="<?=h($item['car_type']??'')?>" style="width:100%;box-sizing:border-box"></div>
-          <div>
-            <label>Коробка</label>
-            <select name="transmission" style="width:100%;box-sizing:border-box">
-              <?php foreach (['auto'=>'Автомат','manual'=>'Механика'] as $k=>$v): ?>
-                <option value="<?=$k?>" <?=($item['transmission']??'')===$k?'selected':''?>><?=$v?></option>
-              <?php endforeach; ?>
-            </select>
-          </div>
-          <div><label>Мест</label><input type="number" name="seats" value="<?=(int)($item['seats']??5)?>" min="1" style="width:100%;box-sizing:border-box"></div>
-          <div><label>Топливо</label><input type="text" name="fuel" value="<?=h($item['fuel']??'')?>" style="width:100%;box-sizing:border-box"></div>
-          <div><label>Пробег (км/день)</label><input type="number" name="mileage" value="<?=(int)($item['mileage']??0)?>" min="0" style="width:100%;box-sizing:border-box"></div>
-          <div><label>Залог (₽)</label><input type="number" name="deposit" value="<?=(int)($item['deposit_amount']??0)?>" min="0" style="width:100%;box-sizing:border-box"></div>
-        </div>
-        <div style="margin-top:1rem"><label>Требования</label><input type="text" name="requirements" value="<?=h($item['requirements']??'')?>" style="width:100%;box-sizing:border-box"></div>
-        <div style="margin-top:1rem"><label>Что включено</label><input type="text" name="includes" value="<?=h($item['includes']??'')?>" style="width:100%;box-sizing:border-box"></div>
-      </div>
-
-      <!-- Photos -->
-      <div style="margin-bottom:2rem">
-        <h2 style="font-family:Manrope,sans-serif;font-weight:700;font-size:1rem;margin:0 0 1rem;padding-bottom:0.75rem;border-bottom:1px solid #EEF2F6;display:flex;align-items:center;gap:0.5rem">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7A8A9A" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-          Фотографии
-        </h2>
-        <?php
-        $imgs = $pdo->prepare("SELECT * FROM listing_images WHERE listing_id = ? ORDER BY sort_order, id");
-        $imgs->execute([$listing_id]);
-        $images = $imgs->fetchAll();
-        ?>
-        <div id="photoGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:0.625rem">
-          <?php foreach ($images as $img): ?>
-            <div data-img-id="<?=$img['id']?>" style="position:relative;border-radius:8px;overflow:hidden;border:1px solid #EEF2F6;background:rgba(238,242,246,0.3)">
-              <img src="<?=UPLOAD_URL . $img['filename']?>" style="width:100%;height:88px;object-fit:cover;display:block" alt="">
-              <?php if ($img['sort_order'] === 0): ?>
-                <span style="position:absolute;top:4px;left:4px;background:#121E2B;color:#F7F9FB;font-size:0.625rem;padding:0.15rem 0.5rem;border-radius:4px;font-weight:600;letter-spacing:0.03em">Обложка</span>
-              <?php else: ?>
-                <button type="button" onclick="setCover(<?=$img['id']?>, this)" style="position:absolute;top:4px;left:4px;background:rgba(0,0,0,0.55);color:#fff;border:0;font-size:0.625rem;padding:0.15rem 0.5rem;border-radius:4px;font-weight:500;cursor:pointer;opacity:0;transition:opacity 0.15s" onmouseover="this.style.opacity='1';this.style.background='#1B6B8A'" onmouseout="this.style.opacity='0';this.style.background='rgba(0,0,0,0.55)'">Обложка</button>
-              <?php endif; ?>
-              <button type="button" onclick="deleteImage(<?=$img['id']?>, this)" style="position:absolute;top:4px;right:4px;width:1.25rem;height:1.25rem;background:#DC2626;color:#fff;border:0;font-size:0.625rem;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;opacity:0;transition:opacity 0.15s" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0'">&times;</button>
+        <!-- ЛЕВАЯ КОЛОНКА -->
+        <div>
+          <div class="ed-card">
+            <div class="ed-sect">
+              <div class="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1B6B8A" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></div>
+              <div><b>Основное</b><small>Название, цена и описание</small></div>
             </div>
-          <?php endforeach; ?>
-        </div>
-        <div style="display:flex;align-items:center;gap:0.75rem;margin-top:0.875rem">
-          <label style="display:inline-flex;align-items:center;gap:0.375rem;border-radius:8px;border:1px solid #DFE4EA;padding:0.5rem 1rem;font-size:0.8125rem;font-weight:500;cursor:pointer;transition:all 0.15s;background:#fff;color:#3A4A5C" onmouseover="this.style.background='#F7F9FB';this.style.borderColor='#C8D0DA'" onmouseout="this.style.background='#fff';this.style.borderColor='#DFE4EA'">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
-            Добавить фото
-            <input type="file" id="photoInput" accept="image/*" hidden onchange="uploadImage()">
-          </label>
-          <span id="uploadStatus" style="font-size:0.75rem;color:#7A8A9A;display:none"></span>
-        </div>
-      </div>
+            <label class="ed-label">Название</label>
+            <input type="text" name="title" value="<?= h($item['title']) ?>" required class="ed-input" style="margin-bottom:1rem">
+            <label class="ed-label">Цена</label>
+            <div class="ed-row2" style="margin-bottom:1rem">
+              <div>
+                <select name="price_type" id="price_type" onchange="priceTypeChange()" class="ed-select">
+                  <option value="fixed" <?=($item['price_type']??'fixed')==='fixed'?'selected':''?>>Точная цена</option>
+                  <option value="from" <?=($item['price_type']??'')==='from'?'selected':''?>>От (цена от …)</option>
+                  <option value="negotiable" <?=($item['price_type']??'')==='negotiable'?'selected':''?>>По договорённости</option>
+                </select>
+              </div>
+              <div><input type="number" name="price" id="price_input" value="<?= (int)$item['price'] ?>" min="0" step="1" required class="ed-input" placeholder="₽"></div>
+            </div>
+            <label class="ed-label">Описание</label>
+            <textarea name="description" rows="8" required class="ed-textarea"><?= h($item['description'] ?? '') ?></textarea>
+            <p class="ed-hint">Расскажите подробно: что входит, особенности места, условия.</p>
+          </div>
 
-      <!-- Actions -->
-      <div style="display:flex;gap:0.75rem;padding-top:1.25rem;border-top:1px solid #EEF2F6">
-        <button type="submit" class="cta-btn" style="gap:0.375rem">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-          Сохранить
-        </button>
-        <a href="/dashboard" class="btn-outline">Отмена</a>
+          <div class="ed-card">
+            <div class="ed-sect">
+              <div class="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1B6B8A" stroke-width="2"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg></div>
+              <div><b>Параметры</b><small>Зависят от типа объявления</small></div>
+            </div>
+
+            <div id="prop-fields" class="ed-block" style="<?=$item['listing_type']!=='property'?'display:none':''?>">
+              <p class="ed-label" style="color:#1B6B8A;margin-bottom:0.625rem">Жильё</p>
+              <div class="ed-grid3">
+                <div><label class="ed-label">Гостей</label><input type="number" name="max_guests" value="<?=(int)($item['max_guests']??1)?>" min="1" class="ed-input"></div>
+                <div><label class="ed-label">Комнат</label><input type="number" name="rooms_count" value="<?=(int)($item['rooms_count']??1)?>" min="0" class="ed-input"></div>
+                <div><label class="ed-label">Кроватей</label><input type="number" name="beds_count" value="<?=(int)($item['beds_count']??1)?>" min="0" class="ed-input"></div>
+                <div><label class="ed-label">Заезд</label><input type="text" name="check_in_time" value="<?=h($item['check_in_time']??'14:00')?>" class="ed-input"></div>
+                <div><label class="ed-label">Выезд</label><input type="text" name="check_out_time" value="<?=h($item['check_out_time']??'12:00')?>" class="ed-input"></div>
+              </div>
+              <div class="ed-block">
+                <label class="ed-label">Удобства</label>
+                <?php $am = json_decode($item['amenities']??'[]',true)?:[]; ?>
+                <div class="ed-grid-a">
+                  <?php foreach (['Wi-Fi','Кухня','Парковка','Стиральная машина','Кондиционер','Телевизор','Балкон','Отопление','Фен','Утюг','Посуда','Полотенца'] as $a): ?>
+                    <label class="ed-check"><input type="checkbox" name="amenities[]" value="<?=$a?>" <?=in_array($a,$am)?'checked':''?>> <?=$a?></label>
+                  <?php endforeach; ?>
+                </div>
+              </div>
+              <div class="ed-block">
+                <label class="ed-label">Правила</label>
+                <textarea name="rules" rows="3" class="ed-textarea"><?=h($item['rules']??'')?></textarea>
+              </div>
+            </div>
+
+            <div id="tour-fields" class="ed-block" style="<?=$item['listing_type']!=='tour'?'display:none':''?>">
+              <p class="ed-label" style="color:#1B6B8A;margin-bottom:0.625rem">Тур</p>
+              <div class="ed-grid3">
+                <div><label class="ed-label">Длит. (часов)</label><input type="number" name="tour_duration_hours" value="<?=(int)($item['tour_duration_hours']??0)?>" min="0" class="ed-input"></div>
+                <div><label class="ed-label">Длит. (дней)</label><input type="number" name="tour_duration_days" value="<?=(int)($item['tour_duration_days']??0)?>" min="0" class="ed-input"></div>
+                <div><label class="ed-label">Группа (чел.)</label><input type="number" name="max_guests" value="<?=(int)($item['max_guests']??1)?>" min="1" class="ed-input"></div>
+                <div>
+                  <label class="ed-label">Сложность</label>
+                  <select name="difficulty" class="ed-select">
+                    <?php foreach (['easy'=>'Лёгкий','medium'=>'Средний','hard'=>'Сложный','extreme'=>'Экстремальный'] as $k=>$v): ?>
+                      <option value="<?=$k?>" <?=($item['difficulty_level']??'')===$k?'selected':''?>><?=$v?></option>
+                    <?php endforeach; ?>
+                  </select>
+                </div>
+              </div>
+              <div class="ed-block"><label class="ed-label">Что включено</label><input type="text" name="includes" value="<?=h($item['includes']??'')?>" class="ed-input"></div>
+              <div class="ed-block"><label class="ed-label">Что взять с собой</label><input type="text" name="what_to_bring" value="<?=h($item['what_to_bring']??'')?>" class="ed-input"></div>
+              <div class="ed-block"><label class="ed-label">Место встречи</label><input type="text" name="meeting_point" value="<?=h($item['meeting_point']??'')?>" class="ed-input"></div>
+            </div>
+
+            <div id="fish-fields" class="ed-block" style="<?=$item['listing_type']!=='fishing'?'display:none':''?>">
+              <p class="ed-label" style="color:#1B6B8A;margin-bottom:0.625rem">Рыбалка</p>
+              <div class="ed-grid3">
+                <div><label class="ed-label">Длит. (часов)</label><input type="number" name="tour_duration_hours" value="<?=(int)($item['tour_duration_hours']??0)?>" min="0" class="ed-input"></div>
+                <div><label class="ed-label">Группа (чел.)</label><input type="number" name="max_guests" value="<?=(int)($item['max_guests']??1)?>" min="1" class="ed-input"></div>
+                <div>
+                  <label class="ed-label">Вид ловли</label>
+                  <select name="fishing_method" class="ed-select">
+                    <?php foreach (['spin'=>'Спиннинг','fly'=>'Нахлыст','troll'=>'Троллинг','ice'=>'Зимняя','float'=>'Поплавочная'] as $k=>$v): ?>
+                      <option value="<?=$k?>" <?=($item['fishing_method']??'')===$k?'selected':''?>><?=$v?></option>
+                    <?php endforeach; ?>
+                  </select>
+                </div>
+                <div><label class="ed-label">Рыба</label><input type="text" name="fish_types" value="<?=h($item['fish_species']??'')?>" placeholder="Кунджа, горбуша, таймень" class="ed-input"></div>
+                <div><label class="ed-label">Тип лодки</label><input type="text" name="boat_type" value="<?=h($item['boat_type']??'')?>" class="ed-input"></div>
+                <div style="display:flex;align-items:center;padding-top:1.375rem">
+                  <label class="ed-check"><input type="checkbox" name="license_required" value="1" <?=$item['license_required']?'checked':''?>> Нужна лицензия</label>
+                </div>
+              </div>
+              <div class="ed-block"><label class="ed-label">Что включено</label><input type="text" name="includes" value="<?=h($item['includes']??'')?>" class="ed-input"></div>
+              <div class="ed-block"><label class="ed-label">Что взять</label><input type="text" name="what_to_bring" value="<?=h($item['what_to_bring']??'')?>" class="ed-input"></div>
+              <div class="ed-block"><label class="ed-label">Место встречи</label><input type="text" name="meeting_point" value="<?=h($item['meeting_point']??'')?>" class="ed-input"></div>
+            </div>
+
+            <div id="gear-fields" class="ed-block" style="<?=$item['listing_type']!=='rental_gear'?'display:none':''?>">
+              <p class="ed-label" style="color:#1B6B8A;margin-bottom:0.625rem">Снаряжение</p>
+              <div class="ed-grid3">
+                <div><label class="ed-label">Тип</label><input type="text" name="gear_type" value="<?=h($item['gear_type']??'')?>" class="ed-input"></div>
+                <div><label class="ed-label">Состояние</label><input type="text" name="condition" value="<?=h($item['gear_condition']??'')?>" class="ed-input"></div>
+                <div><label class="ed-label">Размеры</label><input type="text" name="sizes" value="<?=h($item['sizes']??'')?>" class="ed-input"></div>
+                <div><label class="ed-label">Доступно (шт.)</label><input type="number" name="max_guests" value="<?=(int)($item['max_guests']??1)?>" min="1" class="ed-input"></div>
+                <div><label class="ed-label">Залог (₽)</label><input type="number" name="deposit" value="<?=(int)($item['deposit_amount']??0)?>" min="0" class="ed-input"></div>
+              </div>
+              <div class="ed-block"><label class="ed-label">Что включено</label><input type="text" name="includes" value="<?=h($item['includes']??'')?>" class="ed-input"></div>
+            </div>
+
+            <div id="car-fields" class="ed-block" style="<?=$item['listing_type']!=='car_rental'?'display:none':''?>">
+              <p class="ed-label" style="color:#1B6B8A;margin-bottom:0.625rem">Авто</p>
+              <div class="ed-grid3">
+                <div><label class="ed-label">Марка/модель</label><input type="text" name="car_type" value="<?=h($item['car_type']??'')?>" class="ed-input"></div>
+                <div>
+                  <label class="ed-label">Коробка</label>
+                  <select name="transmission" class="ed-select">
+                    <?php foreach (['auto'=>'Автомат','manual'=>'Механика'] as $k=>$v): ?>
+                      <option value="<?=$k?>" <?=($item['transmission']??'')===$k?'selected':''?>><?=$v?></option>
+                    <?php endforeach; ?>
+                  </select>
+                </div>
+                <div><label class="ed-label">Мест</label><input type="number" name="seats" value="<?=(int)($item['seats']??5)?>" min="1" class="ed-input"></div>
+                <div><label class="ed-label">Топливо</label><input type="text" name="fuel" value="<?=h($item['fuel']??'')?>" class="ed-input"></div>
+                <div><label class="ed-label">Пробег (км/день)</label><input type="number" name="mileage" value="<?=(int)($item['mileage']??0)?>" min="0" class="ed-input"></div>
+                <div><label class="ed-label">Залог (₽)</label><input type="number" name="deposit" value="<?=(int)($item['deposit_amount']??0)?>" min="0" class="ed-input"></div>
+              </div>
+              <div class="ed-block"><label class="ed-label">Требования</label><input type="text" name="requirements" value="<?=h($item['requirements']??'')?>" class="ed-input"></div>
+              <div class="ed-block"><label class="ed-label">Что включено</label><input type="text" name="includes" value="<?=h($item['includes']??'')?>" class="ed-input"></div>
+            </div>
+          </div>
+
+          <div class="ed-card">
+            <div class="ed-sect">
+              <div class="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1B6B8A" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>
+              <div><b>Фотографии</b><small>Первая — обложка объявления</small></div>
+            </div>
+            <?php
+            $imgs = $pdo->prepare("SELECT * FROM listing_images WHERE listing_id = ? ORDER BY sort_order, id");
+            $imgs->execute([$listing_id]);
+            $images = $imgs->fetchAll();
+            ?>
+            <div id="photoGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:0.625rem">
+              <?php foreach ($images as $img): ?>
+                <div data-img-id="<?=$img['id']?>" style="position:relative;border-radius:10px;overflow:hidden;border:1px solid #EEF2F6;background:rgba(238,242,246,0.3)">
+                  <img src="<?=UPLOAD_URL . $img['filename']?>" style="width:100%;height:88px;object-fit:cover;display:block" alt="">
+                  <?php if ($img['sort_order'] === 0): ?>
+                    <span style="position:absolute;top:4px;left:4px;background:#121E2B;color:#F7F9FB;font-size:0.625rem;padding:0.15rem 0.5rem;border-radius:4px;font-weight:600;letter-spacing:0.03em">Обложка</span>
+                  <?php else: ?>
+                    <button type="button" onclick="setCover(<?=$img['id']?>, this)" style="position:absolute;top:4px;left:4px;background:rgba(0,0,0,0.55);color:#fff;border:0;font-size:0.625rem;padding:0.15rem 0.5rem;border-radius:4px;font-weight:500;cursor:pointer;opacity:0;transition:opacity 0.15s" onmouseover="this.style.opacity='1';this.style.background='#1B6B8A'" onmouseout="this.style.opacity='0';this.style.background='rgba(0,0,0,0.55)'">Обложка</button>
+                  <?php endif; ?>
+                  <button type="button" onclick="deleteImage(<?=$img['id']?>, this)" style="position:absolute;top:4px;right:4px;width:1.25rem;height:1.25rem;background:#DC2626;color:#fff;border:0;font-size:0.625rem;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;opacity:0;transition:opacity 0.15s" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0'">&times;</button>
+                </div>
+              <?php endforeach; ?>
+            </div>
+            <div style="display:flex;align-items:center;gap:0.75rem;margin-top:0.875rem">
+              <label style="display:inline-flex;align-items:center;gap:0.375rem;border-radius:10px;border:1px dashed #C8D0DA;padding:0.625rem 1.125rem;font-size:0.8125rem;font-weight:600;cursor:pointer;transition:all 0.15s;background:#F7F9FB;color:#3A4A5C" onmouseover="this.style.background='#EEF4F8';this.style.borderColor='#1B6B8A'" onmouseout="this.style.background='#F7F9FB';this.style.borderColor='#C8D0DA'">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+                Добавить фото
+                <input type="file" id="photoInput" accept="image/*" hidden onchange="uploadImage()">
+              </label>
+              <span id="uploadStatus" style="font-size:0.75rem;color:#7A8A9A;display:none"></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- САЙДБАР -->
+        <div class="ed-side">
+          <div class="ed-card">
+            <div class="ed-sect" style="margin-bottom:1rem">
+              <div class="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1B6B8A" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></div>
+              <div><b>Размещение</b><small>Тип и категория</small></div>
+            </div>
+            <div class="ed-side-row">
+              <label class="ed-label">Тип</label>
+              <select name="listing_type" id="listing_type" onchange="edTypeChange()" class="ed-select">
+                <?php foreach (['property'=>'Жильё','tour'=>'Туры','fishing'=>'Рыбалка','rental_gear'=>'Снаряжение','car_rental'=>'Прокат авто'] as $k=>$v): ?>
+                  <option value="<?=$k?>" <?=$item['listing_type']===$k?'selected':''?>><?=$v?></option>
+                <?php endforeach; ?>
+              </select>
+            </div>
+            <div class="ed-side-row">
+              <label class="ed-label">Категория</label>
+              <select name="category_id" class="ed-select">
+                <?php
+                $cats = $pdo->query("SELECT id, name, slug FROM categories ORDER BY id")->fetchAll();
+                foreach ($cats as $c): ?>
+                  <option value="<?=$c['id']?>" <?=$item['category_id']==$c['id']?'selected':''?>><?=h($c['name'])?></option>
+                <?php endforeach; ?>
+              </select>
+            </div>
+            <div class="ed-side-row">
+              <label class="ed-label">Локация</label>
+              <input type="text" name="location" value="<?= h($item['location'] ?? '') ?>" class="ed-input" placeholder="Южно-Сахалинск">
+            </div>
+          </div>
+          <div class="ed-card">
+            <button type="submit" class="ed-btn-save" style="width:100%;justify-content:center;padding:0.75rem;font-size:0.875rem"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Сохранить изменения</button>
+            <a class="ed-btn-view" href="/listing/<?= (int)$item['id'] ?>" style="width:100%;justify-content:center;margin-top:0.625rem">Просмотреть объявление</a>
+            <a class="ed-btn-view" href="/dashboard" style="width:100%;justify-content:center;margin-top:0.625rem;border:0;background:none;color:#7A8A9A">Отмена</a>
+          </div>
+        </div>
+
       </div>
     </form>
+
+    <div class="ed-savebar">
+      <button type="submit" form="editForm" class="ed-btn-primary"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Сохранить изменения</button>
+      <a class="ed-btn-view" href="/listing/<?= (int)$item['id'] ?>" style="align-self:center">Просмотр</a>
+    </div>
+  </div>
+</section>
+
+<script>
+function edTypeChange(){
+  var map = {property:'prop', tour:'tour', fishing:'fish', rental_gear:'gear', car_rental:'car'};
+  var v = document.getElementById('listing_type').value;
+  Object.keys(map).forEach(function(k){
+    var el = document.getElementById(map[k] + '-fields');
+    if (el) el.style.display = (map[k] === map[v]) ? '' : 'none';
+  });
+}
+</script>
   </div>
 </section>
 
