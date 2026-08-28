@@ -7,6 +7,7 @@ require_once __DIR__ . '/includes/version.php';
 require_once __DIR__ . '/includes/functions.php';
 require_once __DIR__ . '/includes/auth.php';
 require_once __DIR__ . '/includes/notify.php';
+require_once __DIR__ . '/includes/robokassa.php';
 
 header('X-Frame-Options: SAMEORIGIN');
 header('X-Content-Type-Options: nosniff');
@@ -25,7 +26,7 @@ $id = $parts[2] ?? null;
 if (in_array($page, ['listing', 'edit', 'promote', 'seller']) && empty($id)) { $id = $sub; $sub = null; }
 
 // Maintenance mode check
-if ($page !== 'admin' && $page !== 'login' && $page !== 'register' && $page !== 'api' && $page !== 'max-webhook') {
+if ($page !== 'admin' && $page !== 'login' && $page !== 'register' && $page !== 'api' && $page !== 'max-webhook' && $page !== 'robokassa') {
   $mcheck = db()->query("SELECT setting_value FROM settings WHERE setting_key = 'maintenance'")->fetchColumn();
   $user = auth_user();
   if ($mcheck === '1' && (!$user || $user['role'] !== 'admin')) {
@@ -111,6 +112,30 @@ switch ($page) {
       }
     }
     echo json_encode(['busy'=>$avlBusy]);
+    exit;
+
+  case 'robokassa':
+    // Уведомления и возвраты Robokassa. result — серверный callback (Пароль №2).
+    $rkAction = $sub ?? '';
+    if ($rkAction === 'result') {
+      header('Content-Type: text/plain; charset=utf-8');
+      $res = rk_verify_result($_POST['OutSum'] ?? '', $_POST['InvId'] ?? '', $_POST['SignatureValue'] ?? '');
+      if (!$res) { echo 'bad sign'; exit; }
+      rk_activate_payment($res[0], $res[1]);
+      echo 'OK' . $res[0];
+      exit;
+    }
+    if ($rkAction === 'success') {
+      $res = rk_verify_success(
+        $_POST['OutSum'] ?? ($_GET['OutSum'] ?? ''),
+        $_POST['InvId'] ?? ($_GET['InvId'] ?? ''),
+        $_POST['SignatureValue'] ?? ($_GET['SignatureValue'] ?? '')
+      );
+      if ($res) rk_activate_payment($res[0], $res[1]);
+      header('Location: /dashboard?pay=ok');
+      exit;
+    }
+    header('Location: /dashboard?pay=fail');
     exit;
 
   case 'max-webhook':

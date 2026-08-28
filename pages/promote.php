@@ -25,6 +25,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['promote'])) {
   $starts = date('Y-m-d H:i:s');
   $expires = date('Y-m-d H:i:s', strtotime("+{$duration} days"));
 
+  // Онлайн-оплата через Robokassa: черновик промо → платёж → редирект на оплату
+  if (rk_configured() && $budget > 0) {
+    if ($activePromo) {
+      $pdo->prepare("UPDATE promotions SET promo_type=?, status='draft', starts_at=?, expires_at=?, budget_rub=?, payment_status='pending', payment_amount=? WHERE id=?")
+        ->execute([$promoType, $starts, $expires, $budget, $budget, $activePromo['id']]);
+      $promoId = (int)$activePromo['id'];
+    } else {
+      $stmt = $pdo->prepare('INSERT INTO promotions (listing_id, host_id, promo_type, status, starts_at, expires_at, budget_rub, payment_status, payment_amount) VALUES (?,?,?,?,?,?,?,?,?)');
+      $stmt->execute([$lid, $cu['id'], $promoType, 'draft', $starts, $expires, $budget, 'pending', $budget]);
+      $promoId = (int)$pdo->lastInsertId();
+    }
+    $invId = rk_create_payment((float)$budget, 'promo', $promoId, $cu['id'], 'Продвижение «' . $listing['title'] . '» — ' . $duration . ' дн.');
+    header('Location: ' . rk_pay_url((float)$budget, $invId, 'Продвижение объявления №' . $lid . ' на СахGO'));
+    exit;
+  }
+
+  // Ручная схема (Robokassa не настроена): заявка → подтверждение администратором
   $stmt = $pdo->prepare('INSERT INTO promotions (listing_id, host_id, promo_type, status, starts_at, expires_at, budget_rub, payment_status, payment_amount) VALUES (?,?,?,?,?,?,?,?,?)');
   $stmt->execute([$lid, $cu['id'], $promoType, 'pending', $starts, $expires, $budget, 'pending', $budget]);
 

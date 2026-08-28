@@ -212,6 +212,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     header('Location: /admin?tab=banners&ok=1');
     exit;
   }
+  // Banner: выставить счёт за рекламу (Robokassa)
+  if ($_POST['action'] === 'create_banner_invoice') {
+    $amount = (float)str_replace([',', ' '], ['.', ''], $_POST['amount'] ?? '0');
+    $bid = (int)($_POST['banner_id'] ?? 0);
+    $desc = trim($_POST['invoice_desc'] ?? '');
+    if ($amount > 0 && rk_configured()) {
+      $invId = rk_create_payment($amount, 'banner', $bid ?: null, null, $desc !== '' ? $desc : 'Реклама на СахGO');
+      header('Location: /admin?tab=banners&paylink=' . $invId);
+      exit;
+    }
+    header('Location: /admin?tab=banners&payerr=1'); exit;
+  }
+
   // Banner: delete
   if ($_POST['action'] === 'delete_banner') {
     $pdo->prepare("DELETE FROM banners WHERE id=?")->execute([(int)$_POST['id']]);
@@ -893,6 +906,34 @@ elseif ($tab === 'banners'):
       </table>
     </div>
     <?php endif; ?>
+
+    <!-- Счёт за рекламу (Robokassa) -->
+    <div class="bg-white border rounded-xl p-6 mt-6">
+      <h3 class="font-display text-lg" style="margin:0 0 0.5rem">Счёт за рекламу (Robokassa)</h3>
+      <?php if (!rk_configured()): ?>
+        <p class="text-sm text-muted-foreground" style="margin:0">Robokassa не настроена: добавьте ключи RK_MERCHANT_LOGIN / RK_PASSWORD1 / RK_PASSWORD2 в конфиг.</p>
+      <?php else: ?>
+        <?php if (isset($_GET['paylink'])): $pl = (int)$_GET['paylink'];
+          $pr = $pdo->prepare('SELECT * FROM payments WHERE inv_id = ?'); $pr->execute([$pl]); $pay = $pr->fetch();
+          if ($pay): ?>
+          <p class="text-sm" style="margin:0 0 0.375rem">Ссылка для оплаты — отправьте рекламодателю:</p>
+          <input class="w-full text-sm border rounded-lg px-3 py-2 font-mono" readonly onclick="this.select()" value="<?= h(rk_pay_url((float)$pay['amount'], (int)$pay['inv_id'], (string)$pay['description'])) ?>">
+          <?php endif; ?>
+        <?php endif; ?>
+        <?php if (isset($_GET['payerr'])): ?><p class="text-sm text-red-500">Не удалось создать счёт — проверьте сумму.</p><?php endif; ?>
+        <form method="post" class="grid grid-cols-1 sm:grid-cols-4 gap-3 mt-3">
+          <?= csrf_field() ?>
+          <input type="hidden" name="action" value="create_banner_invoice">
+          <input name="amount" placeholder="Сумма, ₽" class="border rounded-lg px-3 py-2 text-sm">
+          <select name="banner_id" class="border rounded-lg px-3 py-2 text-sm">
+            <option value="0">— баннер не выбран —</option>
+            <?php foreach ($banners as $b): ?><option value="<?=$b['id']?>"><?=h($b['title'])?></option><?php endforeach; ?>
+          </select>
+          <input name="invoice_desc" placeholder="Описание (для рекламодателя)" class="border rounded-lg px-3 py-2 text-sm">
+          <button type="submit" class="cta-btn text-sm">Создать ссылку на оплату</button>
+        </form>
+      <?php endif; ?>
+    </div>
 
 <?php
 // ── REVISIONS ──
