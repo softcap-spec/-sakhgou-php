@@ -5,6 +5,7 @@ require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/functions.php';
 require_once __DIR__ . '/../includes/auth.php';
 
+header('Cache-Control: no-store, must-revalidate');
 $user = auth_required();
 $listing_id = (int)($id ?? 0);
 $pdo = db();
