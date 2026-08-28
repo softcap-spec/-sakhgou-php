@@ -710,7 +710,7 @@ require __DIR__ . '/../includes/header.php';
   $today = date('Y-m-d');
   // истёкшие pending хозяина освобождают даты
   $pdo->prepare("UPDATE bookings SET status='declined' WHERE host_id=? AND status='pending' AND created_at < DATE_SUB(NOW(), INTERVAL 48 HOUR)")->execute([$user['id']]);
-  $calSql = "SELECT b.*, l.title AS listing_title, l.price AS lprice, l.price_type AS ptype, l.listing_type AS ltype, COALESCE(NULLIF(b.guest_name,''), (SELECT name FROM users WHERE id = b.guest_id), 'Клиент') AS ev_name FROM bookings b JOIN listings l ON b.listing_id = l.id WHERE b.host_id = ? AND b.status IN ('pending','confirmed','blocked') AND b.check_in_date <= ? AND b.check_out_date >= ?" . ($calLid > 0 ? ' AND b.listing_id = ' . (int)$calLid : '') . " ORDER BY b.check_in_date";
+  $calSql = "SELECT b.*, l.title AS listing_title, l.price AS lprice, l.price_type AS ptype, l.listing_type AS ltype, ug.phone AS guphone, COALESCE(NULLIF(b.guest_name,''), (SELECT name FROM users WHERE id = b.guest_id), 'Клиент') AS ev_name FROM bookings b JOIN listings l ON b.listing_id = l.id LEFT JOIN users ug ON b.guest_id = ug.id WHERE b.host_id = ? AND b.status IN ('pending','confirmed','blocked') AND b.check_in_date <= ? AND b.check_out_date >= ?" . ($calLid > 0 ? ' AND b.listing_id = ' . (int)$calLid : '') . " ORDER BY b.check_in_date";
   $qe = $pdo->prepare($calSql);
   $qe->execute([$user['id'], $calEnd, $calStart]);
   $calEvents = $qe->fetchAll();
@@ -732,19 +732,16 @@ require __DIR__ . '/../includes/header.php';
     .cal-day.empty{background:transparent;border:0}
     .cal-num{font-size:0.75rem;font-weight:700;color:#0A1A2A;margin-bottom:3px}
     .cal-day.past .cal-num{color:#9AAAB8}
-    .cal-chip{height:7px;border-radius:4px;margin:3px 0;background:#CBD5E1;cursor:pointer}
-    .cal-chip.confirmed{background:#34D399}
-    .cal-chip.pending{background:#FBBF24}
-    .cal-chip.blocked{background:#94A3B8}
+    .cal-chip{font-size:0.66rem;line-height:1.3;border-radius:6px;padding:3px 5px;margin-bottom:3px;cursor:pointer;word-break:break-word}
+    .cal-chip.confirmed{background:#DFF5E7;color:#1F7A45;border:1px solid #BBE5C8}
+    .cal-chip.pending{background:#FFF3D6;color:#9A6700;border:1px solid #F5E1A4}
+    .cal-chip.blocked{background:#E9EEF3;color:#41505E;border:1px solid #D5DDE6}
     .cal-more{font-size:0.62rem;color:#7A8A9A}
-    .cal-day.sel{border-color:#0A7BBA;background:#F0F9FF;box-shadow:0 0 0 1px #0A7BBA inset}
-    #dayPanel .dcard{background:#fff;border:1px solid #EEF2F6;border-radius:12px;padding:1rem;box-shadow:0 4px 12px rgba(15,23,32,0.06);margin-bottom:0.75rem}
-    #dayPanel .dtitle{font-family:Manrope,sans-serif;font-weight:700;font-size:0.9375rem;color:#0A1A2A;text-decoration:none}
-    #dayPanel .dmeta{font-size:0.8125rem;color:#5A6B7D;margin-top:0.25rem}
-    #dayPanel .dbtn{display:inline-block;background:#F0F3F7;color:#0A1A2A;border:0;border-radius:8px;padding:0.4375rem 0.875rem;font-size:0.75rem;font-weight:600;cursor:pointer;text-decoration:none;margin-right:0.375rem;margin-top:0.625rem}
-    #dayPanel .dbtn.blue{background:#0A7BBA;color:#fff}
-    #dayPanel .dbtn.red{background:#fff;color:#DC2626;border:1px solid #F3C1C1}
-    #dayPanel .dstat{display:inline-block;padding:0.1875rem 0.5rem;border-radius:999px;font-size:0.6875rem;font-weight:600}
+    .cal-modal .cinfo{font-size:0.9rem;line-height:1.6;color:#0A1A2A}
+    .cal-modal .cinfo b{color:#5A6B7D;font-weight:600;font-size:0.8125rem;margin-right:0.25rem}
+    .cal-modal .dbtn{display:inline-block;background:#F0F3F7;color:#0A1A2A;border:0;border-radius:8px;padding:0.4375rem 0.875rem;font-size:0.75rem;font-weight:600;cursor:pointer;text-decoration:none;margin-right:0.375rem}
+    .cal-modal .dbtn.blue{background:#0A7BBA;color:#fff}
+    .cal-modal .dbtn.red{background:#fff;color:#DC2626;border:1px solid #F3C1C1}
     .cal-add{position:absolute;bottom:3px;right:3px;width:20px;height:20px;border-radius:6px;border:1px dashed #C8D0DA;background:#fff;color:#7A8A9A;font-size:0.8rem;line-height:1;cursor:pointer}
     .cal-add:hover{background:#0A7BBA;color:#fff;border-color:#0A7BBA}
     .cal-modal-overlay{display:none;position:fixed;inset:0;background:rgba(18,30,43,0.5);z-index:120;align-items:center;justify-content:center;padding:1rem}
@@ -802,20 +799,30 @@ require __DIR__ . '/../includes/header.php';
         $evs = $dayEvents[$key] ?? [];
         $isPast = $key < $today;
       ?>
-      <td class="cal-day<?=$isPast ? ' past' : ''?><?=$key === $today ? ' today' : ''?>" data-date="<?=$key?>" onclick="calDay('<?=$key?>')" style="cursor:pointer">
+      <td class="cal-day<?=$isPast ? ' past' : ''?><?=$key === $today ? ' today' : ''?>">
         <div class="cal-num"><?=$dayNum?></div>
         <?php foreach (array_slice($evs, 0, 3) as $ev): ?>
-        <div class="cal-chip <?=$ev['status']?>" title="<?=h($ev['ev_name'])?> · <?=h($ev['listing_title'])?>"></div>
+        <div class="cal-chip <?=$ev['status']?>" onclick="calInfo(<?=$ev['id']?>)" title="Подробнее"><?=h(mb_substr($ev['ev_name'], 0, 18))?></div>
         <?php endforeach; ?>
         <?php if (count($evs) > 3): ?><div class="cal-more">+<?=count($evs) - 3?></div><?php endif; ?>
-        <?php if (!$isPast): ?><button type="button" class="cal-add" onclick="event.stopPropagation();calAdd('<?=$key?>')" title="Занять даты">+</button><?php endif; ?>
+        <?php if (!$isPast): ?><button type="button" class="cal-add" onclick="calAdd('<?=$key?>')" title="Занять даты">+</button><?php endif; ?>
       </td>
       <?php endfor; ?>
     </tr>
     <?php endfor; ?>
   </table>
 
-  <div id="dayPanel" style="margin-top:1.25rem"></div>
+  <!-- Попап: детали брони (имя, телефон, кнопки) -->
+  <div id="calInfo" class="cal-modal-overlay" onclick="if(event.target===this)calInfoClose()">
+    <div class="cal-modal">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem">
+        <b style="font-family:Manrope,sans-serif" id="ciStatus"></b>
+        <button type="button" onclick="calInfoClose()" style="background:none;border:0;font-size:1.25rem;cursor:pointer;color:#7A8A9A">×</button>
+      </div>
+      <div class="cinfo" id="ciBody"></div>
+      <div style="display:flex;gap:0.5rem;margin-top:1rem;flex-wrap:wrap;align-items:center" id="ciBtns"></div>
+    </div>
+  </div>
 
   <!-- Модалка: добавить / править ручную запись -->
   <div id="calModal" class="cal-modal-overlay" onclick="if(event.target===this)calClose()">
@@ -862,7 +869,8 @@ require __DIR__ . '/../includes/header.php';
               'guests'=>(int)$e['guests_count'], 'name'=>$e['ev_name'], 'phone'=>(string)$e['guest_phone'],
               'price'=>(float)$e['total_price'], 'source'=>$e['source'], 'status'=>$e['status'],
               'gid'=>(int)($e['guest_id'] ?? 0), 'lprice'=>(float)($e['lprice'] ?? 0),
-              'ptype'=>(string)($e['ptype'] ?? ''), 'ltype'=>(string)($e['ltype'] ?? '')];
+              'ptype'=>(string)($e['ptype'] ?? ''), 'ltype'=>(string)($e['ltype'] ?? ''),
+              'tel'=>(!empty($e['guest_phone']) ? phone_display((string)$e['guest_phone']) : (!empty($e['guphone']) ? phone_display((string)$e['guphone']) : ''))];
     }, $calEvents), JSON_UNESCAPED_UNICODE) ?>;
   var CAL_CSRF = <?= json_encode(csrf_token()) ?>;
   var CAL_M = <?= json_encode($calMonth) ?>;
@@ -904,48 +912,33 @@ require __DIR__ . '/../includes/header.php';
   }
   document.addEventListener('keydown', function(e){ if (e.key === 'Escape') calClose(); });
 
-  var CAL_MONTHS = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
   function esc(s){var d=document.createElement('div');d.textContent=s;return d.innerHTML}
   function money(n){return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g,' ')}
-  function guestsW(n){return n===1?'гость':(n>=2&&n<=4?'гостя':'гостей')}
-  function dshort(ds){var p=ds.split('-');return p[2].replace(/^0/,'')+' '+CAL_MONTHS[parseInt(p[1],10)-1].slice(0,3)}
-  function statusBadge(st){
-    var lab = st==='confirmed' ? 'Подтверждена' : (st==='pending' ? 'Ожидает' : 'Занято вручную');
-    var bg = st==='confirmed' ? 'background:#E8F5E9;color:#2E7D32' : (st==='pending' ? 'background:#FFF8E1;color:#B26A00' : 'background:#EEF2F6;color:#54677A');
-    return '<span class="dstat" style="'+bg+'">'+lab+'</span>';
-  }
-  function calDay(ds){
-    document.querySelectorAll('.cal-day.sel').forEach(function(x){x.classList.remove('sel')});
-    var td=document.querySelector('.cal-day[data-date="'+ds+'"]');
-    if(td)td.classList.add('sel');
-    var evs=CAL_EVENTS.filter(function(e){return e.from<=ds&&ds<=e.to});
-    var parts=ds.split('-');
-    var d=new Date(parseInt(parts[0],10),parseInt(parts[1],10)-1,parseInt(parts[2],10));
-    var html='<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem;margin-bottom:0.75rem"><b style="font-family:Manrope,sans-serif;font-size:1rem">'+d.getDate()+' '+CAL_MONTHS[d.getMonth()]+' '+d.getFullYear()+'</b>'
-      + '<button type="button" class="dbtn blue" style="margin:0" onclick="calAdd(\''+ds+'\')">+ Занять даты</button></div>';
-    if(!evs.length){
-      html+='<div class="dcard" style="color:#7A8A9A;font-size:0.875rem">На этот день броней нет</div>';
+  function calInfo(id){
+    var e=CAL_EVENTS.find(function(x){return x.id===id});
+    if(!e)return;
+    var st=e.status==='confirmed'?'Подтверждена':(e.status==='pending'?'Ожидает подтверждения':'Занято вручную');
+    document.getElementById('ciStatus').textContent=st;
+    var rows='<div><b>Объявление:</b> <a href="/listing/'+e.lid+'" style="color:#0A7BBA;text-decoration:none">'+esc(e.title)+'</a></div>';
+    rows+='<div><b>Гость:</b> '+esc(e.name)+'</div>';
+    if(e.tel)rows+='<div><b>Телефон:</b> <a href="tel:'+e.tel+'" style="color:#0A7BBA">'+esc(e.tel)+'</a></div>';
+    rows+='<div><b>Даты:</b> '+e.from+' — '+e.to+'</div>';
+    rows+='<div><b>Гостей:</b> '+e.guests+'</div>';
+    rows+='<div><b>Цена:</b> '+(e.price>0?money(e.price)+' ₽':'без цены')+'</div>';
+    document.getElementById('ciBody').innerHTML=rows;
+    var btns='';
+    if(e.source==='manual'){
+      btns+='<button type="button" class="dbtn" onclick="calInfoClose();calEdit('+e.id+')">Правка</button>';
+      btns+='<button type="button" class="dbtn red" onclick="calInfoClose();calDelete('+e.id+')">Удалить</button>';
+    } else {
+      btns+='<button type="button" class="dbtn blue" onclick="calChat('+e.id+')">Открыть чат</button>';
+      if(e.status==='pending')btns+='<span style="font-size:0.75rem;color:#7A8A9A;align-self:center">подтвердить — во вкладке «Ко мне»</span>';
     }
-    evs.forEach(function(e){
-      html+='<div class="dcard">';
-      html+='<div style="margin-bottom:0.375rem">'+statusBadge(e.status)+' <a class="dtitle" href="/listing/'+e.lid+'">'+esc(e.title)+'</a></div>';
-      html+='<div class="dmeta">Гость: '+esc(e.name)+'</div>';
-      html+='<div class="dmeta">'+dshort(e.from)+' — '+dshort(e.to)+' · '+e.guests+' '+guestsW(e.guests)+'</div>';
-      if(e.price>0)html+='<div class="dmeta" style="font-weight:700;color:#0A1A2A">'+money(e.price)+' ₽</div>';
-      html+='<div>';
-      if(e.source==='manual'){
-        html+='<button type="button" class="dbtn" onclick="calEdit('+e.id+')">Правка</button>';
-        html+='<button type="button" class="dbtn red" onclick="calDelete('+e.id+')">Удалить</button>';
-      } else {
-        html+='<button type="button" class="dbtn blue" onclick="calChat('+e.id+')">Открыть чат</button>';
-        if(e.status==='pending')html+='<span style="font-size:0.75rem;color:#7A8A9A">подтвердить/отклонить — во вкладке «Ко мне»</span>';
-      }
-      html+='</div></div>';
-    });
-    var panel=document.getElementById('dayPanel');
-    panel.innerHTML=html;
-    panel.scrollIntoView({behavior:'smooth',block:'nearest'});
+    document.getElementById('ciBtns').innerHTML=btns;
+    document.getElementById('calInfo').classList.add('open');
+    document.body.style.overflow='hidden';
   }
+  function calInfoClose(){document.getElementById('calInfo').classList.remove('open');document.body.style.overflow=''}
   function calChat(id){
     var e=CAL_EVENTS.find(function(x){return x.id===id});
     if(!e)return;
@@ -958,11 +951,6 @@ require __DIR__ . '/../includes/header.php';
     f.innerHTML='<input type="hidden" name="_csrf" value="'+CAL_CSRF+'"><input type="hidden" name="delete_manual" value="1"><input type="hidden" name="bid" value="'+id+'"><input type="hidden" name="m" value="'+CAL_M+'">';
     document.body.appendChild(f);f.submit();
   }
-  (function(){
-    var ds = '<?=$today?>';
-    if (!document.querySelector('.cal-day[data-date="'+ds+'"]')) ds = CAL_EVENTS.length ? CAL_EVENTS[0].from : '<?=$calStart?>';
-    if (document.querySelector('.cal-day[data-date="'+ds+'"]')) calDay(ds);
-  })();
   </script>
 
   <?php elseif ($sub === 'profile'): ?>
