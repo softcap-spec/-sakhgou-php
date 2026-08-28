@@ -150,8 +150,17 @@ $page_title = 'Подать объявление — СахGO';
 require __DIR__ . '/../includes/header.php';
 ?>
 
-<main style="padding:3rem 0 4rem">
-<div style="max-width:42rem;margin:0 auto;padding:0 1rem">
+<style>
+  .form-group{margin-bottom:1.125rem}
+  .form-group label{display:block;font-size:0.8125rem;font-weight:600;color:#54677A;margin:0 0 0.375rem}
+  .form-group input,.form-group select,.form-group textarea{padding:0.6875rem 0.875rem;border:1px solid #DFE4EA;border-radius:10px;font-size:0.9375rem;font-family:inherit;color:#121E2B;background:#fff;transition:border-color 0.15s, box-shadow 0.15s;outline:none}
+  .form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:#1B6B8A;box-shadow:0 0 0 3px rgba(27,107,138,0.12)}
+  .form-group textarea{resize:vertical;line-height:1.55}
+  form[enctype]{border-radius:16px !important;padding:2rem !important;box-shadow:0 4px 14px rgba(15,23,32,0.05) !important}
+</style>
+
+<main style="padding:2.5rem 0 5rem">
+<div style="max-width:58rem;margin:0 auto;padding:0 1rem">
 
 <?php if ($success): ?>
   <div style="text-align:center;padding:4rem 0">
@@ -192,17 +201,17 @@ require __DIR__ . '/../includes/header.php';
       $active = $step === $n;
     ?>
     <div style="display:flex;align-items:center;gap:0.5rem;flex:1;min-width:0">
-      <div style="width:2.25rem;height:2.25rem;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:700;flex-shrink:0;transition:all 0.2s ease;<?=$done||$active?'background:#121E2B;color:#F7F9FB':'background:#EEF2F6;color:#7A8A9A'?>">
+      <div style="width:2.25rem;height:2.25rem;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:700;flex-shrink:0;transition:all 0.2s ease;<?=$done||$active?'background:#1B6B8A;color:#F7F9FB':'background:#EEF2F6;color:#7A8A9A'?>">
         <?php if ($done): ?>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
         <?php else: ?>
           <?=$stepIcons[$n]?>
         <?php endif; ?>
       </div>
-      <span style="font-size:0.75rem;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:<?=$done||$active?'#121E2B':'#7A8A9A'?>"><?=$lbl?></span>
+      <span style="font-size:0.75rem;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:<?=$done||$active?'#1B6B8A':'#7A8A9A'?>"><?=$lbl?></span>
     </div>
     <?php if ($i < $totalSteps): ?>
-    <div style="height:1px;background:<?=$done?'#121E2B':'#DFE4EA'?>;flex:0.5;margin:0 0.25rem"></div>
+    <div style="height:1px;background:<?=$done?'#1B6B8A':'#DFE4EA'?>;flex:0.5;margin:0 0.25rem"></div>
     <?php endif; ?>
     <?php endforeach; ?>
   </div>
@@ -222,9 +231,9 @@ require __DIR__ . '/../includes/header.php';
     <?php if ($step === 1): ?>
       <!-- Step 1: Choose type -->
       <h2 style="font-family:Manrope,sans-serif;font-weight:700;font-size:1.25rem;margin:0 0 1.5rem">Тип объявления</h2>
-      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:0.75rem">
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:0.75rem">
         <?php foreach($LISTING_LABELS as $k=>$v): $sel = ($_POST['listing_type']??'')===$k; ?>
-        <label style="position:relative;border-radius:12px;border:2px solid <?=$sel?'#121E2B':'#EEF2F6'?>;padding:1.25rem 0.75rem;cursor:pointer;text-align:center;transition:all 0.15s ease;<?=$sel?'background:rgba(27,107,138,0.04)':''?>" onmouseover="if(!this.querySelector('input:checked')){this.style.borderColor='#C8D0DA'}" onmouseout="if(!this.querySelector('input:checked')){this.style.borderColor='#EEF2F6'}">
+        <label style="position:relative;border-radius:12px;border:2px solid <?=$sel?'#1B6B8A':'#EEF2F6'?>;padding:1.5rem 0.75rem;cursor:pointer;text-align:center;transition:all 0.15s ease;<?=$sel?'background:rgba(27,107,138,0.04)':''?>" onmouseover="if(!this.querySelector('input:checked')){this.style.borderColor='#C8D0DA'}" onmouseout="if(!this.querySelector('input:checked')){this.style.borderColor='#EEF2F6'}">
           <input type="radio" name="listing_type" value="<?=$k?>" style="position:absolute;opacity:0" <?=$sel?'checked':''?> onchange="this.form.step.value=1;this.form.submit()">
           <div style="color:<?=$sel?'#1B6B8A':'#7A8A9A'?>;margin-bottom:0.5rem"><?=$LISTING_ICONS[$k]?></div>
           <div style="font-size:0.8125rem;font-weight:500"><?=$v?></div>
@@ -238,7 +247,7 @@ require __DIR__ . '/../includes/header.php';
         <h2 style="font-family:Manrope,sans-serif;font-weight:700;font-size:1.25rem;margin:0 0 1rem">Категория</h2>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.625rem">
           <?php foreach($CATEGORY_OPTIONS[$slt] as $c): $sel = ($_POST['category']??'')===$c[0]; ?>
-          <label style="position:relative;border-radius:8px;border:1px solid <?=$sel?'#121E2B':'#DFE4EA'?>;padding:0.75rem 1rem;cursor:pointer;transition:all 0.15s ease;<?=$sel?'background:rgba(27,107,138,0.04)':''?>" onmouseover="if(!this.querySelector('input:checked')){this.style.borderColor='#C8D0DA'}" onmouseout="if(!this.querySelector('input:checked')){this.style.borderColor='#DFE4EA'}">
+          <label style="position:relative;border-radius:8px;border:1px solid <?=$sel?'#1B6B8A':'#DFE4EA'?>;padding:0.75rem 1rem;cursor:pointer;transition:all 0.15s ease;<?=$sel?'background:rgba(27,107,138,0.04)':''?>" onmouseover="if(!this.querySelector('input:checked')){this.style.borderColor='#C8D0DA'}" onmouseout="if(!this.querySelector('input:checked')){this.style.borderColor='#DFE4EA'}">
             <input type="radio" name="category" value="<?=$c[0]?>" style="position:absolute;opacity:0" <?=$sel?'checked':''?> onchange="this.form.step.value=1;this.form.submit()">>
             <div style="font-size:0.8125rem;font-weight:500;display:flex;align-items:center;gap:0.5rem">
               <?php if($sel): ?><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1B6B8A" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg><?php endif; ?>
@@ -317,7 +326,7 @@ require __DIR__ . '/../includes/header.php';
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-top:1rem">
           <?php foreach(['transport_inc'=>'Транспорт включён','border_permit'=>'Нужен погранпропуск','weather_dep'=>'Зависит от погоды','meals'=>'Питание включено'] as $fk=>$fl): ?>
           <label style="display:flex;align-items:center;gap:0.5rem;padding:0.75rem 1rem;border-radius:8px;border:1px solid #DFE4EA;cursor:pointer;transition:all 0.15s ease" onmouseover="this.style.borderColor='#C8D0DA';this.style.background='#F7F9FB'" onmouseout="this.style.borderColor='#DFE4EA';this.style.background='transparent'">
-            <input type="checkbox" name="<?=$fk?>" value="1" <?=($_POST[$fk]??'')?'checked':''?> style="width:1rem;height:1rem;accent-color:#121E2B">
+            <input type="checkbox" name="<?=$fk?>" value="1" <?=($_POST[$fk]??'')?'checked':''?> style="width:1rem;height:1rem;accent-color:#1B6B8A">
             <span style="font-size:0.8125rem"><?=$fl?></span>
           </label>
           <?php endforeach; ?>
@@ -349,7 +358,7 @@ require __DIR__ . '/../includes/header.php';
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-top:1rem">
           <?php foreach(['gear_inc'=>'Снаряжение включено','catch_g'=>'Гарантия улова','license'=>'Нужна лицензия','boat'=>'Лодка включена'] as $fk=>$fl): ?>
           <label style="display:flex;align-items:center;gap:0.5rem;padding:0.75rem 1rem;border-radius:8px;border:1px solid #DFE4EA;cursor:pointer;transition:all 0.15s ease" onmouseover="this.style.borderColor='#C8D0DA';this.style.background='#F7F9FB'" onmouseout="this.style.borderColor='#DFE4EA';this.style.background='transparent'">
-            <input type="checkbox" name="<?=$fk?>" value="1" <?=($_POST[$fk]??'')?'checked':''?> style="width:1rem;height:1rem;accent-color:#121E2B">
+            <input type="checkbox" name="<?=$fk?>" value="1" <?=($_POST[$fk]??'')?'checked':''?> style="width:1rem;height:1rem;accent-color:#1B6B8A">
             <span style="font-size:0.8125rem"><?=$fl?></span>
           </label>
           <?php endforeach; ?>
@@ -368,7 +377,7 @@ require __DIR__ . '/../includes/header.php';
         <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:0.375rem">
         <?php foreach($AMENITY_OPTIONS as $a): $ckd = in_array($a, $_POST['amenities']??[]); ?>
         <label style="display:flex;align-items:center;gap:0.5rem;font-size:0.8125rem;cursor:pointer;padding:0.375rem 0.5rem;border-radius:6px;transition:background 0.15s ease" onmouseover="this.style.background='#F7F9FB'" onmouseout="this.style.background='transparent'">
-          <input type="checkbox" name="amenities[]" value="<?=h($a)?>" <?=$ckd?'checked':''?> style="width:1rem;height:1rem;accent-color:#121E2B"><?=$a?>
+          <input type="checkbox" name="amenities[]" value="<?=h($a)?>" <?=$ckd?'checked':''?> style="width:1rem;height:1rem;accent-color:#1B6B8A"><?=$a?>
         </label>
         <?php endforeach; ?>
         </div>
@@ -468,7 +477,7 @@ function removeImage(idx) {
         ?>
         <div style="display:flex;justify-content:space-between;padding:0.5rem 0;border-bottom:1px solid #EEF2F6">
           <span style="color:#7A8A9A"><?=$k?>:</span>
-          <span style="font-weight:500;color:#121E2B"><?=h($v)?></span>
+          <span style="font-weight:500;color:#1B6B8A"><?=h($v)?></span>
         </div>
         <?php endforeach; ?>
       </div>
@@ -483,12 +492,12 @@ function removeImage(idx) {
       </button>
       <?php else: ?><div></div><?php endif; ?>
       <?php if ($step < 5): ?>
-      <button type="submit" name="step" value="<?=$step+1?>" style="display:inline-flex;align-items:center;gap:0.375rem;border-radius:8px;border:0;background:#121E2B;color:#F7F9FB;padding:0.625rem 1.25rem;font-size:0.8125rem;font-weight:600;cursor:pointer;font-family:inherit;transition:background 0.15s ease" onmouseover="this.style.background='#1A2937'" onmouseout="this.style.background='#121E2B'">
+      <button type="submit" name="step" value="<?=$step+1?>" style="display:inline-flex;align-items:center;gap:0.375rem;border-radius:8px;border:0;background:#1B6B8A;color:#F7F9FB;padding:0.625rem 1.25rem;font-size:0.8125rem;font-weight:600;cursor:pointer;font-family:inherit;transition:background 0.15s ease" onmouseover="this.style.background='#1A2937'" onmouseout="this.style.background='#1B6B8A'">
         Далее
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
       </button>
       <?php else: ?>
-      <button type="submit" name="finish" value="1" style="display:inline-flex;align-items:center;gap:0.375rem;border-radius:8px;border:0;background:#121E2B;color:#F7F9FB;padding:0.625rem 1.5rem;font-size:0.8125rem;font-weight:600;cursor:pointer;font-family:inherit;transition:background 0.15s ease" onmouseover="this.style.background='#1A2937'" onmouseout="this.style.background='#121E2B'">
+      <button type="submit" name="finish" value="1" style="display:inline-flex;align-items:center;gap:0.375rem;border-radius:8px;border:0;background:#1B6B8A;color:#F7F9FB;padding:0.625rem 1.5rem;font-size:0.8125rem;font-weight:600;cursor:pointer;font-family:inherit;transition:background 0.15s ease" onmouseover="this.style.background='#1A2937'" onmouseout="this.style.background='#1B6B8A'">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
         Опубликовать
       </button>
