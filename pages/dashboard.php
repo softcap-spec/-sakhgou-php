@@ -127,7 +127,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_manual'])) {
   foreach ($conflicts as $cv) {
     if ($cv['status'] === 'pending') $pdo->prepare("UPDATE bookings SET status='declined' WHERE id=?")->execute([$cv['id']]);
   }
-  $pdo->prepare("INSERT INTO bookings (listing_id, guest_id, host_id, check_in_date, check_out_date, guests_count, status, total_price, guest_name, guest_phone, source, created_at) VALUES (?,?,NULL,?,?,?,?, 'blocked', ?, ?, 'manual', NOW())")
+  $pdo->prepare("INSERT INTO bookings (listing_id, guest_id, host_id, check_in_date, check_out_date, guests_count, status, total_price, guest_name, guest_phone, source, created_at) VALUES (?, NULL, ?, ?, ?, ?, 'blocked', ?, ?, ?, 'manual', NOW())")
     ->execute([$lid, $user['id'], $df, $dt, $gcount, $price, $gname !== '' ? $gname : 'Занято', $gphone !== '' ? $gphone : null]);
   header('Location: ' . $calBack . '&bok=1'); exit;
 }
