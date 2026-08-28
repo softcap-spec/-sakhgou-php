@@ -769,4 +769,54 @@ function toggleBookForm(){
   if(f){ f.classList.toggle('hidden'); }
 }
 </script>
+<script>
+(function(){
+  var BUSY = [];
+  var wrap = document.getElementById('availCal');
+  var MONTHS = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+  function fmt(d){var m=d.getMonth()+1,dd=d.getDate();return d.getFullYear()+'-'+(m<10?'0':'')+m+'-'+(dd<10?'0':'')+dd}
+  function busy(ds){for(var i=0;i<BUSY.length;i++){if(ds>=BUSY[i].from&&ds<BUSY[i].to)return BUSY[i].status}return null}
+  function render(){
+    if(!wrap)return;
+    var html='<div style="font-size:0.65rem;font-weight:600;color:#5A6B7D;margin-bottom:6px">Занятые даты — зачёркнуты:</div><div style="display:flex;gap:14px;flex-wrap:wrap">';
+    var base=new Date();base.setDate(1);
+    for(var mi=0;mi<2;mi++){
+      var first=new Date(base.getFullYear(),base.getMonth()+mi,1);
+      var y=first.getFullYear(),m=first.getMonth();
+      var dim=new Date(y,m+1,0).getDate();
+      var dow=(new Date(y,m,1).getDay()+6)%7;
+      html+='<div style="flex:1;min-width:180px"><div style="font-size:0.75rem;font-weight:700;color:#121E2B;margin-bottom:4px">'+MONTHS[m]+' '+y+'</div><div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;font-size:0.62rem;text-align:center">';
+      var DOW=['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
+      for(var i=0;i<7;i++)html+='<div style="color:#9AAAB8">'+DOW[i]+'</div>';
+      for(var i=0;i<dow;i++)html+='<div></div>';
+      for(var day=1;day<=dim;day++){
+        var ds=y+'-'+String(m+1).padStart(2,'0')+'-'+String(day).padStart(2,'0');
+        var st=busy(ds),past=ds<fmt(new Date());
+        var css='padding:3px 0;border-radius:6px;';
+        if(past)css+='color:#C8D0DA;';
+        else if(st==='confirmed')css+='background:#F8D7DA;color:#842029;text-decoration:line-through;font-weight:600;';
+        else if(st==='blocked')css+='background:#E2E8EE;color:#54677A;text-decoration:line-through;';
+        else if(st==='pending')css+='background:#FFF3CD;color:#8a6d00;';
+        html+='<div style="'+css+'">'+day+'</div>';
+      }
+      html+='</div></div>';
+    }
+    html+='</div>';
+    wrap.innerHTML=html;
+  }
+  window.availValidate=function(){
+    var fi=document.getElementById('bkIn'),fo=document.getElementById('bkOut');
+    if(!fi||!fo||!fi.value||!fo.value)return true;
+    if(fo.value<=fi.value){alert('Дата выезда должна быть позже даты заезда');return false}
+    var d=new Date(fi.value+'T00:00:00');
+    while(fmt(d)<fo.value){
+      var ds=fmt(d),st=busy(ds);
+      if(st){alert(st==='pending'?'Эти даты сейчас резервируются другим гостем — ждём подтверждения. Попробуйте другие даты.':'Извините, даты '+ds+' уже заняты. Выберите другие.');return false}
+      d.setDate(d.getDate()+1);
+    }
+    return true;
+  };
+  fetch('/availability?lid=<?=$lid?>').then(function(r){return r.json()}).then(function(d){BUSY=d.busy||[];render()}).catch(function(){});
+})();
+</script>
 <?php require __DIR__ . '/../includes/footer.php'; ?>
