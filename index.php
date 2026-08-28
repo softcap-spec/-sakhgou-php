@@ -97,6 +97,22 @@ switch ($page) {
   case 'help':
     require __DIR__ . '/pages/help.php';
     break;
+  case 'availability':
+    // Занятые даты объявления (публично, для мини-календаря на странице объявления)
+    header('Content-Type: application/json; charset=utf-8');
+    $avlLid = (int)($_GET['lid'] ?? 0);
+    $avlBusy = [];
+    if ($avlLid > 0) {
+      bookings_expire_pendings($avlLid);
+      $avlSt = db()->prepare("SELECT check_in_date, check_out_date, status FROM bookings WHERE listing_id=? AND status IN ('pending','confirmed','blocked') AND check_out_date > CURDATE() ORDER BY check_in_date");
+      $avlSt->execute([$avlLid]);
+      foreach ($avlSt->fetchAll() as $avlRow) {
+        $avlBusy[] = ['from'=>$avlRow['check_in_date'], 'to'=>$avlRow['check_out_date'], 'status'=>$avlRow['status']];
+      }
+    }
+    echo json_encode(['busy'=>$avlBusy]);
+    exit;
+
   case 'max-webhook':
     // Вебхук «Макс» (Max Bot API): приём событий (message_created и др.)
     // Без сессии; подлинность — по заголовку X-Max-Bot-Api-Secret.

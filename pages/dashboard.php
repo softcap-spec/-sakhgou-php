@@ -22,6 +22,7 @@ $tabs = [
   'favorites'  => 'Избранное',
   'bookings'   => 'Мои брони',
   'host_bookings' => 'Ко мне',
+  'calendar'   => 'Календарь',
   'profile'    => 'Профиль',
 ];
 // Брони: мои (гость) и входящие (хозяин) — считаем один раз, используем и в табах, и во вьюхах
@@ -96,6 +97,77 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['unbind_max'])) {
   $pdo->prepare('UPDATE users SET max_user_id = NULL WHERE id = ?')->execute([$user['id']]);
   $user['max_user_id'] = null;
   header('Location: /dashboard?sub=profile&maxok=1'); exit;
+}
+
+// Календарь: назад на тот же месяц после действий
+$calBack = '/dashboard?sub=calendar&m=' . urlencode($_POST['m'] ?? date('Y-m'));
+
+// POST: ручная запись в календарь (занять даты, клиент вне сайта)
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_manual'])) {
+  csrf_check();
+  $lid = (int)($_POST['listing_id'] ?? 0);
+  $df = $_POST['date_from'] ?? '';
+  $dt = $_POST['date_to'] ?? '';
+  $gname = trim($_POST['guest_name'] ?? '');
+  $gphone = trim($_POST['guest_phone'] ?? '');
+  $gcount = max(1, (int)($_POST['guests_count'] ?? 1));
+  $price = (float)str_replace([',', ' '], ['.', ''], $_POST['total_price'] ?? '0');
+  if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $df) || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $dt)) { header('Location: ' . $calBack . '&cerr=1'); exit; }
+  $st = $pdo->prepare('SELECT id, title FROM listings WHERE id = ? AND user_id = ?');
+  $st->execute([$lid, $user['id']]);
+  $lst = $st->fetch();
+  if (!$lst || strtotime($dt) < strtotime($df)) { header('Location: ' . $calBack . '&cerr=1'); exit; }
+  bookings_expire_pendings($lid);
+  $ov = $pdo->prepare("SELECT id, status FROM bookings WHERE listing_id=? AND status IN ('pending','confirmed','blocked') AND check_in_date < ? AND check_out_date > ?");
+  $ov->execute([$lid, $dt, $df]);
+  $conflicts = $ov->fetchAll();
+  foreach ($conflicts as $cv) {
+    if (in_array($cv['status'], ['confirmed', 'blocked'], true)) { header('Location: ' . $calBack . '&cerr=2'); exit; }
+  }
+  foreach ($conflicts as $cv) {
+    if ($cv['status'] === 'pending') $pdo->prepare("UPDATE bookings SET status='declined' WHERE id=?")->execute([$cv['id']]);
+  }
+  $pdo->prepare("INSERT INTO bookings (listing_id, guest_id, host_id, check_in_date, check_out_date, guests_count, status, total_price, guest_name, guest_phone, source, created_at) VALUES (?,?,NULL,?,?,?,?, 'blocked', ?, ?, 'manual', NOW())")
+    ->execute([$lid, $user['id'], $df, $dt, $gcount, $price, $gname !== '' ? $gname : 'Занято', $gphone !== '' ? $gphone : null]);
+  header('Location: ' . $calBack . '&bok=1'); exit;
+}
+
+// POST: правка ручной записи
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_manual'])) {
+  csrf_check();
+  $bid = (int)($_POST['bid'] ?? 0);
+  $lid = (int)($_POST['listing_id'] ?? 0);
+  $df = $_POST['date_from'] ?? '';
+  $dt = $_POST['date_to'] ?? '';
+  $gname = trim($_POST['guest_name'] ?? '');
+  $gphone = trim($_POST['guest_phone'] ?? '');
+  $gcount = max(1, (int)($_POST['guests_count'] ?? 1));
+  $price = (float)str_replace([',', ' '], ['.', ''], $_POST['total_price'] ?? '0');
+  $st = $pdo->prepare("SELECT id, listing_id FROM bookings WHERE id=? AND host_id=? AND source='manual' AND status='blocked'");
+  $st->execute([$bid, $user['id']]);
+  $bk = $st->fetch();
+  if (!$bk || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $df) || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $dt) || strtotime($dt) < strtotime($df)) { header('Location: ' . $calBack . '&cerr=1'); exit; }
+  bookings_expire_pendings($bk['listing_id']);
+  $ov = $pdo->prepare("SELECT id, status FROM bookings WHERE listing_id=? AND id!=? AND status IN ('pending','confirmed','blocked') AND check_in_date < ? AND check_out_date > ?");
+  $ov->execute([$bk['listing_id'], $bid, $dt, $df]);
+  $conflicts = $ov->fetchAll();
+  foreach ($conflicts as $cv) {
+    if (in_array($cv['status'], ['confirmed', 'blocked'], true)) { header('Location: ' . $calBack . '&cerr=2'); exit; }
+  }
+  foreach ($conflicts as $cv) {
+    if ($cv['status'] === 'pending') $pdo->prepare("UPDATE bookings SET status='declined' WHERE id=?")->execute([$cv['id']]);
+  }
+  $pdo->prepare('UPDATE bookings SET check_in_date=?, check_out_date=?, guests_count=?, guest_name=?, guest_phone=?, total_price=? WHERE id=?')
+    ->execute([$df, $dt, $gcount, $gname !== '' ? $gname : 'Занято', $gphone !== '' ? $gphone : null, $price, $bid]);
+  header('Location: ' . $calBack . '&bok=1'); exit;
+}
+
+// POST: удалить ручную запись
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_manual'])) {
+  csrf_check();
+  $bid = (int)($_POST['bid'] ?? 0);
+  $pdo->prepare("DELETE FROM bookings WHERE id=? AND host_id=? AND source='manual' AND status='blocked'")->execute([$bid, $user['id']]);
+  header('Location: ' . $calBack . '&bok=1'); exit;
 }
 
 // POST: подтвердить / отклонить бронь (только хозяин объявления, только для pending)
@@ -537,8 +609,8 @@ require __DIR__ . '/../includes/header.php';
       <div style="display:flex;flex-direction:column;gap:0.75rem">
       <?php foreach ($bookings as $b):
         $bs = $b['status'];
-        $badge = $bs === 'confirmed' ? 'background:#E8F5E9;color:#2E7D32' : ($bs === 'declined' ? 'background:#FDECEC;color:#C62828' : 'background:#FFF8E1;color:#B26A00');
-        $blabel = $bs === 'confirmed' ? 'Подтверждена' : ($bs === 'declined' ? 'Отклонена' : 'Ожидает подтверждения');
+        $badge = $bs === 'confirmed' ? 'background:#E8F5E9;color:#2E7D32' : ($bs === 'declined' ? 'background:#FDECEC;color:#C62828' : ($bs === 'blocked' ? 'background:#EEF2F6;color:#54677A' : 'background:#FFF8E1;color:#B26A00'));
+        $blabel = $bs === 'confirmed' ? 'Подтверждена' : ($bs === 'declined' ? 'Отклонена' : ($bs === 'blocked' ? 'Занято вручную' : 'Ожидает подтверждения'));
       ?>
         <div style="background:#fff;border:1px solid #EEF2F6;border-radius:12px;padding:1.25rem;box-shadow:0 4px 12px rgba(15,23,32,0.06)">
           <div style="display:flex;justify-content:space-between;align-items:flex-start">
@@ -579,8 +651,8 @@ require __DIR__ . '/../includes/header.php';
       <div style="display:flex;flex-direction:column;gap:0.75rem">
       <?php foreach ($hb as $b):
         $bs = $b['status'];
-        $badge = $bs === 'confirmed' ? 'background:#E8F5E9;color:#2E7D32' : ($bs === 'declined' ? 'background:#FDECEC;color:#C62828' : 'background:#FFF8E1;color:#B26A00');
-        $blabel = $bs === 'confirmed' ? 'Подтверждена' : ($bs === 'declined' ? 'Отклонена' : 'Ожидает подтверждения');
+        $badge = $bs === 'confirmed' ? 'background:#E8F5E9;color:#2E7D32' : ($bs === 'declined' ? 'background:#FDECEC;color:#C62828' : ($bs === 'blocked' ? 'background:#EEF2F6;color:#54677A' : 'background:#FFF8E1;color:#B26A00'));
+        $blabel = $bs === 'confirmed' ? 'Подтверждена' : ($bs === 'declined' ? 'Отклонена' : ($bs === 'blocked' ? 'Занято вручную' : 'Ожидает подтверждения'));
       ?>
         <div style="background:#fff;border:1px solid #EEF2F6;border-radius:12px;padding:1.25rem;box-shadow:0 4px 12px rgba(15,23,32,0.06)">
           <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:1rem">
@@ -622,6 +694,202 @@ require __DIR__ . '/../includes/header.php';
       <?php endforeach; ?>
       </div>
     <?php endif; ?>
+
+  <?php elseif ($sub === 'calendar'): ?>
+  <?php
+  $calMonth = $_GET['m'] ?? date('Y-m');
+  if (!preg_match('/^\d{4}-\d{2}$/', $calMonth)) $calMonth = date('Y-m');
+  $calLid = (int)($_GET['lid'] ?? 0);
+  $calTs = strtotime($calMonth . '-01');
+  $calPrev = date('Y-m', strtotime('-1 month', $calTs));
+  $calNext = date('Y-m', strtotime('+1 month', $calTs));
+  $daysInMonth = (int)date('t', $calTs);
+  $startDow = (int)date('N', $calTs) - 1; // Пн = 0
+  $calStart = $calMonth . '-01';
+  $calEnd = $calMonth . '-' . sprintf('%02d', $daysInMonth);
+  $today = date('Y-m-d');
+  // истёкшие pending хозяина освобождают даты
+  $pdo->prepare("UPDATE bookings SET status='declined' WHERE host_id=? AND status='pending' AND created_at < DATE_SUB(NOW(), INTERVAL 48 HOUR)")->execute([$user['id']]);
+  $calSql = "SELECT b.*, l.title AS listing_title, COALESCE(NULLIF(b.guest_name,''), (SELECT name FROM users WHERE id = b.guest_id), 'Клиент') AS ev_name FROM bookings b JOIN listings l ON b.listing_id = l.id WHERE b.host_id = ? AND b.status IN ('pending','confirmed','blocked') AND b.check_in_date <= ? AND b.check_out_date >= ?" . ($calLid > 0 ? ' AND b.listing_id = ' . (int)$calLid : '') . " ORDER BY b.check_in_date";
+  $qe = $pdo->prepare($calSql);
+  $qe->execute([$user['id'], $calEnd, $calStart]);
+  $calEvents = $qe->fetchAll();
+  $dayEvents = [];
+  foreach ($calEvents as $ev) {
+    $s = max(strtotime($ev['check_in_date']), strtotime($calStart));
+    $e2 = min(strtotime($ev['check_out_date']), strtotime($calEnd));
+    for ($d = $s; $d <= $e2; $d = strtotime('+1 day', $d)) {
+      $dayEvents[date('Y-m-d', $d)][] = $ev;
+    }
+  }
+  ?>
+  <style>
+    .cal-grid{width:100%;border-collapse:separate;border-spacing:4px;table-layout:fixed}
+    .cal-grid th{font-size:0.6875rem;color:#7A8A9A;font-weight:600;padding:4px 0;text-align:center}
+    .cal-day{background:#fff;border:1px solid #EEF2F6;border-radius:10px;height:76px;vertical-align:top;padding:4px;position:relative}
+    .cal-day.past{background:#F7F9FB;opacity:0.65}
+    .cal-day.today{border-color:#0A7BBA;box-shadow:0 0 0 1px #0A7BBA inset}
+    .cal-day.empty{background:transparent;border:0}
+    .cal-num{font-size:0.75rem;font-weight:700;color:#0A1A2A;margin-bottom:3px}
+    .cal-day.past .cal-num{color:#9AAAB8}
+    .cal-chip{font-size:0.59rem;line-height:1.25;border-radius:6px;padding:2px 5px;margin-bottom:2px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;cursor:default}
+    .cal-chip.confirmed{background:#E8F5E9;color:#2E7D32;border:1px solid #BBE5C8}
+    .cal-chip.pending{background:#FFF8E1;color:#B26A00;border:1px solid #F5E1A4}
+    .cal-chip.blocked{background:#EEF2F6;color:#54677A;border:1px solid #D5DDE6;cursor:pointer}
+    .cal-more{font-size:0.59rem;color:#7A8A9A}
+    .cal-add{position:absolute;bottom:3px;right:3px;width:20px;height:20px;border-radius:6px;border:1px dashed #C8D0DA;background:#fff;color:#7A8A9A;font-size:0.8rem;line-height:1;cursor:pointer}
+    .cal-add:hover{background:#0A7BBA;color:#fff;border-color:#0A7BBA}
+    .cal-modal-overlay{display:none;position:fixed;inset:0;background:rgba(18,30,43,0.5);z-index:120;align-items:center;justify-content:center;padding:1rem}
+    .cal-modal-overlay.open{display:flex}
+    .cal-modal{background:#fff;border-radius:14px;width:100%;max-width:26rem;padding:1.5rem;max-height:90vh;overflow:auto}
+    .cal-modal label{display:block;font-size:0.8125rem;font-weight:600;color:#0A1A2A;margin:0.75rem 0 0.25rem}
+    .cal-modal input,.cal-modal select{width:100%;box-sizing:border-box;padding:0.5rem 0.75rem;border:1px solid #DFE4EA;border-radius:8px;font-size:0.9rem}
+  </style>
+  <?php if (isset($_GET['bok'])): ?><div class="flash success">Календарь обновлён</div><?php endif; ?>
+  <?php if (isset($_GET['cerr'])): ?><div class="flash error"><?= ($_GET['cerr'] === '2') ? 'Эти даты уже заняты подтверждённой бронью или ручной записью' : 'Проверьте даты и объявление' ?></div><?php endif; ?>
+
+  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.75rem;margin-bottom:1rem">
+    <div style="display:flex;align-items:center;gap:0.5rem">
+      <a href="/dashboard?sub=calendar&m=<?=h($calPrev)?><?=$calLid?'&lid='.$calLid:''?>" style="text-decoration:none;padding:0.375rem 0.75rem;border:1px solid #DFE4EA;border-radius:8px;color:#0A1A2A;font-size:0.875rem">←</a>
+      <b style="font-family:Manrope,sans-serif;font-size:1.0625rem"><?= ['01'=>'Январь','02'=>'Февраль','03'=>'Март','04'=>'Апрель','05'=>'Май','06'=>'Июнь','07'=>'Июль','08'=>'Август','09'=>'Сентябрь','10'=>'Октябрь','11'=>'Ноябрь','12'=>'Декабрь'][substr($calMonth,5,2)] ?> <?= (int)substr($calMonth,0,4) ?></b>
+      <a href="/dashboard?sub=calendar&m=<?=h($calNext)?><?=$calLid?'&lid='.$calLid:''?>" style="text-decoration:none;padding:0.375rem 0.75rem;border:1px solid #DFE4EA;border-radius:8px;color:#0A1A2A;font-size:0.875rem">→</a>
+      <?php if ($calMonth !== date('Y-m')): ?><a href="/dashboard?sub=calendar<?=$calLid?'&lid='.$calLid:''?>" style="text-decoration:none;font-size:0.8125rem;color:#0A7BBA;margin-left:0.5rem">Сегодня</a><?php endif; ?>
+    </div>
+    <div style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap">
+      <form method="get" action="/dashboard">
+        <input type="hidden" name="sub" value="calendar">
+        <?php if ($calMonth !== date('Y-m')): ?><input type="hidden" name="m" value="<?=h($calMonth)?>"><?php endif; ?>
+        <select name="lid" onchange="this.form.submit()" style="padding:0.375rem 0.625rem;border:1px solid #DFE4EA;border-radius:8px;font-size:0.8125rem">
+          <option value="0">Все объявления</option>
+          <?php foreach ($myListings as $ml): ?>
+          <option value="<?=$ml['id']?>" <?=$calLid === (int)$ml['id'] ? 'selected' : ''?>><?=h($ml['title'])?></option>
+          <?php endforeach; ?>
+        </select>
+      </form>
+      <button type="button" onclick="calAdd('')" style="background:#0A7BBA;color:#fff;border:0;border-radius:8px;padding:0.5rem 1rem;font-size:0.8125rem;font-weight:600;cursor:pointer">+ Занять даты</button>
+    </div>
+  </div>
+
+  <div style="display:flex;gap:0.75rem;flex-wrap:wrap;margin-bottom:0.75rem;font-size:0.75rem;color:#54677A">
+    <span><span class="cal-chip confirmed" style="display:inline-block">подтверждена</span></span>
+    <span><span class="cal-chip pending" style="display:inline-block">ожидает</span></span>
+    <span><span class="cal-chip blocked" style="display:inline-block">занято вручную</span></span>
+    <span class="muted">— клик по серому чипу: правка/удаление; «+» в дне: занять даты</span>
+  </div>
+
+  <table class="cal-grid">
+    <tr><th>Пн</th><th>Вт</th><th>Ср</th><th>Чт</th><th>Пт</th><th>Сб</th><th>Вс</th></tr>
+    <?php
+    $cell = 0;
+    for ($week = 0; $week < 6; $week++):
+      if ($cell >= $daysInMonth) break;
+    ?>
+    <tr>
+      <?php for ($dow = 0; $dow < 7; $dow++):
+        $cellIdx = $week * 7 + $dow;
+        $dayNum = $cellIdx - $startDow + 1;
+        if ($dayNum < 1 || $dayNum > $daysInMonth) { echo '<td class="cal-day empty"></td>'; $cell = max($cell, $dayNum); continue; }
+        $cell = max($cell, $dayNum);
+        $key = $calMonth . '-' . sprintf('%02d', $dayNum);
+        $evs = $dayEvents[$key] ?? [];
+        $isPast = $key < $today;
+      ?>
+      <td class="cal-day<?=$isPast ? ' past' : ''?><?=$key === $today ? ' today' : ''?>">
+        <div class="cal-num"><?=$dayNum?></div>
+        <?php foreach (array_slice($evs, 0, 2) as $ev): ?>
+        <div class="cal-chip <?=$ev['status']?>" <?php if ($ev['source'] === 'manual'): ?>onclick="calEdit(<?=$ev['id']?>)" title="Правка/удаление"<?php else: ?>title="<?=h($ev['ev_name'])?> — управление в «Ко мне»"<?php endif; ?>><?=h(mb_substr($ev['ev_name'], 0, 16))?></div>
+        <?php endforeach; ?>
+        <?php if (count($evs) > 2): ?><div class="cal-more">+<?=count($evs) - 2?></div><?php endif; ?>
+        <?php if (!$isPast): ?><button type="button" class="cal-add" onclick="calAdd('<?=$key?>')" title="Занять даты">+</button><?php endif; ?>
+      </td>
+      <?php endfor; ?>
+    </tr>
+    <?php endfor; ?>
+  </table>
+
+  <!-- Модалка: добавить / править ручную запись -->
+  <div id="calModal" class="cal-modal-overlay" onclick="if(event.target===this)calClose()">
+    <div class="cal-modal">
+      <form method="post" action="/dashboard">
+        <?= csrf_field() ?>
+        <input type="hidden" name="m" value="<?=h($calMonth)?>">
+        <input type="hidden" name="bid" id="cmBid" value="">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <b id="cmTitle" style="font-family:Manrope,sans-serif">Занять даты вручную</b>
+          <button type="button" onclick="calClose()" style="background:none;border:0;font-size:1.25rem;cursor:pointer;color:#7A8A9A">×</button>
+        </div>
+        <label>Объявление</label>
+        <select name="listing_id" id="cmListing">
+          <?php foreach ($myListings as $ml): ?>
+          <option value="<?=$ml['id']?>"><?=h($ml['title'])?></option>
+          <?php endforeach; ?>
+        </select>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.625rem">
+          <div><label>С даты</label><input type="date" name="date_from" id="cmFrom" required></div>
+          <div><label>По дату</label><input type="date" name="date_to" id="cmTo" required></div>
+        </div>
+        <label>Гостей</label>
+        <input type="number" name="guests_count" id="cmGuests" value="1" min="1" max="30">
+        <label>Имя клиента (вне сайта)</label>
+        <input type="text" name="guest_name" id="cmName" placeholder="напр. Иванов, с авито">
+        <label>Телефон</label>
+        <input type="text" name="guest_phone" id="cmPhone" placeholder="+7 …">
+        <label>Цена, ₽ (0 — без цены)</label>
+        <input type="text" name="total_price" id="cmPrice" value="0">
+        <div style="display:flex;gap:0.5rem;margin-top:1rem;flex-wrap:wrap">
+          <button type="submit" name="add_manual" id="cmBtnAdd" value="1" style="background:#0A7BBA;color:#fff;border:0;border-radius:8px;padding:0.5625rem 1.125rem;font-size:0.8125rem;font-weight:600;cursor:pointer">Занять</button>
+          <button type="submit" name="edit_manual" id="cmBtnEdit" value="1" style="display:none;background:#16A34A;color:#fff;border:0;border-radius:8px;padding:0.5625rem 1.125rem;font-size:0.8125rem;font-weight:600;cursor:pointer">Сохранить</button>
+          <button type="submit" name="delete_manual" id="cmBtnDel" value="1" style="display:none;background:#fff;color:#DC2626;border:1px solid #F3C1C1;border-radius:8px;padding:0.5625rem 1.125rem;font-size:0.8125rem;font-weight:600;cursor:pointer">Удалить</button>
+          <button type="button" onclick="calClose()" style="background:#F0F3F7;color:#0A1A2A;border:0;border-radius:8px;padding:0.5625rem 1.125rem;font-size:0.8125rem;font-weight:600;cursor:pointer">Отмена</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+  var CAL_EVENTS = <?= json_encode(array_map(function ($e) {
+      return ['id'=>(int)$e['id'], 'lid'=>(int)$e['listing_id'], 'from'=>$e['check_in_date'], 'to'=>$e['check_out_date'],
+              'guests'=>(int)$e['guests_count'], 'name'=>$e['ev_name'], 'phone'=>(string)$e['guest_phone'],
+              'price'=>(float)$e['total_price'], 'source'=>$e['source'], 'status'=>$e['status']];
+    }, $calEvents), JSON_UNESCAPED_UNICODE) ?>;
+
+  function calOpen(){document.getElementById('calModal').classList.add('open');document.body.style.overflow='hidden'}
+  function calClose(){document.getElementById('calModal').classList.remove('open');document.body.style.overflow=''}
+  function calSetBtns(mode){
+    document.getElementById('cmBtnAdd').style.display = mode==='add' ? '' : 'none';
+    document.getElementById('cmBtnEdit').style.display = mode==='edit' ? '' : 'none';
+    document.getElementById('cmBtnDel').style.display = mode==='edit' ? '' : 'none';
+    document.getElementById('cmTitle').textContent = mode==='add' ? 'Занять даты вручную' : 'Правка ручной записи';
+  }
+  function calAdd(dateStr){
+    calSetBtns('add');
+    document.getElementById('cmBid').value = '';
+    document.getElementById('cmFrom').value = dateStr || '';
+    var to = '';
+    if (dateStr) { var d = new Date(dateStr + 'T00:00:00'); d.setDate(d.getDate() + 1); to = d.toISOString().slice(0,10); }
+    document.getElementById('cmTo').value = to;
+    document.getElementById('cmName').value = '';
+    document.getElementById('cmPhone').value = '';
+    document.getElementById('cmGuests').value = 1;
+    document.getElementById('cmPrice').value = 0;
+    calOpen();
+  }
+  function calEdit(id){
+    var ev = CAL_EVENTS.find(function(x){return x.id===id});
+    if (!ev || ev.source!=='manual') return;
+    calSetBtns('edit');
+    document.getElementById('cmBid').value = ev.id;
+    document.getElementById('cmListing').value = ev.lid;
+    document.getElementById('cmFrom').value = ev.from;
+    document.getElementById('cmTo').value = ev.to;
+    document.getElementById('cmGuests').value = ev.guests || 1;
+    document.getElementById('cmName').value = ev.name === 'Занято' ? '' : (ev.name || '');
+    document.getElementById('cmPhone').value = ev.phone || '';
+    document.getElementById('cmPrice').value = ev.price || 0;
+    calOpen();
+  }
+  document.addEventListener('keydown', function(e){ if (e.key === 'Escape') calClose(); });
+  </script>
 
   <?php elseif ($sub === 'profile'): ?>
     <?php if (isset($_GET['ok'])): ?>

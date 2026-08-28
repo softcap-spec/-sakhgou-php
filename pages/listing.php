@@ -105,8 +105,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['book'])) {
     } elseif (strtotime($check_out) <= strtotime($check_in)) {
       $book_error = 'Дата выезда должна быть позже даты заезда';
     } else {
+      // Истёкшие «ожидающие» (48ч без ответа) освобождают даты
+      bookings_expire_pendings($lid);
       // Check date overlap with existing active bookings (prevent double-booking)
-      $conflict = $pdo->prepare("SELECT COUNT(*) FROM bookings WHERE listing_id = ? AND status IN ('pending','confirmed') AND check_in_date < ? AND check_out_date > ?");
+      $conflict = $pdo->prepare("SELECT COUNT(*) FROM bookings WHERE listing_id = ? AND status IN ('pending','confirmed','blocked') AND check_in_date < ? AND check_out_date > ?");
       $conflict->execute([$lid, $check_out, $check_in]);
       if ((int)$conflict->fetchColumn() > 0) {
         $book_error = 'Эти даты уже забронированы';
@@ -361,16 +363,16 @@ require __DIR__ . '/../includes/header.php';
               <div class="bg-[#F0FDF4] border border-[#BBF7D0] text-[#166534] rounded-lg px-3 py-2.5 text-xs">Заявка отправлена! Хозяин свяжется с вами.</div>
               <?php else: ?>
               <?php if ($book_error): ?><div class="bg-[#FEF2F2] border border-[#FECACA] text-[#DC2626] rounded-lg px-3 py-2.5 text-xs mb-2"><?=h($book_error)?></div><?php endif; ?>
-              <form method="post" onsubmit="if(typeof ymGoal==='function')ymGoal('booking')">
+              <form method="post" onsubmit="if(!availValidate())return false;if(typeof ymGoal==='function')ymGoal('booking')">
                 <?= csrf_field() ?>
                 <div class="grid grid-cols-2 gap-2">
                   <div>
                     <label class="text-[0.65rem] text-[#5A6B7D] font-semibold block mb-1">Заезд</label>
-                    <input type="date" name="check_in" required class="w-full border border-[#DFE4EA] rounded-lg px-2.5 py-2 text-sm" style="box-sizing:border-box">
+                    <input type="date" name="check_in" id="bkIn" required class="w-full border border-[#DFE4EA] rounded-lg px-2.5 py-2 text-sm" style="box-sizing:border-box">
                   </div>
                   <div>
                     <label class="text-[0.65rem] text-[#5A6B7D] font-semibold block mb-1">Выезд</label>
-                    <input type="date" name="check_out" required class="w-full border border-[#DFE4EA] rounded-lg px-2.5 py-2 text-sm" style="box-sizing:border-box">
+                    <input type="date" name="check_out" id="bkOut" required class="w-full border border-[#DFE4EA] rounded-lg px-2.5 py-2 text-sm" style="box-sizing:border-box">
                   </div>
                 </div>
                 <div class="mt-2">
@@ -381,6 +383,7 @@ require __DIR__ . '/../includes/header.php';
                   <label class="text-[0.65rem] text-[#5A6B7D] font-semibold block mb-1">Сообщение хозяину</label>
                   <textarea name="guest_message" rows="2" placeholder="Добрый день! Интересуют даты…" class="w-full border border-[#DFE4EA] rounded-lg px-2.5 py-2 text-sm" style="box-sizing:border-box;resize:vertical;font-family:inherit"></textarea>
                 </div>
+                <div id="availCal" style="margin-top:12px"></div>
                 <button type="submit" name="book" value="1" class="w-full mt-3 rounded-lg bg-accent text-white h-10 text-sm font-semibold hover:bg-accent/90 transition-colors">Отправить заявку</button>
               </form>
               <?php endif; ?>

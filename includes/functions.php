@@ -437,16 +437,22 @@ function get_user_favorites(int $user_id): array {
 
 function get_user_bookings(int $user_id): array {
   $pdo = db();
-  $stmt = $pdo->prepare("SELECT b.*, l.title AS listing_title, l.listing_type, l.location, u.name AS host_name, u.phone AS host_phone FROM bookings b JOIN listings l ON b.listing_id = l.id JOIN users u ON b.host_id = u.id WHERE b.guest_id = ? ORDER BY b.created_at DESC LIMIT 20");
+  $stmt = $pdo->prepare("SELECT b.*, l.title AS listing_title, l.listing_type, l.location, u.name AS host_name, u.phone AS host_phone FROM bookings b JOIN listings l ON b.listing_id = l.id JOIN users u ON b.host_id = u.id WHERE b.guest_id = ? ORDER BY b.created_at DESC LIMIT 30");
   $stmt->execute([$user_id]);
   return $stmt->fetchAll();
 }
 
 function get_host_bookings(int $user_id): array {
   $pdo = db();
-  $stmt = $pdo->prepare("SELECT b.*, l.title AS listing_title, l.price, l.price_type, l.listing_type, u.name AS guest_name, u.phone AS guest_phone, u.avatar_url AS guest_avatar FROM bookings b JOIN listings l ON b.listing_id = l.id JOIN users u ON b.guest_id = u.id WHERE b.host_id = ? ORDER BY b.created_at DESC LIMIT 20");
+  $stmt = $pdo->prepare("SELECT b.*, l.title AS listing_title, l.price, l.price_type, l.listing_type, COALESCE(NULLIF(b.guest_name,''), u.name, 'Клиент') AS guest_name, u.phone AS guest_phone, u.avatar_url AS guest_avatar FROM bookings b JOIN listings l ON b.listing_id = l.id LEFT JOIN users u ON b.guest_id = u.id WHERE b.host_id = ? ORDER BY b.created_at DESC LIMIT 30");
   $stmt->execute([$user_id]);
   return $stmt->fetchAll();
+}
+
+/** Истёкшие «ожидающие» брони (48ч без ответа хозяина) → declined, даты освобождаются. */
+function bookings_expire_pendings(int $listing_id): void {
+  db()->prepare("UPDATE bookings SET status='declined' WHERE listing_id=? AND status='pending' AND created_at < DATE_SUB(NOW(), INTERVAL 48 HOUR)")
+    ->execute([$listing_id]);
 }
 
 function send_message(int $sender_id, int $receiver_id, int $listing_id, string $text): int {
