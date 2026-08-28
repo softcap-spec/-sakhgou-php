@@ -75,7 +75,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['finish'])) {
   if (empty($title)) $errors[] = ['field'=>'title', 'text'=>'Введите название'];
   if ($priceType !== 'negotiable' && $price <= 0) $errors[] = ['field'=>'price', 'text'=>'Укажите цену'];
   if (empty($desc)) $errors[] = ['field'=>'description', 'text'=>'Добавьте описание'];
+  if ($loc === '__custom__') $loc = trim($_POST['location_custom'] ?? '');
   if (empty($loc)) $errors[] = ['field'=>'location', 'text'=>'Укажите локацию'];
+  $_POST['location'] = $loc;
   if (empty($lt) || !isset($LISTING_LABELS[$lt])) $errors[] = ['field'=>'listing_type', 'text'=>'Выберите тип объявления'];
   if ($lt === 'tour' && empty($tourOrgType)) $errors[] = ['field'=>'tour_organizer_type', 'text'=>'Укажите статус организатора (туроператор / турагент / частное лицо)'];
 
@@ -276,10 +278,25 @@ require __DIR__ . '/../includes/header.php';
           <input type="number" name="price" id="price_input" value="<?=h($_POST['price']??'')?>" style="width:100%;box-sizing:border-box" min="1" step="1" required>
         </div>
         <div class="form-group"><label>Локация <span style="color:#DC2626">*</span></label>
-          <select name="location" required style="width:100%;box-sizing:border-box"><option value="">Выберите...</option>
-            <?php foreach($LOCATIONS as $l): ?><option value="<?=$l?>" <?=($_POST['location']??'')===$l?'selected':''?>><?=$l?></option><?php endforeach; ?>
+          <?php $__loc = $_POST['location'] ?? ''; $__isCustom = ($__loc !== '' && !in_array($__loc, $LOCATIONS, true)); ?>
+          <select name="location" id="location_select" onchange="locChange()" required style="width:100%;box-sizing:border-box"><option value="">Выберите...</option>
+            <?php foreach($LOCATIONS as $l): ?><option value="<?=$l?>" <?=$__loc===$l?'selected':''?>><?=$l?></option><?php endforeach; ?>
+            <option value="__custom__" <?=($__loc==='__custom__'||$__isCustom)?'selected':''?>>Своя локация…</option>
           </select>
+          <div id="location_custom_wrap" style="margin-top:0.5rem;<?=($__isCustom||$__loc==='__custom__')?'':'display:none'?>">
+            <input type="text" name="location_custom" id="location_custom" value="<?=h($__isCustom?$__loc:'')?>" placeholder="Введите свою локацию" style="width:100%;box-sizing:border-box" <?=($__isCustom||$__loc==='__custom__')?'required':''?>>
+          </div>
         </div>
+        <script>
+        function locChange(){
+          var sel=document.getElementById('location_select');
+          var wrap=document.getElementById('location_custom_wrap');
+          var inp=document.getElementById('location_custom');
+          if(sel.value==='__custom__'){wrap.style.display='';inp.setAttribute('required','required');}
+          else{wrap.style.display='none';inp.removeAttribute('required');}
+        }
+        locChange();
+        </script>
       </div>
       <script>
       function priceTypeChange(){
