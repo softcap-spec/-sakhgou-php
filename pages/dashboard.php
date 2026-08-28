@@ -912,6 +912,8 @@ require __DIR__ . '/../includes/header.php';
   }
   document.addEventListener('keydown', function(e){ if (e.key === 'Escape') calClose(); });
 
+  var CAL_SHORT = ['янв','фев','мар','апр','мая','июн','июл','авг','сен','окт','ноя','дек'];
+  function dhum(ds){var p=ds.split('-');var s=parseInt(p[2],10)+' '+CAL_SHORT[parseInt(p[1],10)-1];if(p[0]!==String(new Date().getFullYear()))s+=' '+p[0];return s}
   function esc(s){var d=document.createElement('div');d.textContent=s;return d.innerHTML}
   function money(n){return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g,' ')}
   function calInfo(id){
@@ -922,7 +924,7 @@ require __DIR__ . '/../includes/header.php';
     var rows='<div><b>Объявление:</b> <a href="/listing/'+e.lid+'" style="color:#0A7BBA;text-decoration:none">'+esc(e.title)+'</a></div>';
     rows+='<div><b>Гость:</b> '+esc(e.name)+'</div>';
     if(e.tel)rows+='<div><b>Телефон:</b> <a href="tel:'+e.tel+'" style="color:#0A7BBA">'+esc(e.tel)+'</a></div>';
-    rows+='<div><b>Даты:</b> '+e.from+' — '+e.to+'</div>';
+    rows+='<div><b>Даты:</b> '+dhum(e.from)+' — '+dhum(e.to)+'</div>';
     rows+='<div><b>Гостей:</b> '+e.guests+'</div>';
     rows+='<div><b>Цена:</b> '+(e.price>0?money(e.price)+' ₽':'без цены')+'</div>';
     document.getElementById('ciBody').innerHTML=rows;
