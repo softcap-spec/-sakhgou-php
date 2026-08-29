@@ -410,6 +410,7 @@ function toggle_favorite(int $user_id, int $listing_id): bool {
     return false;
   }
   $pdo->prepare('INSERT INTO favorites (user_id, listing_id) VALUES (?, ?)')->execute([$user_id, $listing_id]);
+  stats_incr($listing_id, 'favorite');
   return true;
 }
 
@@ -447,6 +448,26 @@ function get_host_bookings(int $user_id): array {
   $stmt = $pdo->prepare("SELECT b.*, l.title AS listing_title, l.price, l.price_type, l.listing_type, COALESCE(NULLIF(b.guest_name,''), u.name, 'Клиент') AS guest_name, u.phone AS guest_phone, u.avatar_url AS guest_avatar FROM bookings b JOIN listings l ON b.listing_id = l.id LEFT JOIN users u ON b.guest_id = u.id WHERE b.host_id = ? ORDER BY b.created_at DESC LIMIT 30");
   $stmt->execute([$user_id]);
   return $stmt->fetchAll();
+}
+
+/** Дневной счётчик статистики объявления (view/phone/chat/favorite). Тихий, не ломает поток. */
+function stats_incr(int $listing_id, string $event): void {
+  if ($listing_id <= 0 || !in_array($event, ['view', 'phone', 'chat', 'favorite'], true)) return;
+  try {
+    db()->prepare('INSERT INTO listing_stats (listing_id, event, day, cnt) VALUES (?, ?, CURDATE(), 1) ON DUPLICATE KEY UPDATE cnt = cnt + 1')
+      ->execute([$listing_id, $event]);
+  } catch (\Throwable $e) {}
+}
+
+/** Дневные ряды статистики: [day][event] = cnt. */
+function stats_series(int $listing_id, array $events, string $from, string $to): array {
+  if (!$events) return [];
+  $in = implode(',', array_fill(0, count($events), '?'));
+  $st = db()->prepare("SELECT day, event, cnt FROM listing_stats WHERE listing_id = ? AND event IN ($in) AND day BETWEEN ? AND ? ORDER BY day");
+  $st->execute(array_merge([$listing_id], $events, [$from, $to]));
+  $out = [];
+  foreach ($st->fetchAll() as $r) $out[$r['day']][$r['event']] = (int)$r['cnt'];
+  return $out;
 }
 
 /** Истёкшие «ожидающие» брони (48ч без ответа хозяина) → declined, даты освобождаются. */

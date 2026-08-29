@@ -24,6 +24,7 @@ if (!$item) {
 }
 
 $pdo->prepare('UPDATE listings SET view_count = COALESCE(view_count, 0) + 1 WHERE id = ?')->execute([$lid]);
+stats_incr($lid, 'view');
 $item['view_count'] = ($item['view_count'] ?? 0) + 1;
 
 $stmt = $pdo->prepare('SELECT l.*, c.slug AS cat_slug FROM listings l JOIN categories c ON l.category_id = c.id LEFT JOIN promotions promo ON l.id = promo.listing_id AND promo.status = \'active\' AND promo.expires_at > NOW() WHERE l.listing_type = ? AND l.id != ? AND l.status = ? ORDER BY CASE WHEN promo.id IS NOT NULL THEN 0 ELSE 1 END, RAND() LIMIT 4');
@@ -754,6 +755,10 @@ function revealPhone(){
   document.getElementById('revealedPhone').classList.remove('hidden');
   var m = document.getElementById('revealedPhoneMobile');
   if(m){ m.classList.remove('hidden'); }
+  try {
+    fetch('/api/stats', {method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'},
+      body: 'lid=<?=$lid?>&event=phone&_csrf=' + '<?=h(csrf_token())?>'});
+  } catch(e){}
 }
 function setRating(n){
   document.getElementById('ratingVal').value=n;

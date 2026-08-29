@@ -23,7 +23,7 @@ $page = $parts[0] ?? 'home';
 $sub = $parts[1] ?? null;
 $id = $parts[2] ?? null;
 // Fix: listing/edit/promote/seller use /listing/N format (id in parts[1])
-if (in_array($page, ['listing', 'edit', 'promote', 'seller']) && empty($id)) { $id = $sub; $sub = null; }
+if (in_array($page, ['listing', 'edit', 'promote', 'seller', 'stats']) && empty($id)) { $id = $sub; $sub = null; }
 
 // Maintenance mode check
 if ($page !== 'admin' && $page !== 'login' && $page !== 'register' && $page !== 'api' && $page !== 'max-webhook' && $page !== 'robokassa') {
@@ -59,6 +59,9 @@ switch ($page) {
     break;
   case 'seller':
     require __DIR__ . '/pages/seller.php';
+    break;
+  case 'stats':
+    require __DIR__ . '/pages/stats.php';
     break;
   case 'search':
     require __DIR__ . '/pages/search.php';
@@ -219,6 +222,14 @@ switch ($page) {
       ]);
       exit;
     }
+    if ($action === 'stats' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+      csrf_check();
+      $lid = (int)($_POST['lid'] ?? 0);
+      $event = $_POST['event'] ?? '';
+      if ($lid > 0 && $event === 'phone') stats_incr($lid, 'phone');
+      echo json_encode(['ok' => true]);
+      exit;
+    }
     if ($action === 'typing' && $_SERVER['REQUEST_METHOD'] === 'POST') {
       csrf_check();
       if (!rate_limit('typing', 5)) { echo json_encode(['error'=>'rate_limit']); exit; }
@@ -258,6 +269,8 @@ switch ($page) {
           notify_new_message($cu['id'], $receiver, $lid, $listing['title']);
           // Уведомление в «Макс» (MVP — оператору)
           try { max_notify_message($receiver, $listing['title'], $cu['name'] ?? 'пользователь', $text); } catch (\Throwable $e) {}
+          // Статистика: входящий контакт через чат (не владелец)
+          if ($receiver !== $cu['id']) stats_incr($lid, 'chat');
           echo json_encode(['ok'=>true]);
           exit;
         }

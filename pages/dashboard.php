@@ -8,7 +8,9 @@ $sub = $_GET['sub'] ?? 'listings';
 // My listings
 $st = $pdo->prepare("SELECT l.*, c.name AS category_name,
   (SELECT filename FROM listing_images WHERE listing_id = l.id ORDER BY sort_order LIMIT 1) AS image,
-  promo.promo_type AS promo_type
+  promo.promo_type AS promo_type,
+  (SELECT COALESCE(SUM(cnt),0) FROM listing_stats WHERE listing_id = l.id AND event = 'view') AS stat_views,
+  (SELECT COUNT(*) FROM bookings WHERE listing_id = l.id AND status IN ('pending','confirmed')) AS stat_leads
   FROM listings l JOIN categories c ON l.category_id = c.id
   LEFT JOIN promotions promo ON l.id = promo.listing_id AND promo.status = 'active' AND promo.expires_at > NOW()
   WHERE l.user_id = ? ORDER BY l.created_at DESC");
@@ -268,11 +270,16 @@ require __DIR__ . '/../includes/header.php';
             <div class="listing-title"><?=h($item['title'])?></div>
             <div class="listing-meta">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-              <span><?=$item['view_count']??0?></span>
-              <span style="margin-left:0.25rem"><?=time_ago($item['created_at'])?></span>
+              <span><?= (int)($item['stat_views'] ?? 0) ?></span>
+              <span style="margin-left:0.375rem;display:inline-flex;align-items:center;gap:0.25rem">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/></svg>
+                <?= (int)($item['stat_leads'] ?? 0) ?>
+              </span>
+              <span style="margin-left:auto"><?=time_ago($item['created_at'])?></span>
             </div>
             <div style="display:flex;gap:0.375rem">
               <a href="/listing/<?=$item['id']?>" style="flex:1;text-align:center;display:inline-flex;align-items:center;justify-content:center;gap:0.25rem;border-radius:8px;border:1px solid #DFE4EA;padding:0.375rem 0.5rem;font-size:0.75rem;font-weight:500;color:#3A4A5C;text-decoration:none;transition:all 0.15s ease" onmouseover="this.style.background='#F7F9FB';this.style.borderColor='#C8D0DA'" onmouseout="this.style.background='';this.style.borderColor='#DFE4EA'">Смотреть</a>
+              <a href="/stats/<?=$item['id']?>" style="flex:1;text-align:center;display:inline-flex;align-items:center;justify-content:center;gap:0.25rem;border-radius:8px;border:1px solid #DFE4EA;padding:0.375rem 0.5rem;font-size:0.75rem;font-weight:500;color:#3A4A5C;text-decoration:none;transition:all 0.15s ease" onmouseover="this.style.background='#F7F9FB';this.style.borderColor='#C8D0DA'" onmouseout="this.style.background='';this.style.borderColor='#DFE4EA'">Статистика</a>
               <a href="/edit/<?=$item['id']?>" style="flex:1;text-align:center;display:inline-flex;align-items:center;justify-content:center;gap:0.25rem;border-radius:8px;border:1px solid #DFE4EA;padding:0.375rem 0.5rem;font-size:0.75rem;font-weight:500;color:#3A4A5C;text-decoration:none;transition:all 0.15s ease" onmouseover="this.style.background='#F7F9FB';this.style.borderColor='#C8D0DA'" onmouseout="this.style.background='';this.style.borderColor='#DFE4EA'">Ред.</a>
               <a href="/promote?id=<?=$item['id']?>" style="flex:1;text-align:center;display:inline-flex;align-items:center;justify-content:center;gap:0.25rem;border-radius:8px;border:1px solid #FDE68A;padding:0.375rem 0.5rem;font-size:0.75rem;font-weight:500;color:#92400E;text-decoration:none;transition:all 0.15s ease" onmouseover="this.style.background='#FFFBEB';this.style.borderColor='#FCD34D'" onmouseout="this.style.background='';this.style.borderColor='#FDE68A'">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
