@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>СахGO — статистика объявлений для продавцов: дизайн</title>
+<style>
+  :root{--card:#16283a;--line:#24384c;--txt:#e8f0f6;--mut:#8fa7ba;--accent:#38bdf8;--green:#34d399;--amber:#fbbf24;--red:#f87171;--violet:#a78bfa}
+  *{box-sizing:border-box}
+  body{margin:0;background:linear-gradient(160deg,#0d1822,#10202e 60%,#0f1c28);color:var(--txt);font-family:'Manrope',-apple-system,'Segoe UI',Arial,sans-serif;line-height:1.65;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1000px;margin:0 auto;padding:40px 22px 80px}
+  h1{font-size:1.85rem;letter-spacing:-.02em;margin:0 0 6px}
+  .sub{color:var(--mut);margin:0 0 28px;font-size:.95rem}
+  h2{font-size:1.18rem;margin:38px 0 12px;padding-bottom:8px;border-bottom:1px solid var(--line)}
+  h2 .num{color:var(--accent);margin-right:8px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin:14px 0}
+  table{width:100%;border-collapse:collapse;font-size:.9rem}
+  th,td{padding:9px 12px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--mut);font-weight:600;font-size:.78rem;text-transform:uppercase;letter-spacing:.05em}
+  .ok{color:var(--green);font-weight:600}.no{color:var(--mut)}.warn{color:var(--amber)}
+  .rec{display:inline-block;padding:3px 12px;border-radius:999px;font-size:.75rem;font-weight:700;background:rgba(52,211,153,.15);color:var(--green);border:1px solid rgba(52,211,153,.4)}
+  .badge{display:inline-block;padding:2px 10px;border-radius:999px;font-size:.72rem;font-weight:700}
+  .b-green{background:rgba(52,211,153,.14);color:var(--green);border:1px solid rgba(52,211,153,.35)}
+  .b-amber{background:rgba(251,191,36,.13);color:var(--amber);border:1px solid rgba(251,191,36,.35)}
+  .b-violet{background:rgba(167,139,250,.13);color:#b79cff;border:1px solid rgba(167,139,250,.35)}
+  code{background:#0d1822;border:1px solid var(--line);border-radius:6px;padding:2px 6px;font-family:Consolas,monospace;font-size:.85em}
+  .note{border-left:3px solid var(--amber);background:rgba(251,191,36,.06);border-radius:0 10px 10px 0;padding:12px 16px;margin:16px 0;font-size:.9rem}
+  .note.blue{border-left-color:var(--accent);background:rgba(56,189,248,.06)}
+  .cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:14px;margin:14px 0}
+  ul{margin:8px 0;padding-left:20px}
+  li{margin:5px 0}
+  .muted{color:var(--mut)}
+  .stage{display:flex;gap:12px;margin:10px 0;align-items:flex-start}
+  .stage .n{flex-shrink:0;width:28px;height:28px;border-radius:50%;background:rgba(56,189,248,.15);border:1px solid rgba(56,189,248,.4);color:var(--accent);font-weight:700;font-size:.8rem;display:flex;align-items:center;justify-content:center}
+  .stage .b{flex:1}
+  .stage .b b{display:block}
+  .stage .b span{color:var(--mut);font-size:.87rem}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>Статистика объявлений для продавцов</h1>
+  <p class="sub">Дизайн-предложение · СахGO · август 2026</p>
+
+  <h2><span class="num">1</span>Что показываем (метрики)</h2>
+  <div class="card">
+    <table>
+      <tr><th>Метрика</th><th>Где берём</th><th>Статус</th></tr>
+      <tr><td>Просмотры (всего, за период, в день)</td><td>новый счётчик по дням</td><td class="warn">частично есть (view_count без истории)</td></tr>
+      <tr><td>Контакты: телефон (нажали «Позвонить»)</td><td>новый счётчик</td><td class="no">нет</td></tr>
+      <tr><td>Контакты: чат (открыли диалог / написали)</td><td>новый счётчик</td><td class="no">нет</td></tr>
+      <tr><td>Заявки на бронь (всего / подтверждено / отклонено)</td><td>таблица bookings</td><td class="ok">есть</td></tr>
+      <tr><td>Конверсия «просмотр → заявка»</td><td>расчёт</td><td class="ok">считается</td></tr>
+      <tr><td>Избранное (добавления)</td><td>таблица favorites</td><td class="ok">есть</td></tr>
+      <tr><td>Отзывы и рейтинг</td><td>таблица reviews</td><td class="ok">есть</td></tr>
+      <tr><td><b>Эффект продвижения</b>: просмотры до/во время/после промо</td><td>счётчики + promotions</td><td class="warn">нужна история просмотров</td></tr>
+      <tr><td>Окупаемость продвижения (расходы vs брони)</td><td>расчёт</td><td class="warn">частично</td></tr>
+    </table>
+  </div>
+
+  <h2><span class="num">2</span>Откуда данные</h2>
+  <div class="card">
+    <p>Новая таблица дневных счётчиков — простая и достаточная:</p>
+    <code>listing_stats (listing_id, event, day, cnt, PRIMARY KEY(listing_id, event, day))</code>
+    <ul style="margin-top:10px">
+      <li><b>event = view</b> — инкремент при каждом открытии страницы объявления;</li>
+      <li><b>event = phone</b> — при нажатии «Позвонить» (раскрытие телефона);</li>
+      <li><b>event = chat</b> — при первом сообщении в чат по объявлению;</li>
+      <li><b>event = favorite</b> — при добавлении в избранное.</li>
+    </ul>
+    <p class="muted">Брони, отзывы и промо уже лежат в своих таблицах — берём напрямую. История просмотров начнёт копиться с момента внедрения; эффект продвижения будет виден по новым данным.</p>
+  </div>
+
+  <h2><span class="num">3</span>Где показываем</h2>
+  <div class="cols">
+    <div class="card">
+      <p><span class="badge b-green">A</span> <b>Кнопка «Статистика» у объявления</b></p>
+      <p class="muted">В «Мои объявления» у каждой карточки + на странице статистики мини-KPI: просмотры, контакты, заявки.</p>
+      <p><span class="rec">Рекомендую</span></p>
+    </div>
+    <div class="card">
+      <p><span class="badge b-violet">B</span> <b>Страница статистики</b> <code>/stats/{id}</code></p>
+      <p class="muted">KPI-карточки, график просмотров/контактов за 7/30/90 дней, период продвижения подсвечен на графике, таблица «до / во время / после».</p>
+      <p class="muted">График — лёгкий SVG на чистом JS, без библиотек.</p>
+    </div>
+    <div class="card">
+      <p><span class="badge b-amber">C</span> <b>Сводная по всем объявлениям</b></p>
+      <p class="muted">Вкладка «Статистика» в кабинете: таблица всех объявлений продавца — просмотры, контакты, заявки, метка «продвигается», эффект промо.</p>
+    </div>
+  </div>
+
+  <h2><span class="num">4</span>Функционал страницы статистики</h2>
+  <div class="card">
+    <ul>
+      <li><b>KPI-блок</b>: просмотры (всего / за 30 дней / в день), телефон, чаты, заявки, подтверждённые брони, конверсия, выручка от броней;</li>
+      <li><b>График</b> просмотров и контактов за период (7/30/90 дней) с переключателем; если объявление продвигалось — период промо подсвечен;</li>
+      <li><b>Сравнение</b>: «до промо / во время / после» — просмотры в день в каждом периоде;</li>
+      <li><b>Окупаемость</b>: потрачено на продвижение → сколько заявок и выручки пришло за период промо;</li>
+      <li><b>Лента событий</b> (опционально): заявки, отзывы, даты промо.</li>
+    </ul>
+  </div>
+
+  <h2><span class="num">5</span>План по этапам</h2>
+  <div class="card">
+    <div class="stage"><div class="n">1</div><div class="b"><b>Данные</b><span>Таблица listing_stats + инкременты: просмотры (вместо голого счётчика), телефон, чат, избранное. ~1 час.</span></div></div>
+    <div class="stage"><span class="n">2</span><div class="b"><b>Мини-KPI в кабинете</b><span>Кнопка «Статистика» + компактные цифры у объявлений. ~1 час.</span></div></div>
+    <div class="stage"><span class="n">3</span><div class="b"><b>Страница статистики</b><span>KPI + график SVG + периоды 7/30/90. ~2–3 часа.</span></div></div>
+    <div class="stage"><span class="n">4</span><div class="b"><b>Промо-сравнение</b><span>Подсветка периодов промо, «до/во время/после», окупаемость. ~1–2 часа.</span></div></div>
+    <div class="stage"><span class="n">5</span><div class="b"><b>Сводная вкладка</b><span>Сравнение всех объявлений продавца, включая продвигаемые. ~1 час.</span></div></div>
+  </div>
+
+  <h2><span class="num">6</span>Что решить</h2>
+  <div class="card">
+    <ul>
+      <li>Показывать <b>окупаемость</b> (потрачено на промо → выручка) или только просмотры/контакты?</li>
+      <li>График: свой SVG или использовать данные Яндекс.Метрики (она уже подключена)?</li>
+      <li>Начинать со всего сразу или по этапам 1→2→3→4→5?</li>
+    </ul>
+  </div>
+
+</div>
+</body>
+</html>
