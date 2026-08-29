@@ -3,7 +3,7 @@
 $lid = (int)($id ?? 0);
 $pdo = db();
 
-$stmt = $pdo->prepare("SELECT l.*, u.name AS host_name, u.avatar_url AS host_avatar, u.phone AS host_phone,
+$stmt = $pdo->prepare("SELECT l.*, u.name AS host_name, u.avatar_url AS host_avatar, u.phone AS host_phone, u.seller_type AS host_seller_type, u.org_name AS host_org_name,
   (SELECT COUNT(*) FROM reviews WHERE listing_id = l.id AND moderated = 1) AS reviews_count,
   (SELECT AVG(rating) FROM reviews WHERE listing_id = l.id AND moderated = 1) AS avg_rating
   FROM listings l JOIN users u ON l.user_id = u.id WHERE l.id = ? AND l.status = ?");
@@ -12,7 +12,7 @@ $item = $stmt->fetch();
 
 if (!$item) {
   $cu = auth_user();
-  $stmt = $pdo->prepare('SELECT l.*, u.name AS host_name, u.avatar_url AS host_avatar, u.phone AS host_phone FROM listings l JOIN users u ON l.user_id = u.id WHERE l.id = ?');
+  $stmt = $pdo->prepare('SELECT l.*, u.name AS host_name, u.avatar_url AS host_avatar, u.phone AS host_phone, u.seller_type AS host_seller_type, u.org_name AS host_org_name FROM listings l JOIN users u ON l.user_id = u.id WHERE l.id = ?');
   $stmt->execute([$lid]);
   $pending = $stmt->fetch();
   if ($pending && (($cu && $cu['id'] == $pending['user_id']) || ($cu && $cu['role'] === 'admin'))) {
@@ -45,7 +45,7 @@ $sellerMore = $stmt->fetchAll();
 $stmt = $pdo->prepare("SELECT AVG(r.rating) AS seller_rating, COUNT(r.id) AS seller_reviews FROM reviews r JOIN listings l ON r.listing_id = l.id WHERE l.user_id = ? AND r.moderated = 1");
 $stmt->execute([$item['user_id']]);
 $sellerStats = $stmt->fetch();
-$sellerIsOrg = in_array($item['tour_organizer_type'] ?? '', ['tour_operator', 'travel_agent'], true);
+$sellerIsOrg = in_array($item['tour_organizer_type'] ?? '', ['tour_operator', 'travel_agent'], true) || ($item['host_seller_type'] ?? 'private') === 'org';
 
 $stmt = $pdo->prepare('SELECT r.*, u.name AS author_name, u.avatar_url AS author_avatar FROM reviews r JOIN users u ON r.user_id = u.id WHERE r.listing_id = ? AND r.moderated = 1 ORDER BY r.created_at DESC LIMIT 10');
 $stmt->execute([$lid]);

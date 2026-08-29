@@ -38,18 +38,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
   $name = trim($_POST['name'] ?? '');
   $phone = trim($_POST['phone'] ?? '');
   $email = trim($_POST['email'] ?? '');
+  $sellerType = in_array($_POST['seller_type'] ?? 'private', ['private', 'org'], true) ? $_POST['seller_type'] : 'private';
+  $orgName = trim($_POST['org_name'] ?? '');
+  $orgInn = trim($_POST['org_inn'] ?? '');
+  if ($sellerType !== 'org') { $orgName = ''; $orgInn = ''; }
   if (!empty($name)) {
     // Обычный юзер с уже привязанным телефоном: только имя и email; без телефона или админ — можно всё
     if ($user['role'] !== 'admin' && !empty($user['phone'])) {
-      $pdo->prepare('UPDATE users SET name=?, email=? WHERE id=?')->execute([$name, $email, $user['id']]);
+      $pdo->prepare('UPDATE users SET name=?, email=?, seller_type=?, org_name=?, org_inn=? WHERE id=?')->execute([$name, $email, $sellerType, $orgName, $orgInn, $user['id']]);
       $user['name'] = $name;
       $user['email'] = $email;
     } else {
-      $pdo->prepare('UPDATE users SET name=?, phone=?, email=? WHERE id=?')->execute([$name, $phone, $email, $user['id']]);
+      $pdo->prepare('UPDATE users SET name=?, phone=?, email=?, seller_type=?, org_name=?, org_inn=? WHERE id=?')->execute([$name, $phone, $email, $sellerType, $orgName, $orgInn, $user['id']]);
       $user['name'] = $name;
       $user['phone'] = $phone;
       $user['email'] = $email;
     }
+    $user['seller_type'] = $sellerType;
+    $user['org_name'] = $orgName;
+    $user['org_inn'] = $orgInn;
   }
 
   // Avatar upload
@@ -995,6 +1002,32 @@ require __DIR__ . '/../includes/header.php';
           <input type="text" name="phone" value="<?=h($user['phone'] ? phone_display($user['phone']) : '')?>" style="width:100%;box-sizing:border-box" <?php if ($user['role'] !== 'admin' && !empty($user['phone'])): ?>readonly onfocus="this.blur()" title="Телефон можно изменить только через администратора"<?php endif; ?>>
           <?php if ($user['role'] !== 'admin' && !empty($user['phone'])): ?><p style="font-size:0.6875rem;color:#5A6B7D;margin:0.25rem 0 0">Телефон можно изменить только через администратора</p><?php endif; ?>
         </div>
+        <div class="form-group">
+          <label>Статус продавца</label>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.625rem">
+            <label style="position:relative;border-radius:10px;border:2px solid <?=($user['seller_type']??'private')==='org'?'#DFE4EA':'#1B6B8A'?>;padding:0.625rem;cursor:pointer;text-align:center;font-size:0.8125rem;font-weight:600;color:<?=($user['seller_type']??'private')==='org'?'#7A8A9A':'#1B6B8A'?>;transition:all 0.15s">
+              <input type="radio" name="seller_type" value="private" <?=($user['seller_type']??'private')==='org'?'':'checked'?> onchange="stChange()" style="position:absolute;opacity:0">
+              Частное лицо
+            </label>
+            <label style="position:relative;border-radius:10px;border:2px solid <?=($user['seller_type']??'private')==='org'?'#1B6B8A':'#DFE4EA'?>;padding:0.625rem;cursor:pointer;text-align:center;font-size:0.8125rem;font-weight:600;color:<?=($user['seller_type']??'private')==='org'?'#1B6B8A':'#7A8A9A'?>;transition:all 0.15s">
+              <input type="radio" name="seller_type" value="org" <?=($user['seller_type']??'private')==='org'?'checked':''?> onchange="stChange()" style="position:absolute;opacity:0">
+              Организация
+            </label>
+          </div>
+          <div id="orgFields" style="margin-top:0.875rem;display:<?=($user['seller_type']??'private')==='org'?'':'none'?>">
+            <label class="ed-label">Название организации</label>
+            <input type="text" name="org_name" value="<?=h($user['org_name']??'')?>" class="ed-input" placeholder="ООО «...» / ИП Иванов И.И." style="margin-bottom:0.625rem">
+            <label class="ed-label">ИНН</label>
+            <input type="text" name="org_inn" value="<?=h($user['org_inn']??'')?>" class="ed-input" placeholder="ИНН организации">
+          </div>
+        </div>
+        <script>
+        function stChange(){
+          var org = document.querySelector('input[name="seller_type"]:checked').value === 'org';
+          document.getElementById('orgFields').style.display = org ? '' : 'none';
+        }
+        document.addEventListener('DOMContentLoaded', stChange);
+        </script>
         <button type="submit" name="update_profile" value="1" class="cta-btn" style="width:100%;gap:0.375rem;padding:0.625rem 1.25rem">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
           Сохранить

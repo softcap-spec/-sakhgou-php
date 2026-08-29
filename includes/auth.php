@@ -93,7 +93,7 @@ function auth_logout(): void {
 function auth_user(): ?array {
   if (empty($_SESSION['user_id'])) return null;
   $pdo = db();
-  $stmt = $pdo->prepare('SELECT id, email, name, phone, role, avatar_url, created_at, max_user_id, max_bind_code FROM users WHERE id = ?');
+  $stmt = $pdo->prepare('SELECT id, email, name, phone, role, avatar_url, created_at, max_user_id, max_bind_code, seller_type, org_name, org_inn FROM users WHERE id = ?');
   $stmt->execute([$_SESSION['user_id']]);
   $u = $stmt->fetch() ?: null;
   if ($u) {

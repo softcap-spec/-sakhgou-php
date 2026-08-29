@@ -2,7 +2,7 @@
 // seller.php — публичная страница продавца (как на Авито): активные и завершённые объявления
 $pdo = db();
 $uid = (int)($id ?? 0);
-$stmt = $pdo->prepare('SELECT id, name, avatar_url, created_at, role FROM users WHERE id = ?');
+$stmt = $pdo->prepare('SELECT id, name, avatar_url, created_at, role, seller_type, org_name FROM users WHERE id = ?');
 $stmt->execute([$uid]);
 $seller = $stmt->fetch();
 if (!$seller) { header('Location: /'); exit; }
@@ -10,7 +10,7 @@ if (!$seller) { header('Location: /'); exit; }
 // Тип продавца: организация (туроператор/турагент) или частное лицо
 $t = $pdo->prepare("SELECT tour_organizer_type FROM listings WHERE user_id = ? AND tour_organizer_type != '' ORDER BY id DESC LIMIT 1");
 $t->execute([$uid]);
-$sellerIsOrg = in_array($t->fetchColumn(), ['tour_operator', 'travel_agent'], true);
+$sellerIsOrg = in_array($t->fetchColumn(), ['tour_operator', 'travel_agent'], true) || ($seller['seller_type'] ?? 'private') === 'org';
 
 // Рейтинг продавца — по отзывам на все его объявления
 $r = $pdo->prepare('SELECT AVG(r.rating) AS rt, COUNT(r.id) AS rc FROM reviews r JOIN listings l ON r.listing_id = l.id WHERE l.user_id = ? AND r.moderated = 1');
@@ -35,7 +35,7 @@ require __DIR__ . '/../includes/header.php';
       <div class="flex items-center gap-4 min-w-0">
         <?= avatar_html(['name' => $seller['name'], 'avatar_url' => $seller['avatar_url']], 'w-16 h-16', 'text-xl') ?>
         <div class="min-w-0">
-          <h1 class="font-display text-xl md:text-2xl truncate"><?=h($seller['name'])?></h1>
+          <h1 class="font-display text-xl md:text-2xl truncate"><?=h(($sellerIsOrg && !empty($seller['org_name'])) ? $seller['org_name'] : $seller['name'])?></h1>
           <div class="text-sm text-[#6B7B8D] mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
             <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium <?=$sellerIsOrg ? 'bg-[#EEF2F6] text-[#121E2B]' : 'bg-[#F0F9FF] text-[#1B6B8A]'?>">
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
