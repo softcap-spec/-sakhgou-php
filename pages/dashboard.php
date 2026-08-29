@@ -1008,11 +1008,11 @@ require __DIR__ . '/../includes/header.php';
         <div class="form-group">
           <label>Статус продавца</label>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.625rem">
-            <label style="position:relative;border-radius:10px;border:2px solid <?=($user['seller_type']??'private')==='org'?'#DFE4EA':'#1B6B8A'?>;padding:0.625rem;cursor:pointer;text-align:center;font-size:0.8125rem;font-weight:600;color:<?=($user['seller_type']??'private')==='org'?'#7A8A9A':'#1B6B8A'?>;transition:all 0.15s">
+            <label id="stPrivate" style="position:relative;border-radius:10px;border:2px solid <?=($user['seller_type']??'private')==='org'?'#DFE4EA':'#1B6B8A'?>;padding:0.625rem;cursor:pointer;text-align:center;font-size:0.8125rem;font-weight:600;color:<?=($user['seller_type']??'private')==='org'?'#7A8A9A':'#1B6B8A'?>;transition:all 0.15s">
               <input type="radio" name="seller_type" value="private" <?=($user['seller_type']??'private')==='org'?'':'checked'?> onchange="stChange()" style="position:absolute;opacity:0">
               Частное лицо
             </label>
-            <label style="position:relative;border-radius:10px;border:2px solid <?=($user['seller_type']??'private')==='org'?'#1B6B8A':'#DFE4EA'?>;padding:0.625rem;cursor:pointer;text-align:center;font-size:0.8125rem;font-weight:600;color:<?=($user['seller_type']??'private')==='org'?'#1B6B8A':'#7A8A9A'?>;transition:all 0.15s">
+            <label id="stOrg" style="position:relative;border-radius:10px;border:2px solid <?=($user['seller_type']??'private')==='org'?'#1B6B8A':'#DFE4EA'?>;padding:0.625rem;cursor:pointer;text-align:center;font-size:0.8125rem;font-weight:600;color:<?=($user['seller_type']??'private')==='org'?'#1B6B8A':'#7A8A9A'?>;transition:all 0.15s">
               <input type="radio" name="seller_type" value="org" <?=($user['seller_type']??'private')==='org'?'checked':''?> onchange="stChange()" style="position:absolute;opacity:0">
               Организация
             </label>
@@ -1029,6 +1029,10 @@ require __DIR__ . '/../includes/header.php';
         function stChange(){
           var org = document.querySelector('input[name="seller_type"]:checked').value === 'org';
           document.getElementById('orgFields').style.display = org ? '' : 'none';
+          document.getElementById('stPrivate').style.borderColor = org ? '#DFE4EA' : '#1B6B8A';
+          document.getElementById('stPrivate').style.color = org ? '#7A8A9A' : '#1B6B8A';
+          document.getElementById('stOrg').style.borderColor = org ? '#1B6B8A' : '#DFE4EA';
+          document.getElementById('stOrg').style.color = org ? '#1B6B8A' : '#7A8A9A';
           innCheck(document.getElementById('orgInn').value);
         }
         function innValid(v){
