@@ -104,7 +104,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['finish'])) {
       tour_duration_hours,tour_duration_days,difficulty_level,group_size_min,group_size_max,start_point,
       requires_border_permit,depends_on_weather,transport_included,transport_type,
       gear_condition,fishing_type,fishing_method,gear_included,catch_guarantee,license_required,boat_included,
-      meals_included,season,cancellation_policy,status)
+      meals_included,season,cancellation_policy,status,transfer)
       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
     $stmt->execute([
       $cu['id'], $real_cid, $lt, $cat, $tourOrgType, $tourOpName, $tourOpRegno, $title, $slug, $desc, $price, $priceType, 'RUB',
@@ -117,7 +117,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['finish'])) {
       (int)($_POST['border_permit']??0), (int)($_POST['weather_dep']??0), (int)($_POST['transport_inc']??0), $_POST['transport_type']??'',
       $_POST['gear_condition']??'', $_POST['fishing_type']??'', $_POST['fishing_method']??'',
       (int)($_POST['gear_inc']??0), (int)($_POST['catch_g']??0), (int)($_POST['license']??0), (int)($_POST['boat']??0),
-      (int)($_POST['meals']??0), $_POST['season']??'', $_POST['cancellation']??'', 'pending'
+      (int)($_POST['meals']??0), $_POST['season']??'', $_POST['cancellation']??'', 'pending', in_array($_POST['transfer'] ?? '', ['yes','no','possible'], true) ? $_POST['transfer'] : null
     ]);
     $lid = $pdo->lastInsertId();
     $success = $lid;
@@ -420,10 +420,20 @@ function priceTypeChange(){
         <select name="season" style="width:100%;box-sizing:border-box"><option value="all_season">Круглый год</option><option value="summer">Лето</option><option value="winter">Зима</option></select>
       </div>
 
+      <!-- Common: Transfer -->
+      <div class="form-group"><label>Трансфер</label>
+        <select name="transfer" style="width:100%;box-sizing:border-box">
+          <option value="" <?=empty($_POST['transfer']??'')?'selected':''?>>Не указано</option>
+          <option value="yes" <?=($_POST['transfer']??'')==='yes'?'selected':''?>>Да</option>
+          <option value="no" <?=($_POST['transfer']??'')==='no'?'selected':''?>>Нет</option>
+          <option value="possible" <?=($_POST['transfer']??'')==='possible'?'selected':''?>>Возможен</option>
+        </select>
+      </div>
+
     <?php elseif ($step === 4): ?>
       <!-- Step 4: Photos -->
       <h2 style="font-family:Manrope,sans-serif;font-weight:700;font-size:1.25rem;margin:0 0 1.5rem">Фотографии</h2>
-      <?php foreach(['listing_type','category','title','description','price','price_type','location','max_guests','rooms_count','beds_count','bathrooms_count','area_sqm','check_in','check_out','deposit','tour_hours','tour_days','difficulty','group_min','group_max','start_point','transport_inc','border_permit','weather_dep','meals','transport_type','gear_condition','fishing_type','fishing_method','gear_inc','catch_g','license','boat','tour_organizer_type','tour_operator_name','tour_operator_regno','season'] as $f): ?>
+      <?php foreach(['listing_type','category','title','description','price','price_type','location','max_guests','rooms_count','beds_count','bathrooms_count','area_sqm','check_in','check_out','deposit','tour_hours','tour_days','difficulty','group_min','group_max','start_point','transport_inc','border_permit','weather_dep','meals','transport_type','gear_condition','fishing_type','fishing_method','gear_inc','catch_g','license','boat','tour_organizer_type','tour_operator_name','tour_operator_regno','season','transfer'] as $f): ?>
       <input type="hidden" name="<?=$f?>" value="<?=h($_POST[$f]??'')?>">
       <?php endforeach; ?>
       <?php if (isset($_POST['amenities'])): foreach($_POST['amenities'] as $a): ?><input type="hidden" name="amenities[]" value="<?=h($a)?>"><?php endforeach; endif; ?>

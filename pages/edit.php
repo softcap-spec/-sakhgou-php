@@ -105,8 +105,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   if (empty($description)) $errors[] = 'Добавьте описание';
 
   if (empty($errors)) {
-    $fields = ['title', 'description', 'price', 'price_type', 'location', 'listing_type', 'category_id'];
-    $values = [$title, $description, $price, $priceType, $location, $type, $cat_id];
+    $transfer = in_array($_POST['transfer'] ?? '', ['yes', 'no', 'possible'], true) ? $_POST['transfer'] : null;
+    $fields = ['title', 'description', 'price', 'price_type', 'location', 'listing_type', 'category_id', 'transfer'];
+    $values = [$title, $description, $price, $priceType, $location, $type, $cat_id, $transfer];
 
     $typeFields = [
       'property' => ['max_guests', 'rooms_count', 'beds_count', 'amenities', 'check_in_time', 'check_out_time', 'rules'],
@@ -256,6 +257,16 @@ require __DIR__ . '/../includes/header.php';
             <div class="ed-sect">
               <div class="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1B6B8A" stroke-width="2"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg></div>
               <div><b>Параметры</b><small>Зависят от типа объявления</small></div>
+            </div>
+
+            <div class="ed-block">
+              <label class="ed-label">Трансфер</label>
+              <select name="transfer" class="ed-select">
+                <option value="" <?=($item['transfer']??'')===''||$item['transfer']===null?'selected':''?>>Не указано</option>
+                <option value="yes" <?=($item['transfer']??'')==='yes'?'selected':''?>>Да</option>
+                <option value="no" <?=($item['transfer']??'')==='no'?'selected':''?>>Нет</option>
+                <option value="possible" <?=($item['transfer']??'')==='possible'?'selected':''?>>Возможен</option>
+              </select>
             </div>
 
             <div id="prop-fields" class="ed-block" style="<?=$item['listing_type']!=='property'?'display:none':''?>">
