@@ -24,7 +24,11 @@ if (!$item) {
 }
 
 $pdo->prepare('UPDATE listings SET view_count = COALESCE(view_count, 0) + 1 WHERE id = ?')->execute([$lid]);
-stats_incr($lid, 'view');
+// Дедупликация: одна запись просмотра на сессию в день (защита от накрутки обновлением)
+if (($_SESSION['lst_view'][$lid] ?? '') !== date('Y-m-d')) {
+  stats_incr($lid, 'view');
+  $_SESSION['lst_view'][$lid] = date('Y-m-d');
+}
 $item['view_count'] = ($item['view_count'] ?? 0) + 1;
 
 $stmt = $pdo->prepare('SELECT l.*, c.slug AS cat_slug FROM listings l JOIN categories c ON l.category_id = c.id LEFT JOIN promotions promo ON l.id = promo.listing_id AND promo.status = \'active\' AND promo.expires_at > NOW() WHERE l.listing_type = ? AND l.id != ? AND l.status = ? ORDER BY CASE WHEN promo.id IS NOT NULL THEN 0 ELSE 1 END, RAND() LIMIT 4');
@@ -757,8 +761,8 @@ function revealPhone(){
   var m = document.getElementById('revealedPhoneMobile');
   if(m){ m.classList.remove('hidden'); }
   try {
-    fetch('/api/stats', {method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'},
-      body: 'lid=<?=$lid?>&event=phone&_csrf=' + '<?=h(csrf_token())?>'});
+    fetch('/stats-hit', {method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'},
+      body: 'lid=<?=$lid?>&event=phone'});
   } catch(e){}
 }
 function setRating(n){

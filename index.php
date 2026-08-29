@@ -117,6 +117,21 @@ switch ($page) {
     echo json_encode(['busy'=>$avlBusy]);
     exit;
 
+  case 'stats-hit':
+    // Публичный пинг счётчика (звонок/чат). Дедуп: 1 раз в день на сессию+объявление.
+    header('Content-Type: application/json; charset=utf-8');
+    $hitLid = (int)($_POST['lid'] ?? 0);
+    $hitEv = $_POST['event'] ?? '';
+    if ($hitLid > 0 && in_array($hitEv, ['phone', 'chat'], true)) {
+      $key = $hitLid . '_' . $hitEv;
+      if (($_SESSION['st_hit'][$key] ?? '') !== date('Y-m-d')) {
+        stats_incr($hitLid, $hitEv);
+        $_SESSION['st_hit'][$key] = date('Y-m-d');
+      }
+    }
+    echo json_encode(['ok' => true]);
+    exit;
+
   case 'robokassa':
     // Уведомления и возвраты Robokassa. result — серверный callback (Пароль №2).
     $rkAction = $sub ?? '';
@@ -269,8 +284,12 @@ switch ($page) {
           notify_new_message($cu['id'], $receiver, $lid, $listing['title']);
           // Уведомление в «Макс» (MVP — оператору)
           try { max_notify_message($receiver, $listing['title'], $cu['name'] ?? 'пользователь', $text); } catch (\Throwable $e) {}
-          // Статистика: входящий контакт через чат (не владелец)
-          if ($receiver !== $cu['id']) stats_incr($lid, 'chat');
+          // Статистика: первый входящий контакт через чат (начало диалога)
+          if ($receiver !== $cu['id']) {
+            $fst = $pdo->prepare('SELECT COUNT(*) FROM messages WHERE listing_id=? AND sender_id=? AND receiver_id=?');
+            $fst->execute([$lid, $cu['id'], $receiver]);
+            if ((int)$fst->fetchColumn() === 0) stats_incr($lid, 'chat');
+          }
           echo json_encode(['ok'=>true]);
           exit;
         }
