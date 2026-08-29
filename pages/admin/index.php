@@ -4,7 +4,7 @@ require_once __DIR__ . '/../../includes/db.php';
 require_once __DIR__ . '/../../includes/functions.php';
 require_once __DIR__ . '/../../includes/auth.php';
 
-admin_required();
+$ADMIN = admin_required();
 header('Cache-Control: no-store, must-revalidate');
 $pdo = db();
 $tab = $_GET['tab'] ?? 'dashboard';
@@ -60,9 +60,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     exit;
   }
 
-  // User edit
+  // Listing: блокировать/разблокировать (админ)
+  if ($_POST['action'] === 'admin_toggle_listing') {
+    $lid = (int)($_POST['id'] ?? 0);
+    $st = $pdo->prepare('SELECT status FROM listings WHERE id = ?');
+    $st->execute([$lid]);
+    $cur = $st->fetchColumn();
+    if ($cur === 'blocked') $new = 'active';
+    elseif (in_array($cur, ['active', 'pending'], true)) $new = 'blocked';
+    else $new = null;
+    if ($new) $pdo->prepare('UPDATE listings SET status = ? WHERE id = ?')->execute([$new, $lid]);
+    header('Location: /admin?tab=listings&filter=' . urlencode($_POST['filter'] ?? 'all'));
+    exit;
+  }
+  // Listing: удалить (админ, вместе с фото и связанными данными)
+  if ($_POST['action'] === 'admin_delete_listing') {
+    $lid = (int)($_POST['id'] ?? 0);
+    $imgs = $pdo->prepare('SELECT filename FROM listing_images WHERE listing_id = ?');
+    $imgs->execute([$lid]);
+    foreach ($imgs->fetchAll(PDO::FETCH_COLUMN) as $fn) @unlink(UPLOAD_DIR . '/' . basename((string)$fn));
+    foreach (['listing_images', 'favorites', 'listing_stats', 'bookings', 'messages', 'promotions'] as $tbl) {
+      $pdo->prepare("DELETE FROM {$tbl} WHERE listing_id = ?")->execute([$lid]);
+    }
+    $pdo->prepare('DELETE FROM notifications WHERE link = ?')->execute(['/listing/' . $lid]);
+    $pdo->prepare('DELETE FROM listings WHERE id = ?')->execute([$lid]);
+    header('Location: /admin?tab=listings&filter=' . urlencode($_POST['filter'] ?? 'all'));
+    exit;
+  }
+
+  // User edit (пароль — опционально: пустое поле = не менять)
   if ($_POST['action'] === 'edit_user') {
     $uid = (int)$_POST['user_id'];
+    $newPass = trim($_POST['new_password'] ?? '');
+    if ($newPass !== '') {
+      if (mb_strlen($newPass) < 6) { header('Location: /admin?tab=users&err=pwshort'); exit; }
+      $pdo->prepare('UPDATE users SET password_hash = ? WHERE id = ?')
+        ->execute([password_hash($newPass, PASSWORD_BCRYPT), $uid]);
+    }
     $pdo->prepare("UPDATE users SET name = ?, email = ?, phone = ? WHERE id = ?")
       ->execute([trim($_POST['name']), trim($_POST['email']), trim($_POST['phone'] ?? ''), $uid]);
     header('Location: /admin?tab=users&ok=1');
@@ -85,13 +119,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     exit;
   }
 
-  // User delete
+  // User delete (нельзя удалять себя и других админов; чистим файлы и связанные записи)
   if ($_POST['action'] === 'delete_user') {
     $uid = (int)$_POST['user_id'];
-    $u = $pdo->prepare("SELECT name FROM users WHERE id = ?");
+    $u = $pdo->prepare("SELECT name, role FROM users WHERE id = ?");
     $u->execute([$uid]);
     $userRow = $u->fetch();
-    if ($userRow && trim($_POST['confirm_name']) === $userRow['name']) {
+    $canDelete = $userRow
+      && $userRow['role'] !== 'admin'
+      && $uid !== (int)$ADMIN['id']
+      && trim($_POST['confirm_name']) === $userRow['name'];
+    if ($canDelete) {
+      // Файлы изображений объявлений пользователя
+      $imgs = $pdo->prepare('SELECT li.filename FROM listing_images li JOIN listings l ON li.listing_id = l.id WHERE l.user_id = ?');
+      $imgs->execute([$uid]);
+      foreach ($imgs->fetchAll(PDO::FETCH_COLUMN) as $fn) {
+        @unlink(UPLOAD_DIR . '/' . basename((string)$fn));
+      }
+      $pdo->prepare('DELETE li FROM listing_images li JOIN listings l ON li.listing_id = l.id WHERE l.user_id = ?')->execute([$uid]);
+      $pdo->prepare('DELETE ls FROM listing_stats ls JOIN listings l ON ls.listing_id = l.id WHERE l.user_id = ?')->execute([$uid]);
       $pdo->prepare("DELETE FROM listings WHERE user_id = ?")->execute([$uid]);
       $pdo->prepare("DELETE FROM reviews WHERE user_id = ? OR host_id = ?")->execute([$uid, $uid]);
       $pdo->prepare("DELETE FROM favorites WHERE user_id = ?")->execute([$uid]);
@@ -99,9 +145,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
       $pdo->prepare("DELETE FROM messages WHERE sender_id = ? OR receiver_id = ?")->execute([$uid, $uid]);
       $pdo->prepare("DELETE FROM bookings WHERE guest_id = ? OR host_id = ?")->execute([$uid, $uid]);
       $pdo->prepare("DELETE FROM promotions WHERE user_id = ?")->execute([$uid]);
+      $pdo->prepare("DELETE FROM consents WHERE user_id = ?")->execute([$uid]);
+      $pdo->prepare("DELETE FROM payments WHERE user_id = ?")->execute([$uid]);
       $pdo->prepare("DELETE FROM users WHERE id = ?")->execute([$uid]);
     }
-    header('Location: /admin?tab=users&ok=1');
+    header('Location: /admin?tab=users' . ($canDelete ? '&ok=1' : '&err=delforbidden'));
     exit;
   }
 
@@ -173,34 +221,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     exit;
   }
 
-  // Listing: блокировать/разблокировать (админ)
-  if ($_POST['action'] === 'admin_toggle_listing') {
-    $lid = (int)($_POST['id'] ?? 0);
-    $st = $pdo->prepare('SELECT status FROM listings WHERE id = ?');
-    $st->execute([$lid]);
-    $cur = $st->fetchColumn();
-    if ($cur === 'blocked') $new = 'active';
-    elseif (in_array($cur, ['active', 'pending'], true)) $new = 'blocked';
-    else $new = null;
-    if ($new) $pdo->prepare('UPDATE listings SET status = ? WHERE id = ?')->execute([$new, $lid]);
-    header('Location: /admin?tab=listings&filter=' . urlencode($_POST['filter'] ?? 'all'));
-    exit;
-  }
-  // Listing: удалить (админ, вместе с файлами фото)
-  if ($_POST['action'] === 'admin_delete_listing') {
-    $lid = (int)($_POST['id'] ?? 0);
-    $imgs = $pdo->prepare('SELECT filename FROM listing_images WHERE listing_id = ?');
-    $imgs->execute([$lid]);
-    foreach ($imgs->fetchAll() as $im) @unlink(UPLOAD_DIR . '/' . $im['filename']);
-    $pdo->prepare('DELETE FROM listings WHERE id = ?')->execute([$lid]);
-    header('Location: /admin?tab=listings&filter=' . urlencode($_POST['filter'] ?? 'all'));
-    exit;
-  }
-
   // Banner: add
   if ($_POST['action'] === 'add_banner') {
     $bannerContent = trim($_POST['content'] ?? '');
-    if ($_POST['type'] === 'image' && !empty($_FILES['banner_image']['name']) && $_FILES['banner_image']['error'] === UPLOAD_ERR_OK) {
+    if ($_POST['type'] === 'image' && !empty($_FILES['banner_image']['name']) && $_FILES['banner_image']['error'] === UPLOAD_ERR_OK && $_FILES['banner_image']['size'] <= MAX_UPLOAD_SIZE) {
       $finfo = finfo_open(FILEINFO_MIME_TYPE);
       $mime = finfo_file($finfo, $_FILES['banner_image']['tmp_name']);
       finfo_close($finfo);
@@ -220,7 +244,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
   // Banner: edit
   if ($_POST['action'] === 'edit_banner') {
     $bannerContent = trim($_POST['content'] ?? '');
-    if ($_POST['type'] === 'image' && !empty($_FILES['banner_image']['name']) && $_FILES['banner_image']['error'] === UPLOAD_ERR_OK) {
+    if ($_POST['type'] === 'image' && !empty($_FILES['banner_image']['name']) && $_FILES['banner_image']['error'] === UPLOAD_ERR_OK && $_FILES['banner_image']['size'] <= MAX_UPLOAD_SIZE) {
       $finfo = finfo_open(FILEINFO_MIME_TYPE);
       $mime = finfo_file($finfo, $_FILES['banner_image']['tmp_name']);
       finfo_close($finfo);
@@ -307,6 +331,7 @@ require_once __DIR__ . '/../../includes/header.php';
     <div class="flex items-center gap-3 mb-2">
       <h1 class="font-display text-2xl">Админ-панель</h1>
       <span class="text-xs bg-accent text-white px-2 py-0.5 rounded-full font-medium">v<?= defined('APP_VERSION') ? APP_VERSION : '1.0' ?></span>
+      <span class="text-xs bg-accent text-white px-2 py-0.5 rounded-full font-medium">v<?= defined('APP_VERSION') ? APP_VERSION : '1.0' ?></span>
     </div>
 
     <?php if (isset($_GET['ok'])): ?>
@@ -315,7 +340,7 @@ require_once __DIR__ . '/../../includes/header.php';
 
     <!-- Tabs -->
     <div class="border-b mb-6">
-      <nav class="flex gap-0.5 flex-wrap -mb-px overflow-x-auto" style="scrollbar-width:thin">
+      <nav class="flex gap-0.5 flex-nowrap -mb-px">
         <?php
         $tabs = [
           'dashboard' => 'Дашборд',
@@ -581,6 +606,7 @@ elseif ($tab === 'users'):
           <div><label class="block text-xs font-medium mb-1">Имя</label><input type="text" name="name" id="editUserName" required class="w-full rounded-lg border border-border py-2 px-3 text-sm focus:border-accent outline-none"></div>
           <div><label class="block text-xs font-medium mb-1">Email</label><input type="email" name="email" id="editUserEmail" required class="w-full rounded-lg border border-border py-2 px-3 text-sm focus:border-accent outline-none"></div>
           <div><label class="block text-xs font-medium mb-1">Телефон</label><input type="text" name="phone" id="editUserPhone" class="w-full rounded-lg border border-border py-2 px-3 text-sm focus:border-accent outline-none"></div>
+          <div><label class="block text-xs font-medium mb-1">Новый пароль (опционально, мин. 6 символов)</label><input type="text" name="new_password" autocomplete="new-password" minlength="6" placeholder="Оставьте пустым — не менять" class="w-full rounded-lg border border-border py-2 px-3 text-sm focus:border-accent outline-none"></div>
           <div class="flex gap-2 pt-2"><button type="button" onclick="closeModal('editUserModal')" class="flex-1 py-2 border border-border rounded-lg text-sm font-medium hover:bg-muted transition-colors">Отмена</button><button class="flex-1 py-2 bg-accent text-white rounded-lg text-sm font-medium hover:opacity-90 transition-all">Сохранить</button></div>
         </form>
       </div>
@@ -971,45 +997,40 @@ elseif ($tab === 'banners'):
 <?php
 // ── REVISIONS ──
 elseif ($tab === 'content'):
-  // Try to get git log
+  // git на сервере нет: показываем версию сборки и время обновления ключевых файлов
+  $coreFiles = ['index.php', 'includes/functions.php', 'includes/auth.php', 'includes/robokassa.php', 'includes/style.css', 'pages/admin/index.php'];
   $revisions = [];
-  $git_log = @shell_exec('cd ' . escapeshellarg(dirname(dirname(__DIR__))) . ' && git log --oneline -20 2>/dev/null');
-  if ($git_log) {
-    foreach (explode("
-", trim($git_log)) as $line) {
-      if (preg_match('/^([a-f0-9]+)\s+(.+)$/', $line, $m)) {
-        $revisions[] = ['hash' => $m[1], 'message' => $m[2]];
-      }
+  foreach ($coreFiles as $cf) {
+    $p2 = __DIR__ . '/../../' . $cf;
+    if (file_exists($p2)) {
+      $revisions[] = ['file' => $cf, 'time' => filemtime($p2)];
     }
   }
+  usort($revisions, function ($a, $b) { return $b['time'] <=> $a['time']; });
 ?>
     <h2 class="font-display text-xl mb-4">Ревизии</h2>
-    <?php if (!empty($revisions)): ?>
+    <div class="bg-accent text-white rounded-xl p-4 mb-4 flex items-center justify-between">
+      <span class="text-sm opacity-80">Текущая версия сборки</span>
+      <span class="font-display text-2xl font-bold">v<?= APP_VERSION ?></span>
+    </div>
     <div class="bg-white border rounded-xl overflow-hidden">
       <table class="w-full text-sm">
         <thead><tr class="border-b bg-muted/30">
-          <th class="text-left px-4 py-3">#</th><th class="text-left px-4 py-3">Коммит</th><th class="text-left px-4 py-3">Описание</th>
+          <th class="text-left px-4 py-3">Файл</th><th class="text-left px-4 py-3">Обновлён</th>
         </tr></thead>
         <tbody>
-          <?php $rn = count($revisions); foreach ($revisions as $i => $r): ?>
+          <?php foreach ($revisions as $r): ?>
           <tr class="border-b hover:bg-muted/20">
-            <td class="px-4 py-3 text-muted-foreground"><?=$rn - $i?></td>
-            <td class="px-4 py-3 font-mono text-xs"><?=substr($r['hash'],0,7)?></td>
-            <td class="px-4 py-3"><?=h($r['message'])?></td>
+            <td class="px-4 py-3 font-mono text-xs"><?= h($r['file']) ?></td>
+            <td class="px-4 py-3"><?= date('d.m.Y H:i', $r['time']) ?></td>
           </tr>
           <?php endforeach; ?>
         </tbody>
       </table>
     </div>
-    <p class="text-xs text-muted-foreground mt-2">Коммитов: <?=count($revisions)?>. Данные из git-репозитория на сервере.</p>
-    <?php else: ?>
-    <div class="bg-white border rounded-xl p-8 text-center text-muted-foreground">
-      <p class="text-4xl mb-2">📝</p>
-      <p>История ревизий недоступна (git не найден на сервере)</p>
-    </div>
-    <?php endif; ?>
+    <p class="text-xs text-muted-foreground mt-2">Полная история изменений — в git-репозитории проекта.</p>
 
-<?php elseif ($tab === 'notifications'): ?>
+elseif ($tab === 'notifications'): ?>
     <h2 class="font-display text-xl mb-4">Уведомления</h2>
     <?php
     // Mark all as read if requested

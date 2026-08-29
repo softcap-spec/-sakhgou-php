@@ -15,12 +15,16 @@ function rk_sign(array $parts): string {
   return strtoupper(md5(implode(':', $parts)));
 }
 
-/** Создать платёж (payments) и вернуть InvId. */
+/** Создать платёж (payments) и вернуть InvId (в пределах лимита Robokassa 2147483647). */
 function rk_create_payment(float $amount, string $purpose, ?int $targetId, ?int $userId, string $description): int {
-  $invId = (int)(microtime(true) * 1000);
+  // Вставляем запись с временным случайным InvId, затем выставляем InvId = payments.id
+  // (id — INT AUTO_INCREMENT, гарантированно меньше лимита Robokassa).
+  $tmp = random_int(1000000000, 1999999999);
   db()->prepare('INSERT INTO payments (inv_id, purpose, target_id, user_id, amount, description, status) VALUES (?,?,?,?,?,?,?)')
-    ->execute([$invId, $purpose, $targetId, $userId, $amount, $description, 'pending']);
-  return $invId;
+    ->execute([$tmp, $purpose, $targetId, $userId, $amount, $description, 'pending']);
+  $id = (int)db()->lastInsertId();
+  db()->prepare('UPDATE payments SET inv_id = ? WHERE id = ?')->execute([$id, $id]);
+  return $id;
 }
 
 /** URL оплаты Robokassa (редирект пользователя). */

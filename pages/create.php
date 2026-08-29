@@ -36,9 +36,14 @@ $success = false;
 
 // Save uploaded images when arriving at step 5 from step 4
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $step === 5 && !empty($_FILES['images']['name'][0])) {
+  csrf_check();
   $_SESSION['tmp_images'] = [];
   $tmpDir = UPLOAD_DIR . '/.tmp';
   if (!is_dir($tmpDir)) mkdir($tmpDir, 0755, true);
+  // Уборка: tmp-файлы старше 24ч (брошенные визарды) удаляем
+  foreach (glob($tmpDir . '/*') ?: [] as $oldFile) {
+    if (is_file($oldFile) && filemtime($oldFile) < time() - 86400) @unlink($oldFile);
+  }
   foreach ($_FILES['images']['tmp_name'] as $i => $tmp) {
     if ($_FILES['images']['error'][$i] === UPLOAD_ERR_INI_SIZE || $_FILES['images']['error'][$i] === UPLOAD_ERR_FORM_SIZE) {
       $errors[] = 'Файл «' . h($_FILES['images']['name'][$i]) . '» превышает максимальный размер (2 МБ)';

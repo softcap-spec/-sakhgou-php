@@ -48,6 +48,18 @@ define('REQUISITES', [
 // define('SMTP_PASS', 'your_app_password');
 // define('SMTP_FROM', 'noreply@yourdomain.ru');
 // define('SMTP_FROM_NAME', 'СахGO');
+
+// Уведомления «Макс» (Max Bot API) — секреты только на сервере, в git не попадают
+// define('MAX_BOT_TOKEN', 'your_max_bot_token');
+// define('MAX_WEBHOOK_SECRET', 'random_hex_32');
+// define('MAX_BOT_NAME', 'СахGO');
+
+// Robokassa (MerchantLogin, Пароль №1, Пароль №2 из личного кабинета)
+// define('RK_MERCHANT_LOGIN', 'your_login');
+// define('RK_PASSWORD1', 'password1');
+// define('RK_PASSWORD2', 'password2');
+// define('RK_IS_TEST', 1);
+
 define('CATEGORIES', json_encode([
   ['slug' => 'property',    'name' => 'Жильё',       'icon' => '🏠'],
   ['slug' => 'tour',        'name' => 'Туры',        'icon' => '🏔️'],

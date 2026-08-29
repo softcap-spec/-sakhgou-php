@@ -204,7 +204,7 @@ switch ($page) {
       // Get messages + other user info
       $lid = (int)($_GET['lid'] ?? 0);
       $other = (int)($_GET['uid'] ?? 0);
-      $stmt = $pdo->prepare('SELECT * FROM messages WHERE listing_id=? AND ((sender_id=? AND receiver_id=?) OR (sender_id=? AND receiver_id=?)) ORDER BY created_at ASC');
+      $stmt = $pdo->prepare('SELECT * FROM messages WHERE listing_id=? AND is_deleted=0 AND ((sender_id=? AND receiver_id=?) OR (sender_id=? AND receiver_id=?)) ORDER BY created_at ASC');
       $stmt->execute([$lid,$cu['id'],$other,$other,$cu['id']]);
       $msgs = $stmt->fetchAll();
       $hasConversation = count($msgs) > 0;
@@ -321,9 +321,5 @@ switch ($page) {
     require __DIR__ . '/pages/contacts.php';
     break;
   default:
-    http_response_code(404);
-    $page_title = '404 — Страница не найдена — СахGO';
-    require __DIR__ . '/includes/header.php';
-    echo '<section class="py-20"><div class="max-w-7xl mx-auto px-4 text-center text-muted-foreground"><p class="text-lg">Страница не найдена</p><p class="text-sm mt-1 mb-4">Запрошенная страница не существует.</p><a href="/" class="btn-outline">На главную</a></div></section>';
-    require __DIR__ . '/../includes/footer.php';
+    require __DIR__ . '/pages/404.php';
 }

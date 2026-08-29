@@ -59,6 +59,8 @@ $stmt = $pdo->prepare('SELECT filename FROM listing_images WHERE listing_id = ? 
 $stmt->execute([$lid]);
 $images = array_column($stmt->fetchAll(), 'filename');
 if (empty($images) && !empty($item['cover_image'])) $images = [$item['cover_image']];
+// OG-картинка объявления для соцсетей/мессенджеров
+$og_image = !empty($images[0]) ? ('https://сахгоу.рф/uploads/' . rawurlencode($images[0])) : null;
 
 $TYPE_LABEL = ['property'=>'Жильё','tour'=>'Туры','fishing'=>'Рыбалка','rental_gear'=>'Снаряжение','car_rental'=>'Прокат авто'];
 $lt = $item['listing_type'] ?? 'tour';

@@ -25,15 +25,15 @@ $canonical_path = strtok($_SERVER['REQUEST_URI'] ?? '/', '?');
 <link rel="canonical" href="https://сахгоу.рф<?= h($canonical_path) ?>">
 <meta property="og:title" content="<?= h($page_title) ?>">
 <meta property="og:description" content="Туристический маркетплейс путешествий по Сахалину и Курильским островам. Поиск и бронирование туров, жилья, рыбалки, снаряжения и проката авто.">
-<meta property="og:url" content="https://сахгоу.рф">
+<meta property="og:url" content="<?= h('https://сахгоу.рф' . $canonical_path) ?>">
 <meta property="og:site_name" content="СахGO">
 <meta property="og:locale" content="ru_RU">
-<meta property="og:image" content="https://сахгоу.рф/og-image.png">
+<meta property="og:image" content="<?= h($og_image ?? 'https://сахгоу.рф/og-image.png') ?>">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:type" content="website">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="https://сахгоу.рф/og-image.png">
+<meta name="twitter:image" content="<?= h($og_image ?? 'https://сахгоу.рф/og-image.png') ?>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">

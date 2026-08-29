@@ -55,15 +55,18 @@ function auth_register(string $email, string $password, string $name, string $ph
 }
 
 function auth_login(string $email, string $password): array {
-  // Rate limiting: max 5 attempts per 15 minutes per IP
+  // Rate limiting: макс 5 неудачных попыток за 15 мин на пару IP+email.
+  // Храним в БД (таблица auth_attempts) — переживает смену cookie, в отличие от сессии.
   $ip = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
-  $key = 'login_attempts_' . md5($ip);
-  $now = time();
-  $attempts = $_SESSION[$key] ?? ['count' => 0, 'first' => $now];
-  if ($now - $attempts['first'] > 900) { $attempts = ['count' => 0, 'first' => $now]; }
-  if ($attempts['count'] >= 5) {
-    return ['ok' => false, 'error' => 'Слишком много попыток. Попробуйте через 15 минут.'];
-  }
+  $em = mb_strtolower(trim($email));
+  try {
+    $st = db()->prepare('SELECT attempts, first_at FROM auth_attempts WHERE ip = ? AND email = ?');
+    $st->execute([$ip, $em]);
+    $row = $st->fetch();
+    if ($row && (int)$row['attempts'] >= 5 && strtotime($row['first_at']) > time() - 900) {
+      return ['ok' => false, 'error' => 'Слишком много попыток. Попробуйте через 15 минут.'];
+    }
+  } catch (\Throwable $e) { /* fail-open: сбой лимитера не блокирует вход */ }
 
   $pdo = db();
   $stmt = $pdo->prepare('SELECT id, password_hash, role, name FROM users WHERE email = ?');
@@ -71,13 +74,17 @@ function auth_login(string $email, string $password): array {
   $user = $stmt->fetch();
   
   if (!$user || !password_verify($password, $user['password_hash'])) {
-    $attempts['count']++;
-    $_SESSION[$key] = $attempts;
+    try {
+      db()->prepare("INSERT INTO auth_attempts (ip, email, attempts, first_at) VALUES (?,?,1,NOW()) "
+        . "ON DUPLICATE KEY UPDATE attempts = IF(first_at < DATE_SUB(NOW(), INTERVAL 15 MINUTE), 1, attempts + 1), "
+        . "first_at = IF(first_at < DATE_SUB(NOW(), INTERVAL 15 MINUTE), NOW(), first_at)")
+        ->execute([$ip, $em]);
+    } catch (\Throwable $e) { /* тихо */ }
     return ['ok' => false, 'error' => 'Неверный email или пароль'];
   }
 
   // Clear attempts on success
-  unset($_SESSION[$key]);
+  try { db()->prepare('DELETE FROM auth_attempts WHERE ip = ? AND email = ?')->execute([$ip, $em]); } catch (\Throwable $e) {}
   
   session_regenerate_id(true);
   $_SESSION['user_id'] = (int) $user['id'];

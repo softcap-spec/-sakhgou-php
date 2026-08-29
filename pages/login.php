@@ -116,6 +116,12 @@ $page_title = 'Вход — СахGO';
         <span><?= h($error) ?></span>
       </div>
       <?php endif; ?>
+      <?php if (isset($_GET['reset'])): ?>
+      <div class="flex items-start gap-2 bg-green-50 border border-green-200 rounded-lg px-3 py-2.5 mb-4 text-xs text-green-700">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="shrink-0 mt-px"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        <span>Пароль изменён — войдите с новым паролем</span>
+      </div>
+      <?php endif; ?>
 
       <form method="post" class="space-y-4" onsubmit="if(typeof ymGoal==='function')ymGoal('login')">
         <?= csrf_field() ?>
@@ -139,11 +145,7 @@ $page_title = 'Вход — СахGO';
           </div>
         </div>
 
-        <div class="flex items-center justify-between text-xs">
-          <label class="flex items-center gap-1.5 cursor-pointer text-[#54677A]">
-            <input type="checkbox" name="remember" class="w-3.5 h-3.5 rounded border-[#DFE4EA] text-accent focus:ring-accent">
-            Запомнить меня
-          </label>
+        <div class="flex justify-end text-xs">
           <a href="/reset-password" class="text-accent font-medium hover:underline">Забыли пароль?</a>
         </div>
 

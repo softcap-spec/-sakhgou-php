@@ -21,6 +21,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['promote'])) {
   csrf_check();
   $promoType = $_POST['promo_type'] ?? 'top';
   $duration = (int)($_POST['duration'] ?? 7);
+  // Whitelist: только известные типы и сроки (иначе — мусорные заявки с нулевой ценой)
+  if (!in_array($promoType, ['top', 'highlight', 'urgent'], true) || !in_array($duration, [7, 14, 30], true)) {
+    header('Location: /dashboard?err=promo');
+    exit;
+  }
   $budget = $prices[$promoType][$duration] ?? 0;
   $starts = date('Y-m-d H:i:s');
   $expires = date('Y-m-d H:i:s', strtotime("+{$duration} days"));

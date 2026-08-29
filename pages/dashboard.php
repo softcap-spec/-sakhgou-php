@@ -64,6 +64,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
 
   // Avatar upload
   if (!empty($_FILES['avatar']['name']) && $_FILES['avatar']['error'] === UPLOAD_ERR_OK) {
+    if ($_FILES['avatar']['size'] > MAX_UPLOAD_SIZE) {
+      header('Location: /dashboard?sub=profile&averr=1'); exit;
+    }
     $finfo = finfo_open(FILEINFO_MIME_TYPE);
     $mime = finfo_file($finfo, $_FILES['avatar']['tmp_name']);
     finfo_close($finfo);
@@ -975,6 +978,9 @@ require __DIR__ . '/../includes/header.php';
   <?php elseif ($sub === 'profile'): ?>
     <?php if (isset($_GET['ok'])): ?>
     <div class="flash success">Профиль обновлён</div>
+    <?php endif; ?>
+    <?php if (isset($_GET['averr'])): ?>
+    <div class="flash error">Аватар слишком большой — максимум 2 МБ</div>
     <?php endif; ?>
     <div style="max-width:30rem">
       <form method="post" enctype="multipart/form-data" style="background:#fff;border:1px solid #EEF2F6;border-radius:12px;padding:2rem;box-shadow:0 4px 12px rgba(15,23,32,0.06)">
