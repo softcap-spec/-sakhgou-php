@@ -5,6 +5,7 @@ require_once __DIR__ . '/../../includes/functions.php';
 require_once __DIR__ . '/../../includes/auth.php';
 
 admin_required();
+header('Cache-Control: no-store, must-revalidate');
 $pdo = db();
 $tab = $_GET['tab'] ?? 'dashboard';
 
