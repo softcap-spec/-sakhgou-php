@@ -173,6 +173,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     exit;
   }
 
+  // Listing: блокировать/разблокировать (админ)
+  if ($_POST['action'] === 'admin_toggle_listing') {
+    $lid = (int)($_POST['id'] ?? 0);
+    $st = $pdo->prepare('SELECT status FROM listings WHERE id = ?');
+    $st->execute([$lid]);
+    $cur = $st->fetchColumn();
+    if ($cur === 'blocked') $new = 'active';
+    elseif (in_array($cur, ['active', 'pending'], true)) $new = 'blocked';
+    else $new = null;
+    if ($new) $pdo->prepare('UPDATE listings SET status = ? WHERE id = ?')->execute([$new, $lid]);
+    header('Location: /admin?tab=listings&filter=' . urlencode($_POST['filter'] ?? 'all'));
+    exit;
+  }
+  // Listing: удалить (админ, вместе с файлами фото)
+  if ($_POST['action'] === 'admin_delete_listing') {
+    $lid = (int)($_POST['id'] ?? 0);
+    $imgs = $pdo->prepare('SELECT filename FROM listing_images WHERE listing_id = ?');
+    $imgs->execute([$lid]);
+    foreach ($imgs->fetchAll() as $im) @unlink(UPLOAD_DIR . '/' . $im['filename']);
+    $pdo->prepare('DELETE FROM listings WHERE id = ?')->execute([$lid]);
+    header('Location: /admin?tab=listings&filter=' . urlencode($_POST['filter'] ?? 'all'));
+    exit;
+  }
+
   // Banner: add
   if ($_POST['action'] === 'add_banner') {
     $bannerContent = trim($_POST['content'] ?? '');
@@ -291,7 +315,7 @@ require_once __DIR__ . '/../../includes/header.php';
 
     <!-- Tabs -->
     <div class="border-b mb-6">
-      <nav class="flex gap-0.5 flex-nowrap -mb-px">
+      <nav class="flex gap-0.5 flex-wrap -mb-px overflow-x-auto" style="scrollbar-width:thin">
         <?php
         $tabs = [
           'dashboard' => 'Дашборд',
@@ -380,10 +404,18 @@ elseif ($tab === 'listings'):
             <td class="px-4 py-3 hidden sm:table-cell"><?=h($l['host_name'])?></td>
             <td class="px-4 py-3 hidden sm:table-cell"><span style="font-size:0.6875rem;padding:0.125rem 0.5rem;border-radius:999px;<?=$l['status']==='active'?'color:#166534;background:#DCFCE7':($l['status']==='pending'?'color:#92400E;background:#FEF3C7':'color:#991B1B;background:#FEE2E2')?>"><?=$l['status']==='active'?'Активно':$l['status']?></span></td>
             <td class="px-4 py-3 hidden sm:table-cell text-right text-muted-foreground"><?=date('d.m.Y',strtotime($l['created_at']))?></td>
+            <td class="px-4 py-3 text-right text-xs whitespace-nowrap">
+              <?php if ($l['status'] === 'blocked'): ?>
+                <form method="post" class="inline"><input type="hidden" name="action" value="admin_toggle_listing"><input type="hidden" name="id" value="<?=$l['id']?>"><input type="hidden" name="filter" value="<?=h($filter)?>"><button type="submit" class="text-accent hover:underline">Разблокировать</button></form>
+              <?php elseif ($l['status'] === 'active' || $l['status'] === 'pending'): ?>
+                <form method="post" class="inline"><input type="hidden" name="action" value="admin_toggle_listing"><input type="hidden" name="id" value="<?=$l['id']?>"><input type="hidden" name="filter" value="<?=h($filter)?>"><button type="submit" class="text-red-500 hover:underline" title="Отключить объявление">Отключить</button></form>
+              <?php endif; ?>
+              <form method="post" class="inline" onsubmit="return confirm('Удалить объявление безвозвратно?')"><input type="hidden" name="action" value="admin_delete_listing"><input type="hidden" name="id" value="<?=$l['id']?>"><input type="hidden" name="filter" value="<?=h($filter)?>"><button type="submit" class="text-red-500 hover:underline font-medium" title="Удалить безвозвратно">Удалить</button></form>
+            </td>
           </tr>
         <?php endforeach; ?>
         <?php if(empty($allListings)): ?>
-          <tr><td colspan="6" class="px-4 py-8 text-center text-muted-foreground">Нет объявлений</td></tr>
+          <tr><td colspan="7" class="px-4 py-8 text-center text-muted-foreground">Нет объявлений</td></tr>
         <?php endif; ?>
       </tbody>
     </table>
