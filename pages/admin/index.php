@@ -406,11 +406,11 @@ elseif ($tab === 'listings'):
             <td class="px-4 py-3 hidden sm:table-cell text-right text-muted-foreground"><?=date('d.m.Y',strtotime($l['created_at']))?></td>
             <td class="px-4 py-3 text-right text-xs whitespace-nowrap">
               <?php if ($l['status'] === 'blocked'): ?>
-                <form method="post" class="inline"><input type="hidden" name="action" value="admin_toggle_listing"><input type="hidden" name="id" value="<?=$l['id']?>"><input type="hidden" name="filter" value="<?=h($filter)?>"><button type="submit" class="text-accent hover:underline">Разблокировать</button></form>
+                <form method="post" class="inline"><?= csrf_field() ?><input type="hidden" name="action" value="admin_toggle_listing"><input type="hidden" name="id" value="<?=$l['id']?>"><input type="hidden" name="filter" value="<?=h($filter)?>"><button type="submit" class="text-accent hover:underline">Разблокировать</button></form>
               <?php elseif ($l['status'] === 'active' || $l['status'] === 'pending'): ?>
-                <form method="post" class="inline"><input type="hidden" name="action" value="admin_toggle_listing"><input type="hidden" name="id" value="<?=$l['id']?>"><input type="hidden" name="filter" value="<?=h($filter)?>"><button type="submit" class="text-red-500 hover:underline" title="Отключить объявление">Отключить</button></form>
+                <form method="post" class="inline"><?= csrf_field() ?><input type="hidden" name="action" value="admin_toggle_listing"><input type="hidden" name="id" value="<?=$l['id']?>"><input type="hidden" name="filter" value="<?=h($filter)?>"><button type="submit" class="text-red-500 hover:underline" title="Отключить объявление">Отключить</button></form>
               <?php endif; ?>
-              <form method="post" class="inline" onsubmit="return confirm('Удалить объявление безвозвратно?')"><input type="hidden" name="action" value="admin_delete_listing"><input type="hidden" name="id" value="<?=$l['id']?>"><input type="hidden" name="filter" value="<?=h($filter)?>"><button type="submit" class="text-red-500 hover:underline font-medium" title="Удалить безвозвратно">Удалить</button></form>
+              <form method="post" class="inline" onsubmit="return confirm('Удалить объявление безвозвратно?')"><?= csrf_field() ?><input type="hidden" name="action" value="admin_delete_listing"><input type="hidden" name="id" value="<?=$l['id']?>"><input type="hidden" name="filter" value="<?=h($filter)?>"><button type="submit" class="text-red-500 hover:underline font-medium" title="Удалить безвозвратно">Удалить</button></form>
             </td>
           </tr>
         <?php endforeach; ?>
