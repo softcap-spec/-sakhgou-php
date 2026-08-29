@@ -125,6 +125,7 @@ $canonical_path = strtok($_SERVER['REQUEST_URI'] ?? '/', '?');
     <div class="flex items-center gap-2 sm:hidden">
       <?php if ($cu): ?>
         <?= avatar_html($cu, 'w-7 h-7', 'text-[0.6rem]') ?>
+        <?php if (($cu['role'] ?? '') === 'admin'): ?><a href="/admin" class="inline-flex items-center justify-center h-8 rounded-lg px-3 text-sm font-medium text-[#54677A] border border-[#DFE4EA] transition-colors">Админ</a><?php endif; ?>
         <a href="/dashboard" class="inline-flex items-center justify-center h-8 rounded-lg px-3 text-sm font-semibold bg-accent text-white hover:bg-accent/90 transition-colors">Кабинет</a>
       <?php else: ?>
         <a href="/login" class="inline-flex items-center justify-center h-8 rounded-lg px-3 text-sm font-semibold bg-accent text-white hover:bg-accent/90 transition-colors">Войти</a>
