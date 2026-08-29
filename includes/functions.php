@@ -451,6 +451,28 @@ function get_host_bookings(int $user_id): array {
 }
 
 /** Дневной счётчик статистики объявления (view/phone/chat/favorite). Тихий, не ломает поток. */
+/** Проверка ИНН по контрольным цифрам (10 — юрлицо, 12 — ИП). */
+function valid_inn(string $inn): bool {
+  $d = preg_replace('/\D/', '', $inn);
+  if (strlen($d) === 11 && $d[0] === '0') $d = substr($d, 1);
+  if (!in_array(strlen($d), [10, 12], true)) return false;
+  $n = array_map('intval', str_split($d));
+  if (strlen($d) === 10) {
+    $c = [2, 4, 10, 3, 5, 9, 4, 6, 8];
+    $sum = 0;
+    for ($i = 0; $i < 9; $i++) $sum += $n[$i] * $c[$i];
+    return ($sum % 11) % 10 === $n[9];
+  }
+  $c1 = [7, 2, 4, 10, 3, 5, 9, 4, 6, 8];
+  $sum = 0;
+  for ($i = 0; $i < 10; $i++) $sum += $n[$i] * $c1[$i];
+  if (($sum % 11) % 10 !== $n[10]) return false;
+  $c2 = [3, 7, 2, 4, 10, 3, 5, 9, 4, 6, 8];
+  $sum = 0;
+  for ($i = 0; $i < 11; $i++) $sum += $n[$i] * $c2[$i];
+  return ($sum % 11) % 10 === $n[11];
+}
+
 function stats_incr(int $listing_id, string $event): void {
   if ($listing_id <= 0 || !in_array($event, ['view', 'phone', 'chat', 'favorite'], true)) return;
   try {

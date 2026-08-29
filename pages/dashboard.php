@@ -42,6 +42,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
   $orgName = trim($_POST['org_name'] ?? '');
   $orgInn = trim($_POST['org_inn'] ?? '');
   if ($sellerType !== 'org') { $orgName = ''; $orgInn = ''; }
+  if ($sellerType === 'org' && $orgInn !== '' && !valid_inn($orgInn)) {
+    $errors[] = 'Укажите корректный ИНН организации (10 или 12 цифр)';
+  }
   if (!empty($name)) {
     // Обычный юзер с уже привязанным телефоном: только имя и email; без телефона или админ — можно всё
     if ($user['role'] !== 'admin' && !empty($user['phone'])) {
@@ -1018,13 +1021,40 @@ require __DIR__ . '/../includes/header.php';
             <label class="ed-label">Название организации</label>
             <input type="text" name="org_name" value="<?=h($user['org_name']??'')?>" class="ed-input" placeholder="ООО «...» / ИП Иванов И.И." style="margin-bottom:0.625rem">
             <label class="ed-label">ИНН</label>
-            <input type="text" name="org_inn" value="<?=h($user['org_inn']??'')?>" class="ed-input" placeholder="ИНН организации">
+            <input type="text" name="org_inn" id="orgInn" value="<?=h($user['org_inn']??'')?>" class="ed-input" placeholder="ИНН организации" oninput="innCheck(this.value)">
+            <span id="innFeedback" style="display:none;font-size:0.75rem;margin-top:0.375rem"></span>
           </div>
         </div>
         <script>
         function stChange(){
           var org = document.querySelector('input[name="seller_type"]:checked').value === 'org';
           document.getElementById('orgFields').style.display = org ? '' : 'none';
+          innCheck(document.getElementById('orgInn').value);
+        }
+        function innValid(v){
+          var d = (v || '').replace(/\D/g, '');
+          if (d.length === 11 && d[0] === '0') d = d.slice(1);
+          if (d.length !== 10 && d.length !== 12) return false;
+          var n = d.split('').map(Number), s;
+          if (d.length === 10) {
+            var c = [2,4,10,3,5,9,4,6,8]; s = 0;
+            for (var i = 0; i < 9; i++) s += n[i] * c[i];
+            return s % 11 % 10 === n[9];
+          }
+          var c1 = [7,2,4,10,3,5,9,4,6,8]; s = 0;
+          for (var i = 0; i < 10; i++) s += n[i] * c1[i];
+          if (s % 11 % 10 !== n[10]) return false;
+          var c2 = [3,7,2,4,10,3,5,9,4,6,8]; s = 0;
+          for (var i = 0; i < 11; i++) s += n[i] * c2[i];
+          return s % 11 % 10 === n[11];
+        }
+        function innCheck(v){
+          var f = document.getElementById('innFeedback');
+          if (!f) return;
+          if (!v || !v.replace(/\D/g, '').length) { f.style.display = 'none'; return; }
+          f.style.display = 'block';
+          if (innValid(v)) { f.textContent = 'ИНН корректен'; f.style.color = '#16A34A'; }
+          else { f.textContent = 'ИНН некорректен — проверьте цифры'; f.style.color = '#DC2626'; }
         }
         document.addEventListener('DOMContentLoaded', stChange);
         </script>
