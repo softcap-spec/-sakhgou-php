@@ -331,7 +331,6 @@ require_once __DIR__ . '/../../includes/header.php';
     <div class="flex items-center gap-3 mb-2">
       <h1 class="font-display text-2xl">Админ-панель</h1>
       <span class="text-xs bg-accent text-white px-2 py-0.5 rounded-full font-medium">v<?= defined('APP_VERSION') ? APP_VERSION : '1.0' ?></span>
-      <span class="text-xs bg-accent text-white px-2 py-0.5 rounded-full font-medium">v<?= defined('APP_VERSION') ? APP_VERSION : '1.0' ?></span>
     </div>
 
     <?php if (isset($_GET['ok'])): ?>
