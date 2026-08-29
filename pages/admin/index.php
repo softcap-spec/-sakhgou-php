@@ -394,7 +394,7 @@ elseif ($tab === 'listings'):
   </div>
   <div class="bg-white border rounded-xl overflow-x-auto">
     <table class="w-full text-sm">
-      <thead><tr class="border-b bg-muted/30"><th class="text-left px-4 py-3 font-medium text-muted-foreground">ID</th><th class="text-left px-4 py-3 font-medium text-muted-foreground">Название</th><th class="text-left px-4 py-3 font-medium text-muted-foreground hidden sm:table-cell">Категория</th><th class="text-left px-4 py-3 font-medium text-muted-foreground hidden sm:table-cell">Автор</th><th class="text-left px-4 py-3 font-medium text-muted-foreground hidden sm:table-cell">Статус</th><th class="text-right px-4 py-3 font-medium text-muted-foreground hidden sm:table-cell">Дата</th></tr></thead>
+      <thead><tr class="border-b" style="background:#EEF2F6"><th class="text-left px-4 py-3 font-medium text-muted-foreground">ID</th><th class="text-left px-4 py-3 font-medium text-muted-foreground">Название</th><th class="text-left px-4 py-3 font-medium text-muted-foreground hidden sm:table-cell">Категория</th><th class="text-left px-4 py-3 font-medium text-muted-foreground hidden sm:table-cell">Автор</th><th class="text-left px-4 py-3 font-medium text-muted-foreground hidden sm:table-cell">Статус</th><th class="text-right px-4 py-3 font-medium text-muted-foreground hidden sm:table-cell">Дата</th><th class="text-right px-4 py-3 font-medium text-muted-foreground">Действия</th></tr></thead>
       <tbody>
         <?php foreach($allListings as $l): ?>
           <tr class="border-b hover:bg-muted/20">
