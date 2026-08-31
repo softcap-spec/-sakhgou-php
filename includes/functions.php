@@ -36,7 +36,7 @@ function h(string $s): string {
  */
 function get_requisites(): array {
   $defaults = [
-    'name' => 'Шаров А.А., самозанятый',
+    'name' => 'Шаров Александр Александрович, самозанятый',
     'ogrn' => '',
     'inn' => '650112988764',
     'kpp' => '',
