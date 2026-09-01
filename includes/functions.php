@@ -298,8 +298,12 @@ function send_mail_smtp(string $to, string $subject, string $body): bool {
   $from = defined('SMTP_FROM') ? SMTP_FROM : 'noreply@sakhgo.ru';
   $from_name = defined('SMTP_FROM_NAME') ? SMTP_FROM_NAME : 'СахGO';
 
+  // Message-ID — без него спам-фильтры снижают доверие (SpamAssassin MISSING_MID)
+  $midDomain = defined('SMTP_FROM') && strpos(SMTP_FROM, '@') !== false ? substr(SMTP_FROM, strrpos(SMTP_FROM, '@') + 1) : 'localhost';
+  $mid = '<' . bin2hex(random_bytes(16)) . '@' . $midDomain . '>';
+
   if (!$host) {
-    $headers = "From: $from_name <$from>\r\nContent-Type: text/plain; charset=UTF-8";
+    $headers = "Message-ID: $mid\r\nFrom: $from_name <$from>\r\nContent-Type: text/plain; charset=UTF-8";
     return @mail($to, $subject, $body, $headers);
   }
 
@@ -355,6 +359,7 @@ function send_mail_smtp(string $to, string $subject, string $body): bool {
 
     $subject_enc = '=?UTF-8?B?' . base64_encode($subject) . '?=';
     $msg = "From: $from_name <$from>\r\n";
+    $msg .= "Message-ID: $mid\r\n";
     $msg .= "To: <$to>\r\n";
     $msg .= "Subject: $subject_enc\r\n";
     $msg .= "MIME-Version: 1.0\r\n";
