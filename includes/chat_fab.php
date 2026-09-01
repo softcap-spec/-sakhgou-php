@@ -147,8 +147,8 @@ $myId = (int)$cu['id'];
 .chat-clip:hover{background:#F0F3F7;color:#0A1A2A}
 .chat-input-wrap{flex:1}
 .chat-input{width:100%;border:1px solid #DFE4EA;border-radius:22px;padding:.5rem 1rem;font-size:.875rem;outline:none;transition:border-color .15s;background:#F7F9FB;box-sizing:border-box}
-.chat-input:focus{border-color:#0A7BBA;background:#fff}
-.chat-send{width:2.25rem;height:2.25rem;border:0;border-radius:50%;background:#0A7BBA;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0}
+.chat-input:focus{border-color:#1B6B8A;background:#fff}
+.chat-send{width:2.25rem;height:2.25rem;border:0;border-radius:50%;background:#1B6B8A;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0}
 .chat-send:hover{background:#0868A0;transform:scale(1.05)}
 .chat-send:disabled{background:#C8D0DA;cursor:not-allowed;transform:none}
 
@@ -180,7 +180,7 @@ $myId = (int)$cu['id'];
     <span class="chat-w-title">Уведомления</span>
     <div style="display:flex;align-items:center;gap:0.5rem">
       <?php if (!empty($notifs)): ?>
-      <button onclick="markNotifsRead()" style="background:none;border:0;cursor:pointer;font-size:0.75rem;color:#0A7BBA;font-weight:600">Прочитать все</button>
+      <button onclick="markNotifsRead()" style="background:none;border:0;cursor:pointer;font-size:0.75rem;color:#1B6B8A;font-weight:600">Прочитать все</button>
       <?php endif; ?>
       <button class="chat-w-close" onclick="toggleNotif()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
     </div>
@@ -202,7 +202,7 @@ $myId = (int)$cu['id'];
     </div>
     <div class="chat-w-body">
       <?php if (empty($chats)): ?>
-        <div class="chat-empty">Нет сообщений<br><br><a href="/catalog" style="color:#0A7BBA;font-weight:600">Найти объявления →</a></div>
+        <div class="chat-empty">Нет сообщений<br><br><a href="/catalog" style="color:#1B6B8A;font-weight:600">Найти объявления →</a></div>
       <?php else: foreach($chats as $ch):
         $other = ($ch['sender_id'] == $cu['id']) ? $ch['receiver_id'] : $ch['sender_id'];
         $key = $ch['lid'].'_'.$other; $unr = $unreadByChat[$key] ?? 0;

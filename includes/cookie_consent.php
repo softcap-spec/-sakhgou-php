@@ -9,7 +9,7 @@
       Мы используем файлы cookie и сервис веб-аналитики Яндекс.Метрика для корректной работы сайта и анализа посещаемости. Нажимая «Принять», вы соглашаетесь с обработкой данных в соответствии с <a href="/privacy" style="color:#7CC4F0;text-decoration:underline">Политикой конфиденциальности</a>. Вы можете отказаться от аналитических cookie.
     </div>
     <div style="display:flex;align-items:center;gap:0.625rem;flex-shrink:0">
-      <button type="button" onclick="sgSetConsent('accepted')" style="background:#0A7BBA;color:#fff;border:0;border-radius:8px;padding:0.625rem 1.375rem;font-size:0.8125rem;font-weight:600;cursor:pointer;font-family:inherit">Принять</button>
+      <button type="button" onclick="sgSetConsent('accepted')" style="background:#1B6B8A;color:#fff;border:0;border-radius:8px;padding:0.625rem 1.375rem;font-size:0.8125rem;font-weight:600;cursor:pointer;font-family:inherit">Принять</button>
       <button type="button" onclick="sgSetConsent('declined')" style="background:transparent;color:#E6EDF3;border:1px solid rgba(255,255,255,0.35);border-radius:8px;padding:0.625rem 1.125rem;font-size:0.8125rem;cursor:pointer;font-family:inherit">Отказаться</button>
     </div>
   </div>

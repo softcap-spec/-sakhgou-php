@@ -270,7 +270,7 @@ require __DIR__ . '/../includes/header.php';
             <?php endif; ?>
           </div>
           <?php if (!empty($item['promo_type'])): ?>
-          <span class="promo-badge" style="position:absolute;top:0.625rem;left:0.625rem;<?=$item['promo_type']==='top'?'background:#0A7BBA':($item['promo_type']==='highlight'?'background:#D97706':'background:#DC2626')?>">
+          <span class="promo-badge" style="position:absolute;top:0.625rem;left:0.625rem;<?=$item['promo_type']==='top'?'background:#1B6B8A':($item['promo_type']==='highlight'?'background:#D97706':'background:#DC2626')?>">
             <?=$item['promo_type']==='top'?'TOP':($item['promo_type']==='highlight'?'PROMO':'Срочно')?>
           </span>
           <?php endif; ?>
@@ -341,7 +341,7 @@ require __DIR__ . '/../includes/header.php';
     .dm-threads-list{flex:1;overflow-y:auto}
     .dm-thread{padding:.75rem 1rem;display:flex;align-items:center;gap:.625rem;cursor:pointer;border-bottom:1px solid #EEF2F6;transition:background .1s}
     .dm-thread:hover{background:#fff}
-    .dm-thread.sel{background:#E8F4FB;border-left:3px solid #0A7BBA}
+    .dm-thread.sel{background:#E8F4FB;border-left:3px solid #1B6B8A}
     .dm-thread-av{width:42px;height:42px;border-radius:50%;overflow:hidden;flex-shrink:0;background:#DFE4EA;display:flex;align-items:center;justify-content:center;font-weight:700;color:#5A6B7D}
     .dm-thread-av img{width:100%;height:100%;object-fit:cover}
     .dm-thread-info{flex:1;min-width:0}
@@ -404,8 +404,8 @@ require __DIR__ . '/../includes/header.php';
     .dm-input-row{border-top:1px solid #EEF2F6;padding:.5rem .75rem;display:flex;gap:.375rem;align-items:center;background:#fff;flex-shrink:0}
     .dm-input-wrap{flex:1}
     .dm-input{width:100%;border:1px solid #DFE4EA;border-radius:22px;padding:.5rem 1rem;font-size:.875rem;outline:none;transition:border-color .15s;background:#F7F9FB;box-sizing:border-box}
-    .dm-input:focus{border-color:#0A7BBA;background:#fff}
-    .dm-send{width:2.5rem;height:2.5rem;border:0;border-radius:50%;background:#0A7BBA;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0}
+    .dm-input:focus{border-color:#1B6B8A;background:#fff}
+    .dm-send{width:2.5rem;height:2.5rem;border:0;border-radius:50%;background:#1B6B8A;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0}
     .dm-send:hover{background:#14566E}
     .dm-back{display:none;border:0;background:none;color:#5A6B7D;cursor:pointer;padding:.25rem;flex-shrink:0}
     @media(max-width:700px){.dm-layout{flex-direction:column;min-height:auto}
@@ -696,7 +696,7 @@ require __DIR__ . '/../includes/header.php';
               <div style="font-size:0.8125rem;color:#2E7D32;margin-top:0.5rem">Телефон гостя: <a href="tel:<?=h(phone_display($b['guest_phone']))?>" style="color:#2E7D32;font-weight:600"><?=h(phone_display($b['guest_phone']))?></a></div>
               <?php endif; ?>
               <div style="display:flex;gap:0.375rem;margin-top:0.625rem;justify-content:flex-end;flex-wrap:wrap">
-                <button type="button" data-open-chat onclick="openChatThread(<?=(int)$b['listing_id']?>,<?=(int)$b['guest_id']?>,<?=h(json_encode($b['guest_name']))?>,<?=h(json_encode($b['listing_title']))?>,<?=h(json_encode($b['guest_avatar'] ?? ''))?>,<?=(float)$b['price']?>,<?=h(json_encode($b['listing_type'] ?? ''))?>)" style="background:#0A7BBA;color:#fff;border:0;border-radius:8px;padding:0.4375rem 0.875rem;font-size:0.75rem;font-weight:600;cursor:pointer">Открыть чат</button>
+                <button type="button" data-open-chat onclick="openChatThread(<?=(int)$b['listing_id']?>,<?=(int)$b['guest_id']?>,<?=h(json_encode($b['guest_name']))?>,<?=h(json_encode($b['listing_title']))?>,<?=h(json_encode($b['guest_avatar'] ?? ''))?>,<?=(float)$b['price']?>,<?=h(json_encode($b['listing_type'] ?? ''))?>)" style="background:#1B6B8A;color:#fff;border:0;border-radius:8px;padding:0.4375rem 0.875rem;font-size:0.75rem;font-weight:600;cursor:pointer">Открыть чат</button>
                 <?php if ($bs === 'pending'): ?>
                 <form method="post" style="display:inline"><?= csrf_field() ?>
                   <input type="hidden" name="bid" value="<?=$b['id']?>">
@@ -748,7 +748,7 @@ require __DIR__ . '/../includes/header.php';
     .cal-grid th{font-size:0.6875rem;color:#7A8A9A;font-weight:600;padding:4px 0;text-align:center}
     .cal-day{background:#fff;border:1px solid #EEF2F6;border-radius:10px;height:76px;vertical-align:top;padding:4px;position:relative}
     .cal-day.past{background:#F7F9FB;opacity:0.65}
-    .cal-day.today{border-color:#0A7BBA;box-shadow:0 0 0 1px #0A7BBA inset}
+    .cal-day.today{border-color:#1B6B8A;box-shadow:0 0 0 1px #1B6B8A inset}
     .cal-day.empty{background:transparent;border:0}
     .cal-num{font-size:0.75rem;font-weight:700;color:#0A1A2A;margin-bottom:3px}
     .cal-day.past .cal-num{color:#9AAAB8}
@@ -760,10 +760,10 @@ require __DIR__ . '/../includes/header.php';
     .cal-modal .cinfo{font-size:0.9rem;line-height:1.6;color:#0A1A2A}
     .cal-modal .cinfo b{color:#5A6B7D;font-weight:600;font-size:0.8125rem;margin-right:0.25rem}
     .cal-modal .dbtn{display:inline-block;background:#F0F3F7;color:#0A1A2A;border:0;border-radius:8px;padding:0.4375rem 0.875rem;font-size:0.75rem;font-weight:600;cursor:pointer;text-decoration:none;margin-right:0.375rem}
-    .cal-modal .dbtn.blue{background:#0A7BBA;color:#fff}
+    .cal-modal .dbtn.blue{background:#1B6B8A;color:#fff}
     .cal-modal .dbtn.red{background:#fff;color:#DC2626;border:1px solid #F3C1C1}
     .cal-add{position:absolute;bottom:3px;right:3px;width:20px;height:20px;border-radius:6px;border:1px dashed #C8D0DA;background:#fff;color:#7A8A9A;font-size:0.8rem;line-height:1;cursor:pointer}
-    .cal-add:hover{background:#0A7BBA;color:#fff;border-color:#0A7BBA}
+    .cal-add:hover{background:#1B6B8A;color:#fff;border-color:#1B6B8A}
     .cal-modal-overlay{display:none;position:fixed;inset:0;background:rgba(18,30,43,0.5);z-index:120;align-items:center;justify-content:center;padding:1rem}
     .cal-modal-overlay.open{display:flex}
     .cal-modal{background:#fff;border-radius:14px;width:100%;max-width:26rem;padding:1.5rem;max-height:90vh;overflow:auto}
@@ -778,7 +778,7 @@ require __DIR__ . '/../includes/header.php';
       <a href="/dashboard?sub=calendar&m=<?=h($calPrev)?><?=$calLid?'&lid='.$calLid:''?>" style="text-decoration:none;padding:0.375rem 0.75rem;border:1px solid #DFE4EA;border-radius:8px;color:#0A1A2A;font-size:0.875rem">←</a>
       <b style="font-family:Manrope,sans-serif;font-size:1.0625rem"><?= ['01'=>'Январь','02'=>'Февраль','03'=>'Март','04'=>'Апрель','05'=>'Май','06'=>'Июнь','07'=>'Июль','08'=>'Август','09'=>'Сентябрь','10'=>'Октябрь','11'=>'Ноябрь','12'=>'Декабрь'][substr($calMonth,5,2)] ?> <?= (int)substr($calMonth,0,4) ?></b>
       <a href="/dashboard?sub=calendar&m=<?=h($calNext)?><?=$calLid?'&lid='.$calLid:''?>" style="text-decoration:none;padding:0.375rem 0.75rem;border:1px solid #DFE4EA;border-radius:8px;color:#0A1A2A;font-size:0.875rem">→</a>
-      <?php if ($calMonth !== date('Y-m')): ?><a href="/dashboard?sub=calendar<?=$calLid?'&lid='.$calLid:''?>" style="text-decoration:none;font-size:0.8125rem;color:#0A7BBA;margin-left:0.5rem">Сегодня</a><?php endif; ?>
+      <?php if ($calMonth !== date('Y-m')): ?><a href="/dashboard?sub=calendar<?=$calLid?'&lid='.$calLid:''?>" style="text-decoration:none;font-size:0.8125rem;color:#1B6B8A;margin-left:0.5rem">Сегодня</a><?php endif; ?>
     </div>
     <div style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap">
       <form method="get" action="/dashboard">
@@ -791,7 +791,7 @@ require __DIR__ . '/../includes/header.php';
           <?php endforeach; ?>
         </select>
       </form>
-      <button type="button" onclick="calAdd('')" style="background:#0A7BBA;color:#fff;border:0;border-radius:8px;padding:0.5rem 1rem;font-size:0.8125rem;font-weight:600;cursor:pointer">+ Занять даты</button>
+      <button type="button" onclick="calAdd('')" style="background:#1B6B8A;color:#fff;border:0;border-radius:8px;padding:0.5rem 1rem;font-size:0.8125rem;font-weight:600;cursor:pointer">+ Занять даты</button>
     </div>
   </div>
 
@@ -874,7 +874,7 @@ require __DIR__ . '/../includes/header.php';
         <label>Цена, ₽ (0 — без цены)</label>
         <input type="text" name="total_price" id="cmPrice" value="0">
         <div style="display:flex;gap:0.5rem;margin-top:1rem;flex-wrap:wrap">
-          <button type="submit" name="add_manual" id="cmBtnAdd" value="1" style="background:#0A7BBA;color:#fff;border:0;border-radius:8px;padding:0.5625rem 1.125rem;font-size:0.8125rem;font-weight:600;cursor:pointer">Занять</button>
+          <button type="submit" name="add_manual" id="cmBtnAdd" value="1" style="background:#1B6B8A;color:#fff;border:0;border-radius:8px;padding:0.5625rem 1.125rem;font-size:0.8125rem;font-weight:600;cursor:pointer">Занять</button>
           <button type="submit" name="edit_manual" id="cmBtnEdit" value="1" style="display:none;background:#16A34A;color:#fff;border:0;border-radius:8px;padding:0.5625rem 1.125rem;font-size:0.8125rem;font-weight:600;cursor:pointer">Сохранить</button>
           <button type="submit" name="delete_manual" id="cmBtnDel" value="1" style="display:none;background:#fff;color:#DC2626;border:1px solid #F3C1C1;border-radius:8px;padding:0.5625rem 1.125rem;font-size:0.8125rem;font-weight:600;cursor:pointer">Удалить</button>
           <button type="button" onclick="calClose()" style="background:#F0F3F7;color:#0A1A2A;border:0;border-radius:8px;padding:0.5625rem 1.125rem;font-size:0.8125rem;font-weight:600;cursor:pointer">Отмена</button>
@@ -941,9 +941,9 @@ require __DIR__ . '/../includes/header.php';
     if(!e)return;
     var st=e.status==='confirmed'?'Подтверждена':(e.status==='pending'?'Ожидает подтверждения':'Занято вручную');
     document.getElementById('ciStatus').textContent=st;
-    var rows='<div><b>Объявление:</b> <a href="/listing/'+e.lid+'" style="color:#0A7BBA;text-decoration:none">'+esc(e.title)+'</a></div>';
+    var rows='<div><b>Объявление:</b> <a href="/listing/'+e.lid+'" style="color:#1B6B8A;text-decoration:none">'+esc(e.title)+'</a></div>';
     rows+='<div><b>Гость:</b> '+esc(e.name)+'</div>';
-    if(e.tel)rows+='<div><b>Телефон:</b> <a href="tel:'+e.tel+'" style="color:#0A7BBA">'+esc(e.tel)+'</a></div>';
+    if(e.tel)rows+='<div><b>Телефон:</b> <a href="tel:'+e.tel+'" style="color:#1B6B8A">'+esc(e.tel)+'</a></div>';
     rows+='<div><b>Даты:</b> '+dhum(e.from)+' — '+dhum(e.to)+'</div>';
     rows+='<div><b>Гостей:</b> '+e.guests+'</div>';
     rows+='<div><b>Цена:</b> '+(e.price>0?money(e.price)+' ₽':'без цены')+'</div>';

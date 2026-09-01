@@ -33,9 +33,9 @@ $li = 'font-size:0.8125rem;color:#3A4A5C;line-height:1.7;margin:0 0 0.5rem';
         <?php if ($req['legal_address'] !== ''): ?><li style="<?=$li?>">Юридический адрес: <?=h($req['legal_address'])?></li><?php endif; ?>
         <?php if ($req['postal_address'] !== ''): ?><li style="<?=$li?>">Почтовый адрес: <?=h($req['postal_address'])?></li><?php endif; ?>
         <?php if ($req['phone'] !== ''): ?><li style="<?=$li?>">Телефон: <?=h($req['phone'])?></li><?php endif; ?>
-        <li style="<?=$li?>">E-mail: <a href="mailto:<?=h($req['email'])?>" style="color:#0A7BBA;text-decoration:none"><?=h($req['email'])?></a></li>
+        <li style="<?=$li?>">E-mail: <a href="mailto:<?=h($req['email'])?>" style="color:#1B6B8A;text-decoration:none"><?=h($req['email'])?></a></li>
       </ul>
-      <p style="<?=$p?>">Полные реквизиты размещены в подвале Сайта и на странице <a href="/contacts" style="color:#0A7BBA;text-decoration:none">«Контакты и реквизиты»</a>.</p>
+      <p style="<?=$p?>">Полные реквизиты размещены в подвале Сайта и на странице <a href="/contacts" style="color:#1B6B8A;text-decoration:none">«Контакты и реквизиты»</a>.</p>
 
       <h2 style="<?=$h2?>">3. Какие данные мы собираем</h2>
       <p style="<?=$p?>">Мы собираем только те данные, которые необходимы для работы площадки:</p>
@@ -93,7 +93,7 @@ $li = 'font-size:0.8125rem;color:#3A4A5C;line-height:1.7;margin:0 0 0.5rem';
         <li style="<?=$li?>">отозвать согласие на обработку персональных данных;</li>
         <li style="<?=$li?>">удалить свой аккаунт и связанные с ним данные.</li>
       </ul>
-      <p style="<?=$p?>">Для реализации прав обратитесь на <a href="mailto:<?=h($req['email'])?>" style="color:#0A7BBA;text-decoration:none"><?=h($req['email'])?></a><?php if ($req['legal_address'] !== ''): ?> или по адресу: <?=h($req['legal_address'])?><?php endif; ?>. Запрос обрабатывается в течение 10 рабочих дней.</p>
+      <p style="<?=$p?>">Для реализации прав обратитесь на <a href="mailto:<?=h($req['email'])?>" style="color:#1B6B8A;text-decoration:none"><?=h($req['email'])?></a><?php if ($req['legal_address'] !== ''): ?> или по адресу: <?=h($req['legal_address'])?><?php endif; ?>. Запрос обрабатывается в течение 10 рабочих дней.</p>
 
       <h2 style="<?=$h2?>">11. Сроки хранения данных</h2>
       <ul style="margin:0 0 0.875rem;padding-left:1.25rem">
@@ -106,13 +106,13 @@ $li = 'font-size:0.8125rem;color:#3A4A5C;line-height:1.7;margin:0 0 0.5rem';
       <p style="<?=$p?>">По достижении целей обработки или при отзыве согласия данные удаляются либо обезличиваются, за исключением случаев, когда их хранение требуется законодательством РФ.</p>
 
       <h2 style="<?=$h2?>">12. Отзыв согласия и удаление аккаунта</h2>
-      <p style="<?=$p?>">Вы можете в любой момент отозвать согласие на обработку данных, направив письмо на <a href="mailto:<?=h($req['email'])?>" style="color:#0A7BBA;text-decoration:none"><?=h($req['email'])?></a>. После этого аккаунт и связанные с ним данные будут удалены в разумный срок.</p>
+      <p style="<?=$p?>">Вы можете в любой момент отозвать согласие на обработку данных, направив письмо на <a href="mailto:<?=h($req['email'])?>" style="color:#1B6B8A;text-decoration:none"><?=h($req['email'])?></a>. После этого аккаунт и связанные с ним данные будут удалены в разумный срок.</p>
 
       <h2 style="<?=$h2?>">13. Изменение политики</h2>
       <p style="<?=$p?>">Оператор вправе вносить изменения в настоящую Политику. Актуальная редакция всегда размещается на этой странице. При существенных изменениях, затрагивающих условия обработки данных, будет запрошено повторное согласие, если это требуется законодательством.</p>
 
       <h2 style="<?=$h2?>">14. Контакты</h2>
-      <p style="<?=$p?>">По вопросам обработки персональных данных: <a href="mailto:<?=h($req['email'])?>" style="color:#0A7BBA;text-decoration:none"><?=h($req['email'])?></a><?php if ($req['legal_address'] !== ''): ?>, <?=h($req['legal_address'])?><?php endif; ?>.</p>
+      <p style="<?=$p?>">По вопросам обработки персональных данных: <a href="mailto:<?=h($req['email'])?>" style="color:#1B6B8A;text-decoration:none"><?=h($req['email'])?></a><?php if ($req['legal_address'] !== ''): ?>, <?=h($req['legal_address'])?><?php endif; ?>.</p>
 
     </div>
   </div>

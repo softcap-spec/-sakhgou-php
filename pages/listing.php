@@ -478,7 +478,7 @@ require __DIR__ . '/../includes/header.php';
         <!-- Safety note -->
         <div class="bg-[#F7F9FB] border border-[#EBEEF2] rounded-xl p-4">
           <div class="flex gap-2.5">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0A7BBA" stroke-width="2" class="shrink-0 mt-0.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1B6B8A" stroke-width="2" class="shrink-0 mt-0.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
             <div class="text-xs text-[#54677A] leading-relaxed">
               <strong class="text-foreground">Безопасная сделка</strong><br>
               Проверяйте объект перед оплатой. Не переводите предоплату незнакомым людям.
@@ -605,7 +605,7 @@ require __DIR__ . '/../includes/header.php';
       <div style="flex:1;position:relative">
         <input type="text" id="cmInput" placeholder="Сообщение..." style="width:100%;border:1px solid #DFE4EA;border-radius:22px;padding:.5rem 1rem;font-size:.875rem;outline:none;background:#F7F9FB" onkeydown="if(event.key==='Enter')cmSend()" oninput="cmTyping()">
       </div>
-      <button onclick="cmSend()" style="width:2.5rem;height:2.5rem;border:0;border-radius:50%;background:#0A7BBA;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+      <button onclick="cmSend()" style="width:2.5rem;height:2.5rem;border:0;border-radius:50%;background:#1B6B8A;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
       </button>
     </div>

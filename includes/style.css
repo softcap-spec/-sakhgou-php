@@ -30,7 +30,7 @@ input, textarea, select {
 }
 input:hover, textarea:hover, select:hover { border-color: #C8D0DA; }
 input:focus, textarea:focus, select:focus {
-  border-color: #0A7BBA;
+  border-color: #1B6B8A;
   box-shadow: 0 0 0 3px rgba(10,123,186,0.08);
 }
 input[type="file"] { border: 0; padding: 0; }
@@ -199,10 +199,10 @@ tr:hover { background: #F7F9FB; }
 .min-h-screen { min-height: 100vh; }
 .bg-muted\/30 { background: rgba(238, 242, 246, 0.4); }
 .text-muted-foreground { color: #7A8A9A; }
-.text-accent { color: #0A7BBA; }
+.text-accent { color: #1B6B8A; }
 
 /* --- Гарантированные цвета (фоллбэк, если Tailwind CDN не сгенерировал кастомный accent) --- */
-.bg-accent { background-color: #0A7BBA !important; }
+.bg-accent { background-color: #1B6B8A !important; }
 .text-white { color: #FFFFFF !important; }
 .text-foreground { color: #0A1A2A !important; }
 .hover\:bg-accent\/90:hover { background-color: #0A86C7 !important; }
@@ -214,5 +214,5 @@ tr:hover { background: #F7F9FB; }
 
 /* --- Auth footer --- */
 .auth-footer { font-size: 0.8125rem; text-align: center; margin-top: 1.25rem; color: #7A8A9A; }
-.auth-footer a { color: #0A7BBA; font-weight: 500; text-decoration: none; }
+.auth-footer a { color: #1B6B8A; font-weight: 500; text-decoration: none; }
 .auth-footer a:hover { text-decoration: underline; }
