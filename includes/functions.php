@@ -339,6 +339,8 @@ function send_mail_smtp(string $to, string $subject, string $body, string $bodyH
   // Message-ID — без него спам-фильтры снижают доверие (SpamAssassin MISSING_MID)
   $midDomain = defined('SMTP_FROM') && strpos(SMTP_FROM, '@') !== false ? substr(SMTP_FROM, strrpos(SMTP_FROM, '@') + 1) : 'localhost';
   $mid = '<' . bin2hex(random_bytes(16)) . '@' . $midDomain . '>';
+  // RFC 2047: имя отправителя в заголовках должно быть ASCII-кодировано, иначе MTA подменяет From на EMPTY-FROM
+  $from_enc = '=?UTF-8?B?' . base64_encode($from_name) . '?=';
 
   // Текст + HTML (multipart/alternative), если HTML передан
   $boundary = 'sg' . bin2hex(random_bytes(10));
@@ -355,7 +357,7 @@ function send_mail_smtp(string $to, string $subject, string $body, string $bodyH
   }
 
   if (!$host) {
-    $headers = "Message-ID: $mid\nFrom: $from_name <$from>\nMIME-Version: 1.0\nContent-Type: $mimeCT\nContent-Transfer-Encoding: 8bit";
+    $headers = "Message-ID: $mid\nFrom: $from_enc <$from>\nMIME-Version: 1.0\nContent-Type: $mimeCT\nContent-Transfer-Encoding: 8bit";
     return @mail($to, $subject, $mailBody, $headers);
   }
 
@@ -367,7 +369,7 @@ function send_mail_smtp(string $to, string $subject, string $body, string $bodyH
   try {
     $remote = ($secure === 'ssl') ? 'ssl://' . $host : $host;
     $fp = @fsockopen($remote, $port, $errno, $errstr, 10);
-    if (!$fp) return @mail($to, $subject, $mailBody, "Message-ID: $mid\nFrom: $from_name <$from>\nMIME-Version: 1.0\nContent-Type: $mimeCT\nContent-Transfer-Encoding: 8bit");
+    if (!$fp) return @mail($to, $subject, $mailBody, "Message-ID: $mid\nFrom: $from_enc <$from>\nMIME-Version: 1.0\nContent-Type: $mimeCT\nContent-Transfer-Encoding: 8bit");
 
     $read = function() use ($fp) {
       $data = '';
@@ -410,7 +412,7 @@ function send_mail_smtp(string $to, string $subject, string $body, string $bodyH
     $read();
 
     $subject_enc = '=?UTF-8?B?' . base64_encode($subject) . '?=';
-    $msg = "From: $from_name <$from>\r\n";
+    $msg = "From: $from_enc <$from>\r\n";
     $msg .= "Message-ID: $mid\r\n";
     $msg .= "To: <$to>\r\n";
     $msg .= "Subject: $subject_enc\r\n";
