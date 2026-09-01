@@ -293,18 +293,70 @@ function captcha_validate(string $answer): bool {
 /**
  * Send email. Prefers SMTP (constants in config.php); falls back to mail() if SMTP not configured.
  */
-function send_mail_smtp(string $to, string $subject, string $body): bool {
+/**
+ * HTML-шаблон письма СахGO: шапка с логотипом, контент, кнопка, футер.
+ * Табличная вёрстка + инлайн-стили — максимальная совместимость с почтовыми клиентами.
+ */
+function mail_template_html(string $heading, string $htmlBody, string $buttonText = '', string $buttonUrl = ''): string {
+  $logo = 'https://xn--80ag7ajnj.xn--p1ai/logo-white.png';
+  $site = 'https://xn--80ag7ajnj.xn--p1ai';
+  $btn = '';
+  if ($buttonText !== '' && $buttonUrl !== '') {
+    $btn = '<table role="presentation" cellpadding="0" cellspacing="0" style="margin:22px auto 6px"><tr><td align="center" bgcolor="#1B6B8A" style="border-radius:10px">'
+      . '<a href="' . h($buttonUrl) . '" style="display:inline-block;padding:13px 30px;font-family:Arial,Helvetica,sans-serif;font-size:15px;font-weight:bold;color:#ffffff;text-decoration:none;border-radius:10px;background-color:#1B6B8A">' . h($buttonText) . '</a>'
+      . '</td></tr></table>';
+  }
+  return '<!DOCTYPE html>'
+    . '<html lang="ru"><head><meta charset="utf-8"></head>'
+    . '<body style="margin:0;padding:0;background-color:#EDF2F7">'
+    . '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#EDF2F7"><tr><td align="center" style="padding:28px 10px">'
+    . '<table role="presentation" width="600" cellpadding="0" cellspacing="0" style="width:100%;max-width:600px;background-color:#ffffff;border-radius:14px;border:1px solid #E2E8F0;overflow:hidden">'
+    . '<tr><td align="center" bgcolor="#1B6B8A" style="background-color:#1B6B8A;padding:26px 20px">'
+    . '<img src="' . $logo . '" alt="СахGO" width="132" style="display:block;margin:0 auto;max-width:132px;height:auto">'
+    . '</td></tr>'
+    . '<tr><td style="padding:30px 34px 10px;font-family:Arial,Helvetica,sans-serif">'
+    . '<h1 style="margin:0 0 14px;font-size:21px;line-height:1.3;color:#121E2B">' . h($heading) . '</h1>'
+    . '<div style="font-size:15px;line-height:1.65;color:#3A4A5C">' . $htmlBody . '</div>'
+    . $btn
+    . '</td></tr>'
+    . '<tr><td style="padding:22px 34px;background-color:#F7F9FB;border-top:1px solid #EEF2F6;text-align:center;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:1.7;color:#7A8A9A">'
+    . 'С уважением, команда СахGO<br>'
+    . '<a href="' . $site . '" style="color:#1B6B8A;text-decoration:none">сахгоу.рф</a>'
+    . ' · <a href="mailto:support@sakh.su" style="color:#1B6B8A;text-decoration:none">support@sakh.su</a>'
+    . '<br><span style="font-size:11px;color:#9AAAB8">Вы получили это письмо, потому что зарегистрированы на сахгоу.рф</span>'
+    . '</td></tr>'
+    . '</table></td></tr></table></body></html>';
+}
+
+function send_mail_smtp(string $to, string $subject, string $body, string $bodyHtml = ''): bool {
   $host = defined('SMTP_HOST') ? SMTP_HOST : '';
   $from = defined('SMTP_FROM') ? SMTP_FROM : 'noreply@sakhgo.ru';
   $from_name = defined('SMTP_FROM_NAME') ? SMTP_FROM_NAME : 'СахGO';
+
+  // Тема письма обязательна
+  if (trim($subject) === '') $subject = 'СахGO';
 
   // Message-ID — без него спам-фильтры снижают доверие (SpamAssassin MISSING_MID)
   $midDomain = defined('SMTP_FROM') && strpos(SMTP_FROM, '@') !== false ? substr(SMTP_FROM, strrpos(SMTP_FROM, '@') + 1) : 'localhost';
   $mid = '<' . bin2hex(random_bytes(16)) . '@' . $midDomain . '>';
 
+  // Текст + HTML (multipart/alternative), если HTML передан
+  $boundary = 'sg' . bin2hex(random_bytes(10));
+  if (trim($bodyHtml) !== '') {
+    $mimeCT = 'multipart/alternative; boundary="' . $boundary . '"';
+    $mailBody = "--$boundary\r\nContent-Type: text/plain; charset=UTF-8\r\nContent-Transfer-Encoding: 8bit\r\n\r\n"
+      . $body . "\r\n"
+      . "--$boundary\r\nContent-Type: text/html; charset=UTF-8\r\nContent-Transfer-Encoding: 8bit\r\n\r\n"
+      . $bodyHtml . "\r\n"
+      . "--$boundary--\r\n";
+  } else {
+    $mimeCT = 'text/plain; charset=UTF-8';
+    $mailBody = $body;
+  }
+
   if (!$host) {
-    $headers = "Message-ID: $mid\r\nFrom: $from_name <$from>\r\nContent-Type: text/plain; charset=UTF-8";
-    return @mail($to, $subject, $body, $headers);
+    $headers = "Message-ID: $mid\nFrom: $from_name <$from>\nMIME-Version: 1.0\nContent-Type: $mimeCT\nContent-Transfer-Encoding: 8bit";
+    return @mail($to, $subject, $mailBody, $headers);
   }
 
   $port = defined('SMTP_PORT') ? (int)SMTP_PORT : 587;
@@ -315,7 +367,7 @@ function send_mail_smtp(string $to, string $subject, string $body): bool {
   try {
     $remote = ($secure === 'ssl') ? 'ssl://' . $host : $host;
     $fp = @fsockopen($remote, $port, $errno, $errstr, 10);
-    if (!$fp) return @mail($to, $subject, $body, "From: $from_name <$from>\r\nContent-Type: text/plain; charset=UTF-8");
+    if (!$fp) return @mail($to, $subject, $mailBody, "Message-ID: $mid\nFrom: $from_name <$from>\nMIME-Version: 1.0\nContent-Type: $mimeCT\nContent-Transfer-Encoding: 8bit");
 
     $read = function() use ($fp) {
       $data = '';
@@ -363,9 +415,9 @@ function send_mail_smtp(string $to, string $subject, string $body): bool {
     $msg .= "To: <$to>\r\n";
     $msg .= "Subject: $subject_enc\r\n";
     $msg .= "MIME-Version: 1.0\r\n";
-    $msg .= "Content-Type: text/plain; charset=UTF-8\r\n";
+    $msg .= "Content-Type: $mimeCT\r\n";
     $msg .= "Content-Transfer-Encoding: 8bit\r\n\r\n";
-    $msg .= $body . "\r\n.\r\n";
+    $msg .= $mailBody . "\r\n.\r\n";
     $send($msg);
     $read();
     $send('QUIT');
@@ -393,11 +445,15 @@ function notify_new_message(int $sender_id, int $receiver_id, int $listing_id, s
   if ($stmt->fetch()) return; // more than 1 message in last hour — not the first one
 
   $subject = 'Новое сообщение на СахGO';
-  $body = "Здравствуйте, {$user['name']}!\n\n";
-  $body .= "У вас новое сообщение по объявлению «{$listing_title}».\n\n";
-  $body .= "Перейти к сообщению: https://сахгоу.рф/listing/{$listing_id}\n\n";
-  $body .= "С уважением, команда СахGO\n";
-  send_mail_smtp($user['email'], $subject, $body);
+  $link = 'https://xn--80ag7ajnj.xn--p1ai/listing/' . $listing_id;
+  $body = "Здравствуйте, {$user['name']}!\n\n"
+    . "У вас новое сообщение по объявлению «{$listing_title}».\n\n"
+    . "Перейти к сообщению: {$link}\n\n"
+    . "С уважением, команда СахGO\n";
+  $bodyHtml = '<p>Здравствуйте, <strong>' . h($user['name']) . '</strong>!</p>'
+    . '<p>У вас новое сообщение по объявлению <strong>«' . h($listing_title) . '»</strong>.</p>'
+    . '<p>Откройте кабинет, чтобы прочитать и ответить покупателю.</p>';
+  send_mail_smtp($user['email'], $subject, $body, mail_template_html('Новое сообщение', $bodyHtml, 'Перейти к сообщению', $link));
 }
 
 function add_notification(int $user_id, string $type, string $text, string $link = ''): void {

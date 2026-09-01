@@ -50,14 +50,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['email']) && !$step2) 
       $pdo->prepare('UPDATE users SET reset_token = ?, reset_token_expires = DATE_ADD(NOW(), INTERVAL 1 HOUR) WHERE id = ?')
         ->execute([$newToken, $user['id']]);
       $resetUrl = SITE_URL . '/reset-password?' . http_build_query(['token' => $newToken, 'step' => 2]);
+      $mailLink = 'https://xn--80ag7ajnj.xn--p1ai/reset-password?' . http_build_query(['token' => $newToken, 'step' => 2]);
       $subject = 'Сброс пароля — СахGO';
       $body = "Здравствуйте!\n\n"
         . "Вы запросили сброс пароля на СахGO.\n\n"
         . "Чтобы задать новый пароль, перейдите по ссылке (действительна 1 час):\n"
-        . $resetUrl . "\n\n"
+        . $mailLink . "\n\n"
         . "Если вы не запрашивали сброс — просто проигнорируйте это письмо, пароль останется прежним.\n\n"
         . "С уважением,\nкоманда СахGO";
-      send_mail_smtp($email, $subject, $body);
+      $bodyHtml = '<p>Вы запросили сброс пароля на СахGO.</p>'
+        . '<p>Нажмите кнопку, чтобы задать новый пароль. Ссылка действует <strong>1 час</strong>.</p>'
+        . '<p style="font-size:13px;color:#7A8A9A;word-break:break-all">Если кнопка не работает, скопируйте ссылку:<br>'
+        . '<a href="' . h($mailLink) . '" style="color:#1B6B8A">' . h($mailLink) . '</a></p>'
+        . '<p style="font-size:13px;color:#7A8A9A">Если вы не запрашивали сброс — просто проигнорируйте это письмо, пароль останется прежним.</p>';
+      send_mail_smtp($email, $subject, $body, mail_template_html('Восстановление пароля', $bodyHtml, 'Задать новый пароль', $mailLink));
     }
     // Одинаковый ответ независимо от существования аккаунта (не раскрываем, кто зарегистрирован)
     $success = true;
