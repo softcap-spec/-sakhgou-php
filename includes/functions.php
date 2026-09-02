@@ -293,6 +293,18 @@ function captcha_validate(string $answer): bool {
 /**
  * Send email. Prefers SMTP (constants in config.php); falls back to mail() if SMTP not configured.
  */
+/** Русские подписи статусов платежа */
+function pay_status_label(string $s): string {
+  $map = [
+    'pending' => 'Ожидает оплаты',
+    'paid' => 'Оплачено',
+    'refunded' => 'Возвращено',
+    'rejected' => 'Отклонено',
+    'cancelled' => 'Отменено',
+  ];
+  return $map[$s] ?? $s;
+}
+
 /**
  * HTML-шаблон письма СахGO: шапка с логотипом, контент, кнопка, футер.
  * Табличная вёрстка + инлайн-стили — максимальная совместимость с почтовыми клиентами.

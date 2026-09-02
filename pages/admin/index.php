@@ -703,7 +703,7 @@ elseif ($tab === 'payments'):
                 <span class="text-xs px-2 py-0.5 rounded-full <?= $pm['promo_type']==='top' ? 'bg-amber-500 text-white' : ($pm['promo_type']==='highlight' ? 'bg-accent text-white' : 'bg-red-500 text-white') ?>"><?=h($pm['promo_type'])?></span>
               </td>
               <td class="px-4 py-3 text-right text-xs hidden sm:table-cell"><?=number_format((float)$pm['payment_amount'],0,',',' ')?> ₽</td>
-              <td class="px-4 py-3 text-center"><span class="text-xs px-2 py-0.5 rounded-full <?= $pm['payment_status']==='paid' ? 'bg-green-100 text-green-700' : ($pm['payment_status']==='refunded' ? 'bg-gray-100 text-gray-600' : 'bg-yellow-100 text-yellow-700') ?>"><?=h($pm['payment_status'])?></span></td>
+              <td class="px-4 py-3 text-center"><span class="text-xs px-2 py-0.5 rounded-full <?= $pm['payment_status']==='paid' ? 'bg-green-100 text-green-700' : ($pm['payment_status']==='refunded' ? 'bg-gray-100 text-gray-600' : 'bg-yellow-100 text-yellow-700') ?>"><?=h(pay_status_label($pm['payment_status']))?></span></td>
               <td class="px-4 py-3 text-xs text-muted-foreground text-right hidden sm:table-cell"><?=date('d.m.Y', strtotime($pm['created_at']))?></td>
               <td class="px-4 py-3 text-center">
                 <?php if ($pm['payment_status'] === 'pending'): ?>
