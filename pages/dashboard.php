@@ -217,6 +217,15 @@ require __DIR__ . '/../includes/header.php';
 <main style="padding:3rem 0 4rem">
 <div style="max-width:1200px;margin:0 auto;padding:0 1rem">
 
+  <?php if (isset($_GET['pay'])): ?>
+    <?php if ($_GET['pay'] === 'ok'): ?>
+    <div class="flash success" style="margin-bottom:1.25rem">Оплата прошла — продвижение активировано</div>
+    <?php elseif ($_GET['pay'] === 'fail'): ?>
+    <div class="flash error" style="margin-bottom:1.25rem">Оплата не завершена. Если деньги списались, а продвижение не активно — напишите на support@sakh.su</div>
+    <?php endif; ?>
+  <?php endif; ?>
+
+
   <!-- Header -->
   <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin-bottom:2rem">
     <div style="display:flex;align-items:center;gap:0.875rem">
