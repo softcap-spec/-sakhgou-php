@@ -111,7 +111,14 @@ require __DIR__ . '/../includes/header.php';
     </div>
   </div>
 
-  <?php if ($activePromo): ?>
+  <?php $isActivePromo = $activePromo && $activePromo['status'] === 'active' && strtotime($activePromo['expires_at']) > time(); ?>
+  <?php if ($activePromo && !$isActivePromo): ?>
+    <div style="text-align:center;background:#FFF7E6;border:1px solid #FDE68A;border-radius:12px;padding:1.25rem;margin-bottom:1.5rem">
+      <p style="margin:0;font-size:0.875rem;color:#92400E">У этого объявления есть <strong>неоплаченная заявка</strong> на продвижение (тип: <?=h($activePromo['promo_type'])?>). Оформите оплату заново — заявка обновится, даты пересчитаются.</p>
+    </div>
+  <?php endif; ?>
+
+  <?php if ($isActivePromo): ?>
     <div style="text-align:center;background:#F0FDF4;border:1px solid #BBF7D0;border-radius:12px;padding:2rem;margin-bottom:1.5rem">
       <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="1.5" style="margin-bottom:0.75rem">
         <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
