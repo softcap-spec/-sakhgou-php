@@ -60,6 +60,9 @@ define('REQUISITES', [
 // define('RK_PASSWORD2', 'password2');
 // define('RK_IS_TEST', 1);
 
+// Фискализация (54-ФЗ): передача состава чека в параметре Receipt. Включать после настройки чеков в кабинете Robokassa (Робочки/Мой налог, ИНН самозанятого).
+// define('RK_RECEIPT_ENABLED', true);
+
 define('CATEGORIES', json_encode([
   ['slug' => 'property',    'name' => 'Жильё',       'icon' => '🏠'],
   ['slug' => 'tour',        'name' => 'Туры',        'icon' => '🏔️'],
