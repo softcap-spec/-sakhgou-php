@@ -42,7 +42,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['promote'])) {
       $promoId = (int)$pdo->lastInsertId();
     }
     $invId = rk_create_payment((float)$budget, 'promo', $promoId, $cu['id'], 'Продвижение «' . $listing['title'] . '» — ' . $duration . ' дн.');
-    header('Location: ' . rk_pay_url((float)$budget, $invId, 'Продвижение объявления №' . $lid . ' на СахGO'));
+    header('Location: ' . rk_pay_url((float)$budget, $invId, 'Продвижение объявления №' . $lid . ' на СахGO', $cu['email'] ?? null));
     exit;
   }
 

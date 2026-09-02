@@ -27,20 +27,41 @@ function rk_create_payment(float $amount, string $purpose, ?int $targetId, ?int 
   return $id;
 }
 
-/** URL оплаты Robokassa (редирект пользователя). */
-function rk_pay_url(float $amount, int $invId, string $description): string {
+/** URL оплаты Robokassa (редирект пользователя). $customerEmail — контакт покупателя для чека ФНС. */
+function rk_pay_url(float $amount, int $invId, string $description, ?string $customerEmail = null): string {
   $login = RK_MERCHANT_LOGIN;
-  $sig = rk_sign([$login, number_format($amount, 2, '.', ''), $invId, RK_PASSWORD1]);
-  $q = http_build_query([
+  $outSum = number_format($amount, 2, '.', '');
+  $params = [
     'MerchantLogin' => $login,
-    'OutSum' => number_format($amount, 2, '.', ''),
+    'OutSum' => $outSum,
     'InvId' => $invId,
-    'Description' => mb_substr($description, 0, 250),
-    'SignatureValue' => $sig,
+    'Description' => mb_substr($description, 0, 100),
     'Encoding' => 'utf-8',
-  ]);
-  if (defined('RK_IS_TEST') && RK_IS_TEST) $q .= '&IsTest=1';
-  return RK_URL . '?' . $q;
+  ];
+
+  // Состав чека для ФНС (54-ФЗ). Подпись: MerchantLogin:OutSum:InvId:Receipt(URL-encoded):Пароль#1
+  if (defined('RK_RECEIPT_ENABLED') && RK_RECEIPT_ENABLED) {
+    $receipt = [
+      'items' => [[
+        'name' => mb_substr($description, 0, 128),
+        'quantity' => 1,
+        'sum' => round($amount, 2),
+        'payment_method' => 'full_payment',
+        'payment_object' => 'service',
+        'tax' => 'none',
+      ]],
+    ];
+    $receiptJson = json_encode($receipt, JSON_UNESCAPED_UNICODE);
+    $params['Receipt'] = $receiptJson;
+    if ($customerEmail) $params['Email'] = $customerEmail;
+    $sig = strtoupper(md5($login . ':' . $outSum . ':' . $invId . ':' . urlencode($receiptJson) . ':' . RK_PASSWORD1));
+  } else {
+    $sig = rk_sign([$login, $outSum, $invId, RK_PASSWORD1]);
+  }
+
+  $params['SignatureValue'] = $sig;
+  if (defined('RK_IS_TEST') && RK_IS_TEST) $params['IsTest'] = 1;
+  return RK_URL . '?' . http_build_query($params);
 }
 
 /** Проверка уведомления ResultURL (Пароль №2). Возвращает [invId, outSum] или false. */
