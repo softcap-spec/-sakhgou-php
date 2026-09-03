@@ -144,7 +144,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
       $pdo->prepare("DELETE FROM notifications WHERE user_id = ?")->execute([$uid]);
       $pdo->prepare("DELETE FROM messages WHERE sender_id = ? OR receiver_id = ?")->execute([$uid, $uid]);
       $pdo->prepare("DELETE FROM bookings WHERE guest_id = ? OR host_id = ?")->execute([$uid, $uid]);
-      $pdo->prepare("DELETE FROM promotions WHERE user_id = ?")->execute([$uid]);
+      $pdo->prepare("DELETE FROM promotions WHERE host_id = ?")->execute([$uid]);
       $pdo->prepare("DELETE FROM consents WHERE user_id = ?")->execute([$uid]);
       $pdo->prepare("DELETE FROM payments WHERE user_id = ?")->execute([$uid]);
       $pdo->prepare("DELETE FROM users WHERE id = ?")->execute([$uid]);
@@ -169,7 +169,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
   }
   if ($_POST['action'] === 'delete_category') {
     $cid = (int)$_POST['id'];
-    $pdo->prepare("UPDATE listings SET category_id = NULL WHERE category_id = ?")->execute([$cid]);
+    // Категория с объявлениями не удаляется (category_id NOT NULL + FK): сначала перенесите объявления
+    $cnt = $pdo->prepare('SELECT COUNT(*) FROM listings WHERE category_id = ?');
+    $cnt->execute([$cid]);
+    if ((int)$cnt->fetchColumn() > 0) {
+      header('Location: /admin?tab=categories&err=cat_not_empty');
+      exit;
+    }
     $pdo->prepare("DELETE FROM categories WHERE id = ?")->execute([$cid]);
     header('Location: /admin?tab=categories&ok=1');
     exit;
@@ -335,6 +341,14 @@ require_once __DIR__ . '/../../includes/header.php';
 
     <?php if (isset($_GET['ok'])): ?>
       <div class="bg-green-50 border border-green-200 text-green-700 rounded-lg p-3 mb-4 text-sm">Выполнено</div>
+    <?php endif; ?>
+    <?php if (isset($_GET['err'])): ?>
+      <?php $errText = [
+        'pwshort' => 'Пароль должен быть не менее 6 символов',
+        'delforbidden' => 'Нельзя удалять администраторов и самого себя',
+        'cat_not_empty' => 'Нельзя удалить категорию, в которой есть объявления. Сначала перенесите или снимите их',
+      ][$err = $_GET['err']] ?? 'Произошла ошибка'; ?>
+      <div class="bg-red-50 border border-red-200 text-red-700 rounded-lg p-3 mb-4 text-sm"><?= h($errText) ?></div>
     <?php endif; ?>
 
     <!-- Tabs -->
