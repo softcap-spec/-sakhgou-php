@@ -182,11 +182,11 @@ require __DIR__ . '/../includes/header.php';
     <h1 style="font-family:Manrope,sans-serif;font-weight:700;font-size:2rem;letter-spacing:-0.02em;margin:0 0 0.5rem">Объявление отправлено!</h1>
     <p style="color:#7A8A9A;margin:0 0 2rem;font-size:0.875rem">Объявление на модерации. После проверки оно появится в каталоге.</p>
     <div style="display:flex;gap:0.75rem;justify-content:center;flex-wrap:wrap">
-      <a href="/listing/<?=$success?>" class="cta-btn" style="gap:0.375rem">
+      <a href="/listing/<?=$success?>" class="cta-btn" style="gap:0.375rem;background-color:#1B6B8A;color:#F0F4F8">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
         Смотреть объявление
       </a>
-      <a href="/dashboard" class="btn-outline">В кабинет</a>
+      <a href="/dashboard" class="btn-outline" style="color:#3A4A5C">В кабинет</a>
     </div>
   </div>
 <?php else: ?>
