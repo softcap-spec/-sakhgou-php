@@ -110,7 +110,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['finish'])) {
       requires_border_permit,depends_on_weather,transport_included,transport_type,
       gear_condition,fishing_type,fishing_method,gear_included,catch_guarantee,license_required,boat_included,
       meals_included,season,cancellation_policy,status,transfer)
-      VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+      VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
     $stmt->execute([
       $cu['id'], $real_cid, $lt, $cat, $tourOrgType, $tourOpName, $tourOpRegno, $title, $slug, $desc, $price, $priceType, 'RUB',
       $guests, $loc,
@@ -130,7 +130,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['finish'])) {
     $pdo->prepare("INSERT INTO notifications (user_id, type, text, link) VALUES (0, 'new_listing', ?, ?)")
       ->execute(['Новое объявление: ' . $title, '/admin?tab=moderation']);
     } catch (PDOException $e) {
-      $errors[] = 'Ошибка БД: ' . $e->getMessage();
+      error_log('[sakhgo] create listing DB error: ' . $e->getMessage());
+      $errors[] = 'Техническая ошибка при сохранении. Попробуйте ещё раз или напишите на support@sakh.su';
     }
 
     $tmpDir = UPLOAD_DIR . '/.tmp';
