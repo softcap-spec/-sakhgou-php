@@ -563,4 +563,24 @@ function setCover(id, btn) {
   });
 }
 </script>
+<script>
+// Скрытые блоки чужих типов не отправляем: иначе их пустые поля с теми же именами
+// (includes, max_guests, meeting_point, what_to_bring, deposit, tour_duration_hours)
+// перезаписывают заполненные значения активного типа.
+(function(){
+  var form = document.querySelector('form');
+  if (!form) return;
+  form.addEventListener('submit', function(){
+    ['prop-fields','tour-fields','fish-fields','gear-fields','car-fields'].forEach(function(id){
+      var b = document.getElementById(id);
+      if (!b) return;
+      var hidden = (b.style.display === 'none');
+      b.querySelectorAll('input, select, textarea').forEach(function(el){
+        if (hidden) el.disabled = true;
+        else el.disabled = false;
+      });
+    });
+  });
+})();
+</script>
 <?php require __DIR__ . '/../includes/footer.php'; ?>
