@@ -144,13 +144,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $setClause = implode(', ', array_map(fn($f) => "$f = ?", $fields));
     $values[] = $listing_id;
-    $stmt = $pdo->prepare("UPDATE listings SET $setClause WHERE id = ?");
-    $stmt->execute($values);
+    $logFile = dirname(dirname(__DIR__)) . '/sakhgo-errors.log';
+    try {
+      $stmt = $pdo->prepare("UPDATE listings SET $setClause WHERE id = ?");
+      $stmt->execute($values);
+      @error_log(date('Y-m-d H:i:s') . " edit OK id=$listing_id user=" . (int)($_SESSION['user_id'] ?? 0) . " fields=" . implode(',', $fields) . "\n", 3, $logFile);
+      $success = true;
+    } catch (Throwable $e) {
+      @error_log(date('Y-m-d H:i:s') . " edit FAIL id=$listing_id user=" . (int)($_SESSION['user_id'] ?? 0) . " error=" . $e->getMessage() . " fields=" . implode(',', $fields) . " values_len=" . strlen(json_encode($values, JSON_UNESCAPED_UNICODE)) . "\n", 3, $logFile);
+      $errors[] = 'Не удалось сохранить изменения. Детали записаны, разберёмся — напишите на support@sakh.su';
+    }
 
     $stmt = $pdo->prepare('SELECT * FROM listings WHERE id = ?');
     $stmt->execute([$listing_id]);
     $item = $stmt->fetch();
-    $success = true;
   }
 }
 
