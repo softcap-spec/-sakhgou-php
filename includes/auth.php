@@ -103,6 +103,11 @@ function auth_user(): ?array {
   $stmt = $pdo->prepare('SELECT id, email, name, phone, role, avatar_url, created_at, max_user_id, max_bind_code, seller_type, org_name, org_inn FROM users WHERE id = ?');
   $stmt->execute([$_SESSION['user_id']]);
   $u = $stmt->fetch() ?: null;
+  if (!$u) {
+    // Пользователь удалён/не найден: чистим сессию, иначе цикл /login <-> /dashboard
+    unset($_SESSION['user_id'], $_SESSION['user_role'], $_SESSION['user_name']);
+    return null;
+  }
   if ($u) {
     // Update last_seen (throttled: every 60s)
     $ls = db()->prepare('SELECT last_seen FROM users WHERE id=?');
