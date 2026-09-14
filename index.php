@@ -8,6 +8,10 @@ require_once __DIR__ . '/includes/functions.php';
 require_once __DIR__ . '/includes/auth.php';
 require_once __DIR__ . '/includes/notify.php';
 require_once __DIR__ . '/includes/robokassa.php';
+if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
+  @error_log(date('Y-m-d H:i:s') . ' POST ' . ($_SERVER['REQUEST_URI'] ?? '-') . ' user=' . (int)($_SESSION['user_id'] ?? 0) . ' keys=' . implode(',', array_keys($_POST)) . "\n", 3, dirname(__DIR__) . '/sakhgo-errors.log');
+}
+
 
 header('X-Frame-Options: SAMEORIGIN');
 header('X-Content-Type-Options: nosniff');

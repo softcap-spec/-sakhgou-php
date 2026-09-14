@@ -16,6 +16,7 @@ function csrf_check(): void {
   if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!isset($_SESSION['csrf_token']) || !isset($_POST['_csrf'])
         || !hash_equals($_SESSION['csrf_token'], $_POST['_csrf'])) {
+      @error_log(date('Y-m-d H:i:s') . ' CSRF FAIL uri=' . ($_SERVER['REQUEST_URI'] ?? '-') . ' user=' . (int)($_SESSION['user_id'] ?? 0) . ' has_post_token=' . (isset($_POST['_csrf']) ? 'yes' : 'no') . ' has_session_token=' . (isset($_SESSION['csrf_token']) ? 'yes' : 'no') . "\n", 3, dirname(dirname(__DIR__)) . '/sakhgo-errors.log');
       http_response_code(403);
       die('Ошибка безопасности: недействительный CSRF-токен. Обновите страницу и попробуйте снова.');
     }

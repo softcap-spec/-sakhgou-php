@@ -31,9 +31,11 @@ if (!$item && $user['role'] === 'admin') {
 }
 if (!$item) { http_response_code(404); echo 'Not found'; exit; }
 
+$editLogFile = dirname(dirname(__DIR__)) . '/sakhgo-errors.log';
 // ── AJAX Image Management ──
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_POST['image_action']) || !empty($_FILES['image']['name']))) {
   csrf_check();
+  @error_log(date('Y-m-d H:i:s') . " EDIT image-branch listing=$listing_id user=" . (int)($_SESSION['user_id'] ?? 0) . " action=" . ($_POST['image_action'] ?? '-') . " files=" . implode(',', array_keys($_FILES)) . "\n", 3, $editLogFile);
   header('Content-Type: application/json; charset=utf-8');
 
   if (($_POST['image_action'] ?? '') === 'delete') {
@@ -90,6 +92,7 @@ $errors = [];
 $success = false;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+  @error_log(date('Y-m-d H:i:s') . " EDIT POST listing=$listing_id user=" . (int)($_SESSION['user_id'] ?? 0) . " keys=" . implode(',', array_keys($_POST)) . "\n", 3, $editLogFile);
   csrf_check();
   $title = trim($_POST['title'] ?? '');
   $description = trim($_POST['description'] ?? '');
@@ -103,6 +106,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   if (empty($title)) $errors[] = 'Введите название';
   if ($priceType !== 'negotiable' && $price <= 0) $errors[] = 'Укажите цену';
   if (empty($description)) $errors[] = 'Добавьте описание';
+
+  if (!empty($errors)) {
+    @error_log(date('Y-m-d H:i:s') . " EDIT VALIDATION FAIL listing=$listing_id user=" . (int)($_SESSION['user_id'] ?? 0) . " errors=" . implode(' | ', $errors) . "\n", 3, $editLogFile);
+  }
 
   if (empty($errors)) {
     $transfer = in_array($_POST['transfer'] ?? '', ['yes', 'no', 'possible'], true) ? $_POST['transfer'] : null;
@@ -144,7 +151,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $setClause = implode(', ', array_map(fn($f) => "$f = ?", $fields));
     $values[] = $listing_id;
-    $logFile = dirname(dirname(__DIR__)) . '/sakhgo-errors.log';
+    $logFile = $editLogFile;
     try {
       $stmt = $pdo->prepare("UPDATE listings SET $setClause WHERE id = ?");
       $stmt->execute($values);
