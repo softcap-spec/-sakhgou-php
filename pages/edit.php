@@ -111,9 +111,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $values = [$title, $description, $price, $priceType, $location, $type, $cat_id, $season, $transfer];
 
     $typeFields = [
-      'property' => ['max_guests', 'rooms_count', 'beds_count', 'amenities', 'check_in_time', 'check_out_time', 'rules'],
-      'tour' => ['tour_duration_hours', 'tour_duration_days', 'max_guests', 'difficulty', 'includes', 'what_to_bring', 'meeting_point'],
-      'fishing' => ['tour_duration_hours', 'max_guests', 'fish_types', 'fishing_method', 'boat_type', 'includes', 'what_to_bring', 'meeting_point', 'license_required'],
+      'property' => ['max_guests', 'rooms_count', 'beds_count', 'bathrooms_count', 'area_sqm', 'amenities', 'check_in_time', 'check_out_time', 'deposit', 'rules', 'cancellation_policy'],
+      'tour' => ['tour_duration_hours', 'tour_duration_days', 'max_guests', 'difficulty', 'group_size_min', 'group_size_max', 'start_point', 'transport_type', 'transport_included', 'requires_border_permit', 'depends_on_weather', 'meals_included', 'includes', 'what_to_bring', 'meeting_point', 'cancellation_policy'],
+      'fishing' => ['tour_duration_hours', 'max_guests', 'fishing_type', 'fish_types', 'fishing_method', 'boat_type', 'license_required', 'gear_included', 'boat_included', 'catch_guarantee', 'includes', 'what_to_bring', 'meeting_point'],
       'rental_gear' => ['gear_type', 'sizes', 'condition', 'includes', 'deposit', 'max_guests'],
       'car_rental' => ['car_type', 'transmission', 'seats', 'fuel', 'mileage', 'deposit', 'requirements', 'includes'],
     ];
@@ -136,7 +136,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $dbCol = $map[$f] ?? $f;
         $val = $_POST[$f] ?? null;
         if (is_array($val)) $val = json_encode($val, JSON_UNESCAPED_UNICODE);
-        elseif ($f === 'license_required') $val = isset($_POST[$f]) ? 1 : 0;
+        elseif (in_array($f, ['license_required','gear_included','boat_included','catch_guarantee','transport_included','requires_border_permit','depends_on_weather','meals_included'], true)) $val = isset($_POST[$f]) ? 1 : 0;
         $fields[] = $dbCol;
         $values[] = $val;
       }
@@ -301,7 +301,13 @@ require __DIR__ . '/../includes/header.php';
                 <label class="ed-label">Правила</label>
                 <textarea name="rules" rows="3" class="ed-textarea"><?=h($item['rules']??'')?></textarea>
               </div>
-            </div>
+                          <div class="ed-grid3">
+                <div><label class="ed-label">Санузлов</label><input type="number" name="bathrooms_count" value="<?=(int)($item['bathrooms_count']??1)?>" min="0" class="ed-input"></div>
+                <div><label class="ed-label">Площадь, м²</label><input type="number" name="area_sqm" value="<?=(float)($item['area_sqm']??0)?>" min="0" step="0.1" class="ed-input"></div>
+                <div><label class="ed-label">Депозит (₽)</label><input type="number" name="deposit" value="<?=(int)($item['deposit_amount']??0)?>" min="0" class="ed-input"></div>
+              </div>
+              <div class="ed-block"><label class="ed-label">Условия отмены</label><input type="text" name="cancellation_policy" value="<?=h($item['cancellation_policy']??'')?>" class="ed-input"></div>
+</div>
 
             <div id="tour-fields" class="ed-block" style="<?=$item['listing_type']!=='tour'?'display:none':''?>">
               <p class="ed-label" style="color:#1B6B8A;margin-bottom:0.625rem">Тур</p>
@@ -321,10 +327,34 @@ require __DIR__ . '/../includes/header.php';
               <div class="ed-block"><label class="ed-label">Что включено</label><input type="text" name="includes" value="<?=h($item['includes']??'')?>" class="ed-input"></div>
               <div class="ed-block"><label class="ed-label">Что взять с собой</label><input type="text" name="what_to_bring" value="<?=h($item['what_to_bring']??'')?>" class="ed-input"></div>
               <div class="ed-block"><label class="ed-label">Место встречи</label><input type="text" name="meeting_point" value="<?=h($item['meeting_point']??'')?>" class="ed-input"></div>
-            </div>
+                          <div class="ed-grid3">
+                <div><label class="ed-label">Мин. группа (чел.)</label><input type="number" name="group_size_min" value="<?=(int)($item['group_size_min']??1)?>" min="1" class="ed-input"></div>
+                <div><label class="ed-label">Макс. группа (чел.)</label><input type="number" name="group_size_max" value="<?=(int)($item['group_size_max']??4)?>" min="1" class="ed-input"></div>
+                <div><label class="ed-label">Точка старта</label><input type="text" name="start_point" value="<?=h($item['start_point']??'')?>" class="ed-input"></div>
+                <div><label class="ed-label">Тип транспорта</label><input type="text" name="transport_type" value="<?=h($item['transport_type']??'')?>" class="ed-input"></div>
+              </div>
+              <div class="ed-block">
+                <label class="ed-label">Опции</label>
+                <div class="ed-grid-a">
+                  <label class="ed-check"><input type="checkbox" name="transport_included" value="1" <?=$item['transport_included']?'checked':''?>> Транспорт включён</label>
+                  <label class="ed-check"><input type="checkbox" name="requires_border_permit" value="1" <?=$item['requires_border_permit']?'checked':''?>> Нужен погранпропуск</label>
+                  <label class="ed-check"><input type="checkbox" name="depends_on_weather" value="1" <?=$item['depends_on_weather']?'checked':''?>> Зависит от погоды</label>
+                  <label class="ed-check"><input type="checkbox" name="meals_included" value="1" <?=$item['meals_included']?'checked':''?>> Питание включено</label>
+                </div>
+              </div>
+              <div class="ed-block"><label class="ed-label">Условия отмены</label><input type="text" name="cancellation_policy" value="<?=h($item['cancellation_policy']??'')?>" class="ed-input"></div>
+</div>
 
             <div id="fish-fields" class="ed-block" style="<?=$item['listing_type']!=='fishing'?'display:none':''?>">
               <p class="ed-label" style="color:#1B6B8A;margin-bottom:0.625rem">Рыбалка</p>
+              <div class="ed-block">
+                <label class="ed-label">Тип рыбалки</label>
+                <select name="fishing_type" class="ed-select">
+                  <?php foreach (['rechnaya'=>'Речная','morskaya'=>'Морская','ozernaya'=>'Озёрная','podlednaya'=>'Подлёдная','splav'=>'Сплав'] as $k=>$v): ?>
+                  <option value="<?=$k?>" <?=($item['fishing_type']??'')===$k?'selected':''?>><?=$v?></option>
+                  <?php endforeach; ?>
+                </select>
+              </div>
               <div class="ed-grid3">
                 <div><label class="ed-label">Длит. (часов)</label><input type="number" name="tour_duration_hours" value="<?=(int)($item['tour_duration_hours']??0)?>" min="0" class="ed-input"></div>
                 <div><label class="ed-label">Группа (чел.)</label><input type="number" name="max_guests" value="<?=(int)($item['max_guests']??1)?>" min="1" class="ed-input"></div>
@@ -345,7 +375,15 @@ require __DIR__ . '/../includes/header.php';
               <div class="ed-block"><label class="ed-label">Что включено</label><input type="text" name="includes" value="<?=h($item['includes']??'')?>" class="ed-input"></div>
               <div class="ed-block"><label class="ed-label">Что взять</label><input type="text" name="what_to_bring" value="<?=h($item['what_to_bring']??'')?>" class="ed-input"></div>
               <div class="ed-block"><label class="ed-label">Место встречи</label><input type="text" name="meeting_point" value="<?=h($item['meeting_point']??'')?>" class="ed-input"></div>
-            </div>
+                          <div class="ed-block">
+                <label class="ed-label">Опции</label>
+                <div class="ed-grid-a">
+                  <label class="ed-check"><input type="checkbox" name="gear_included" value="1" <?=$item['gear_included']?'checked':''?>> Снаряжение включено</label>
+                  <label class="ed-check"><input type="checkbox" name="boat_included" value="1" <?=$item['boat_included']?'checked':''?>> Лодка включена</label>
+                  <label class="ed-check"><input type="checkbox" name="catch_guarantee" value="1" <?=$item['catch_guarantee']?'checked':''?>> Гарантия улова</label>
+                </div>
+              </div>
+</div>
 
             <div id="gear-fields" class="ed-block" style="<?=$item['listing_type']!=='rental_gear'?'display:none':''?>">
               <p class="ed-label" style="color:#1B6B8A;margin-bottom:0.625rem">Снаряжение</p>
