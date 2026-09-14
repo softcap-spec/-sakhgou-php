@@ -106,8 +106,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
   if (empty($errors)) {
     $transfer = in_array($_POST['transfer'] ?? '', ['yes', 'no', 'possible'], true) ? $_POST['transfer'] : null;
-    $fields = ['title', 'description', 'price', 'price_type', 'location', 'listing_type', 'category_id', 'transfer'];
-    $values = [$title, $description, $price, $priceType, $location, $type, $cat_id, $transfer];
+    $season = in_array($_POST['season'] ?? '', ['all_season', 'summer', 'winter'], true) ? $_POST['season'] : 'all_season';
+    $fields = ['title', 'description', 'price', 'price_type', 'location', 'listing_type', 'category_id', 'season', 'transfer'];
+    $values = [$title, $description, $price, $priceType, $location, $type, $cat_id, $season, $transfer];
 
     $typeFields = [
       'property' => ['max_guests', 'rooms_count', 'beds_count', 'amenities', 'check_in_time', 'check_out_time', 'rules'],
@@ -266,6 +267,15 @@ require __DIR__ . '/../includes/header.php';
                 <option value="yes" <?=($item['transfer']??'')==='yes'?'selected':''?>>Да</option>
                 <option value="no" <?=($item['transfer']??'')==='no'?'selected':''?>>Нет</option>
                 <option value="possible" <?=($item['transfer']??'')==='possible'?'selected':''?>>Возможен</option>
+              </select>
+            </div>
+
+            <div class="ed-block">
+              <label class="ed-label">Сезон</label>
+              <select name="season" class="ed-select">
+                <option value="all_season" <?=($item['season']??'all_season')==='all_season'?'selected':''?>>Круглый год</option>
+                <option value="summer" <?=($item['season']??'')==='summer'?'selected':''?>>Лето</option>
+                <option value="winter" <?=($item['season']??'')==='winter'?'selected':''?>>Зима</option>
               </select>
             </div>
 
